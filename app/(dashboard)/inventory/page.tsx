@@ -1,28 +1,24 @@
 "use client";
 
 import { Plus, Search, Edit, Trash2, Package } from "lucide-react";
-
-// بيانات تجريبية مطابقة تماماً للصورة
-const inventoryData = [
-  { sku: "SH-CL-001", name: "قميص رجالي كلاسيكي", category: "قمصان", quantity: 150, price: "89 ر.س", value: "13,350 ر.س" },
-  { sku: "PT-JN-002", name: "بنطلون جينز", category: "بناطيل", quantity: 80, price: "120 ر.س", value: "9,600 ر.س" },
-  { sku: "DR-EV-003", name: "فستان سهرة", category: "فساتين", quantity: 25, price: "350 ر.س", value: "8,750 ر.س" },
-  { sku: "JK-WN-004", name: "جاكيت شتوي", category: "جاكيتات", quantity: 45, price: "220 ر.س", value: "9,900 ر.س" },
-  { sku: "TS-CT-005", name: "تيشيرت قطني", category: "تيشيرتات", quantity: 200, price: "45 ر.س", value: "9,000 ر.س" },
-  { sku: "SH-SP-006", name: "حذاء رياضي", category: "أحذية", quantity: 60, price: "180 ر.س", value: "10,800 ر.س" },
-  { sku: "AB-WM-007", name: "عباية نسائية", category: "عبايات", quantity: 35, price: "280 ر.س", value: "9,800 ر.س" },
-  { sku: "AC-SM-008", name: "شماغ رجالي", category: "إكسسوارات", quantity: 100, price: "65 ر.س", value: "6,500 ر.س" },
-];
+import { useProducts } from '@/hooks/useInventory';
 
 export default function InventoryPage() {
+  const { data, isLoading } = useProducts();
+
+  // backend returns { products, pagination }
+  const products = data?.products || [
+    { sku: 'SH-CL-001', name: 'قميص رجالي كلاسيكي', category: 'قمصان', quantity: 150, price: '89 ر.س', value: '13,350 ر.س' },
+  ];
+
+  if (isLoading) return <div className="p-8">جاري تحميل بيانات المخزون...</div>;
+
   return (
     <div className="p-8 bg-[#f9fafb] min-h-screen" dir="rtl">
-      
-      {/* الهيدر - العنوان وزر الإضافة */}
       <header className="flex justify-between items-start mb-8">
         <div className="text-right">
           <h1 className="text-2xl font-bold text-slate-800">إدارة المخزون</h1>
-          <p className="text-slate-500 text-sm mt-1">8 صنف • قيمة إجمالية: 77,700 ر.س</p>
+          <p className="text-slate-500 text-sm mt-1">{products.length} صنف • قيمة إجمالية: —</p>
         </div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm font-medium transition-all shadow-md active:scale-95">
           <Plus size={20} />
@@ -30,7 +26,6 @@ export default function InventoryPage() {
         </button>
       </header>
 
-      {/* شريط البحث */}
       <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm mb-6 flex items-center justify-start">
         <div className="relative w-full max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -42,7 +37,6 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* جدول المخزون */}
       <div className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm">
         <table className="w-full text-right border-collapse">
           <thead>
@@ -57,8 +51,8 @@ export default function InventoryPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {inventoryData.map((item) => (
-              <tr key={item.sku} className="hover:bg-slate-50/50 transition-colors">
+            {products.map((item: any) => (
+              <tr key={item.sku || item.id} className="hover:bg-slate-50/50 transition-colors">
                 <td className="p-4 text-xs text-slate-400 font-mono tracking-tight">{item.sku}</td>
                 <td className="p-4">
                   <div className="flex items-center gap-3">
@@ -70,13 +64,12 @@ export default function InventoryPage() {
                 </td>
                 <td className="p-4 text-xs text-slate-400">{item.category}</td>
                 <td className="p-4 text-sm font-bold text-slate-800 text-center">
-                   {/* تمييز الكميات القليلة لونياً إذا أردت مستقبلاً */}
-                   <span className={item.quantity < 30 ? "text-orange-500" : "text-slate-800"}>
+                   <span className={item.quantity < 30 ? 'text-orange-500' : 'text-slate-800'}>
                     {item.quantity}
                    </span>
                 </td>
-                <td className="p-4 text-sm font-medium text-slate-600 tracking-tighter">{item.price}</td>
-                <td className="p-4 text-sm font-bold text-slate-800 tracking-tighter">{item.value}</td>
+                <td className="p-4 text-sm font-medium text-slate-600 tracking-tighter">{item.price || item.unitPrice || '—'}</td>
+                <td className="p-4 text-sm font-bold text-slate-800 tracking-tighter">{item.value || '—'}</td>
                 <td className="p-4">
                   <div className="flex justify-center gap-2">
                     <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="تعديل">
