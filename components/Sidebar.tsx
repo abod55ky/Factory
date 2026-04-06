@@ -55,7 +55,7 @@ export default function Sidebar() {
       {/* ملف المستخدم في الأسفل */}
       <div className="border-t border-slate-800 pt-4 mt-auto">
         <div className="flex items-center gap-3 px-2 py-2 hover:bg-slate-800 rounded-lg cursor-pointer transition-colors">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white font-bold shadow-sm">
+          <div className="w-9 h-9 rounded-full bg-linear-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white font-bold shadow-sm">
             م
           </div>
           <div className="overflow-hidden">

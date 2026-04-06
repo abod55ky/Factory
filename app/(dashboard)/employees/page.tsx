@@ -568,7 +568,8 @@ export default function EmployeesPage() {
 
       {/* الجدول */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <table className="w-full text-right">
+        <div className="w-full overflow-x-auto">
+        <table className="w-full text-right min-w-245">
           <thead className="bg-slate-50 border-b border-slate-100">
             <tr>
               <th className="p-4 text-slate-600 font-semibold text-sm">الموظف</th>
@@ -620,14 +621,14 @@ export default function EmployeesPage() {
                     <div className="flex justify-center gap-3">
                       <button 
                         onClick={() => handleEditClick(emp)}
-                        className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
+                        className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition-colors active:scale-95"
                         title="تعديل"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(emp.employeeId, emp.name)}
-                        className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                        className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors active:scale-95"
                         title="حذف"
                       >
                         <Trash2 size={16} />
@@ -639,6 +640,7 @@ export default function EmployeesPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* نافذة الإضافة والتعديل */}

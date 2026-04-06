@@ -26,6 +26,12 @@ const defaultForm = {
 export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, initialData, employees = [], employeesLoading = false, preselectedEmployeeId }: Props) {
   const [form, setForm] = useState(defaultForm);
 
+  const calculateBaseSalary = (employee: any) => {
+    const raw = employee?.hourlyRate?.$numberDecimal ?? employee?.hourlyRate;
+    const hourly = Number(raw || 0);
+    return Math.round(hourly * 8 * 26).toString();
+  };
+
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
@@ -41,13 +47,10 @@ export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, 
         // opening modal to add salary for specific employee
         const emp = (employees || []).find((x: any) => x.employeeId === preselectedEmployeeId);
         if (emp) {
-          const raw = emp.hourlyRate?.$numberDecimal ?? emp.hourlyRate;
-          const hourly = Number(raw || 0);
-          const calcBase = Math.round(hourly * 8 * 26);
           setForm({
             employeeId: preselectedEmployeeId,
-            profession: emp.profession || emp.department || "",
-            baseSalary: calcBase.toString(),
+            profession: emp.department || "",
+            baseSalary: calculateBaseSalary(emp),
             responsibilityAllowance: "",
             productionIncentive: "",
             transportAllowance: "",
@@ -59,7 +62,7 @@ export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, 
         setForm(defaultForm);
       }
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, preselectedEmployeeId, employees]);
 
   if (!isOpen) return null;
 
@@ -95,18 +98,20 @@ export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, 
               value={form.employeeId}
               onChange={(e) => {
                 const empId = e.target.value;
-                setForm((p) => ({ ...p, employeeId: empId }));
-
-                // auto-calc baseSalary if employee hourlyRate available
                 const emp = (employees || []).find((x: any) => x.employeeId === empId);
-                if (emp) {
-                  // hourlyRate might be stored as object ($numberDecimal) or plain value
-                  const raw = emp.hourlyRate?.$numberDecimal ?? emp.hourlyRate;
-                  const hourly = Number(raw || 0);
-                  // formula: hourlyRate * 8 hours * 26 days
-                  const calcBase = Math.round(hourly * 8 * 26);
-                  setForm((p) => ({ ...p, baseSalary: calcBase.toString() }));
+
+                if (!emp) {
+                  setForm((p) => ({ ...p, employeeId: empId }));
+                  return;
                 }
+
+                // auto-calc base salary and sync profession from department
+                setForm((p) => ({
+                  ...p,
+                  employeeId: empId,
+                  profession: emp.department || "",
+                  baseSalary: calculateBaseSalary(emp),
+                }));
               }}
               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none dir-ltr text-left font-mono"
               disabled={!!initialData}
@@ -124,10 +129,16 @@ export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, 
             <label className="block text-sm font-bold text-slate-700 mb-2">المهنة / الوظيفة</label>
             <input
               type="text"
+              list="profession-options"
               value={form.profession}
               onChange={(e) => setForm((p) => ({ ...p, profession: e.target.value }))}
               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
             />
+            <datalist id="profession-options">
+              {Array.from(new Set((employees || []).map((emp: any) => emp?.department).filter(Boolean))).map((department: string) => (
+                <option key={department} value={department} />
+              ))}
+            </datalist>
           </div>
 
           <div>

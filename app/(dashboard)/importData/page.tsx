@@ -3,7 +3,7 @@
 import { useState } from "react";
 // تأكد أن هذا الـ Hook موجود عندك فعلاً في مجلد hooks، وإلا قم بإيقافه مؤقتاً
 import { useImports } from "@/hooks/useImports"; 
-import { Upload, Users, Clock, Package, CheckCircle2 } from "lucide-react";
+import { Upload, Users, Clock, Package, CheckCircle2, Download } from "lucide-react";
 
 // 1. البيانات الثابتة للبطاقات (بدون أي دوال أو imports هنا!)
 const importSections = [
@@ -14,6 +14,8 @@ const importSections = [
     iconColor: "text-slate-700",
     bgColor: "bg-slate-100",
     entity: "employees", // أضفنا هذا لنعرف أي نوع نرفع
+    enabled: true,
+    templateEntity: "employees",
   },
   {
     title: "سجلات الحضور",
@@ -22,6 +24,8 @@ const importSections = [
     iconColor: "text-red-500",
     bgColor: "bg-red-50",
     entity: "attendance",
+    enabled: false,
+    templateEntity: null,
   },
   {
     title: "جرد المخزون",
@@ -30,6 +34,8 @@ const importSections = [
     iconColor: "text-orange-600",
     bgColor: "bg-orange-50",
     entity: "inventory",
+    enabled: true,
+    templateEntity: "products",
   },
 ];
 
@@ -42,15 +48,47 @@ const instructions = [
 
 export default function ImportPage() {
   // 2. تعريف الحالات (States) والدوال داخل الـ Component
-  const { upload, validate } = useImports(); // استدعاء الهوك
+  const { validate, template } = useImports(); // استدعاء الهوك
   const [status, setStatus] = useState<string | null>(null);
+
+  const downloadTemplate = async (entity: string) => {
+    setStatus("جاري تحميل القالب...");
+    try {
+      const result = await template.mutateAsync(entity);
+
+      const mimeType = result?.type || "text/csv;charset=utf-8;";
+      const blob = result instanceof Blob ? result : new Blob([result], { type: mimeType });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = entity === "employees" ? "employees-template.csv" : "products-template.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      setStatus("تم تحميل القالب بنجاح");
+    } catch (err: any) {
+      setStatus(err?.message || "فشل تحميل القالب");
+    }
+  };
 
   // دالة رفع الملف
   const onFile = async (file: File, entity: string) => {
     setStatus(`جاري التحقق من ملف ${entity}...`);
     try {
       // هنا نستخدم الـ mutateAsync من الهوك
-      await validate.mutateAsync({ entity, file });
+      const result = await validate.mutateAsync({ entity, file });
+      const errorRows = Number(result?.errorRows || 0);
+
+      if (errorRows > 0) {
+        const errors = Array.isArray(result?.errors) ? result.errors : [];
+        const first = errors[0];
+        setStatus(
+          `تمت قراءة الملف لكن يوجد ${errorRows} صف غير صالح${first?.row ? ` (السطر ${first.row}: ${first.error})` : ""}`,
+        );
+        return;
+      }
+
       setStatus('التحقق ناجح! الملف جاهز.');
     } catch (err: any) {
       setStatus(err?.message || 'فشل التحقق من الملف');
@@ -88,12 +126,23 @@ export default function ImportPage() {
               {section.description}
             </p>
 
+            {section.templateEntity ? (
+              <button
+                onClick={() => downloadTemplate(section.templateEntity)}
+                className="mb-3 inline-flex items-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <Download size={14} />
+                تحميل قالب مطابق
+              </button>
+            ) : null}
+
             {/* منطقة السحب والإفلات */}
             <label className="w-full border-2 border-dashed border-slate-200 rounded-2xl p-8 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer">
               <input
                 type="file"
                 accept=".csv,.xlsx"
                 className="hidden" // نخفي الزر القبيح الافتراضي
+                disabled={!section.enabled}
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) onFile(f, section.entity);
@@ -101,7 +150,9 @@ export default function ImportPage() {
               />
               <div className="flex flex-col items-center gap-2">
                 <Upload size={24} className="text-slate-400" />
-                <p className="text-xs font-bold text-slate-500">انقر لرفع الملف هنا</p>
+                <p className="text-xs font-bold text-slate-500">
+                  {section.enabled ? 'انقر لرفع الملف هنا' : 'غير مدعوم حالياً'}
+                </p>
                 <p className="text-[10px] text-slate-400">.xlsx, .csv</p>
               </div>
             </label>
