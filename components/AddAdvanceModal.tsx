@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2, Save, X } from "lucide-react";
 import { AdvanceInput, AdvanceType } from "@/types/advance";
 
@@ -14,12 +14,19 @@ interface AddAdvanceModalProps {
     id?: string;
     employeeId?: string;
     advanceType?: AdvanceType;
-    totalAmount?: number | string;
-    installmentAmount?: number | string;
-    remainingAmount?: number | string;
-    notes?: string;
+    totalAmount?: number | string | { $numberDecimal: string };
+    installmentAmount?: number | string | { $numberDecimal: string };
+    remainingAmount?: number | string | { $numberDecimal: string };
+    notes?: string | null;
   } | null;
 }
+
+const asStringAmount = (value?: number | string | { $numberDecimal: string }) => {
+  if (value && typeof value === "object" && "$numberDecimal" in value) {
+    return value.$numberDecimal || "";
+  }
+  return value?.toString() || "";
+};
 
 const defaultForm: AdvanceInput = {
   employeeId: "",
@@ -31,25 +38,22 @@ const defaultForm: AdvanceInput = {
 };
 
 export default function AddAdvanceModal({ isOpen, onClose, onSave, isPending, employees, initialData }: AddAdvanceModalProps) {
-  const [form, setForm] = useState<AdvanceInput>(defaultForm);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
+  const [form, setForm] = useState<AdvanceInput>(() => {
     if (initialData) {
-      setForm({
+      return {
         employeeId: initialData.employeeId || "",
         advanceType: initialData.advanceType || "salary",
-        totalAmount: initialData.totalAmount?.toString() || "",
-        installmentAmount: initialData.installmentAmount?.toString() || "",
-        remainingAmount: initialData.remainingAmount?.toString() || "",
+        totalAmount: asStringAmount(initialData.totalAmount),
+        installmentAmount: asStringAmount(initialData.installmentAmount),
+        remainingAmount: asStringAmount(initialData.remainingAmount),
         notes: initialData.notes || "",
-      });
-      return;
+      };
     }
+    return defaultForm;
+  });
 
-    setForm(defaultForm);
-  }, [isOpen, initialData]);
+  // No need for useEffect to set form when initialData changes
+  // The useState initializer function handles this correctly
 
   if (!isOpen) return null;
 

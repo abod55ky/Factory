@@ -1,13 +1,19 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { Plus, Search, Edit, ArrowRightLeft, Package2, AlertTriangle, Boxes, Sparkles, Upload, Download, History } from "lucide-react";
 import { useInventory } from "@/hooks/useInventory";
 import { InventoryItem, InventoryItemInput, AdjustStockInput } from "@/types/inventory";
 import { toast } from "react-hot-toast";
-import AddEditItemModal from "@/components/AddEditItemModal";
-import AdjustStockModal from "@/components/AdjustStockModal";
 import apiClient from "@/lib/api-client";
+
+const AddEditItemModal = dynamic(() => import("@/components/AddEditItemModal"), {
+  loading: () => null,
+});
+const AdjustStockModal = dynamic(() => import("@/components/AdjustStockModal"), {
+  loading: () => null,
+});
 
 type MovementLogEntry = {
   id: string;
@@ -466,7 +472,12 @@ export default function InventoryPage() {
               </tr>
             ) : (
               items.map((item) => (
-              <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+              <tr
+                key={item.id}
+                className={`transition-colors ${
+                  item.quantity <= item.minStockLevel ? "bg-red-50/60 hover:bg-red-50" : "hover:bg-slate-50"
+                }`}
+              >
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center">
@@ -564,40 +575,46 @@ export default function InventoryPage() {
         )}
       </div>
 
-      <AddEditItemModal
-        isOpen={isItemModalOpen}
-        onClose={() => {
-          setIsItemModalOpen(false);
-          setSelectedItem(null);
-        }}
-        isPending={createItem.isPending || updateItem.isPending}
-        initialData={
-          selectedItem
-            ? {
-                id: selectedItem.id,
-                sku: selectedItem.sku,
-                name: selectedItem.name,
-                category: selectedItem.category,
-                reorderLevel: selectedItem.minStockLevel,
-                unit: selectedItem.unit,
-                unitPrice: 0,
-                costPrice: 0,
-              }
-            : null
-        }
-        onSave={handleSaveItem}
-      />
+      {isItemModalOpen ? (
+        <AddEditItemModal
+          key={`${isItemModalOpen}-${selectedItem?.id ?? "new"}`}
+          isOpen={isItemModalOpen}
+          onClose={() => {
+            setIsItemModalOpen(false);
+            setSelectedItem(null);
+          }}
+          isPending={createItem.isPending || updateItem.isPending}
+          initialData={
+            selectedItem
+              ? {
+                  id: selectedItem.id,
+                  sku: selectedItem.sku,
+                  name: selectedItem.name,
+                  category: selectedItem.category,
+                  reorderLevel: selectedItem.minStockLevel,
+                  unit: selectedItem.unit,
+                  unitPrice: 0,
+                  costPrice: 0,
+                }
+              : null
+          }
+          onSave={handleSaveItem}
+        />
+      ) : null}
 
-      <AdjustStockModal
-        isOpen={isStockModalOpen}
-        onClose={() => {
-          setIsStockModalOpen(false);
-          setSelectedItem(null);
-        }}
-        item={selectedItem}
-        isPending={adjustStock.isPending}
-        onSave={handleAdjustStock}
-      />
+      {isStockModalOpen ? (
+        <AdjustStockModal
+          key={`${isStockModalOpen}-${selectedItem?.id ?? "new"}`}
+          isOpen={isStockModalOpen}
+          onClose={() => {
+            setIsStockModalOpen(false);
+            setSelectedItem(null);
+          }}
+          item={selectedItem}
+          isPending={adjustStock.isPending}
+          onSave={handleAdjustStock}
+        />
+      ) : null}
 
       {pending && (
         <div className="fixed bottom-6 left-6 z-40 rounded-2xl border border-white/60 bg-white/85 backdrop-blur px-4 py-3 shadow-lg">

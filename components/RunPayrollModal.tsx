@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2, Play, X } from "lucide-react";
 import { CalculatePayrollInput } from "@/types/payroll";
 
@@ -28,23 +28,22 @@ const getDefaultRange = () => {
   };
 };
 
-export default function RunPayrollModal({ isOpen, onClose, onRun, isPending }: RunPayrollModalProps) {
-  const defaults = getDefaultRange();
-  const [form, setForm] = useState<CalculatePayrollInput>({
-    periodStart: defaults.periodStart,
-    periodEnd: defaults.periodEnd,
+const createDefaultForm = (): CalculatePayrollInput => {
+  const range = getDefaultRange();
+  return {
+    periodStart: range.periodStart,
+    periodEnd: range.periodEnd,
     gracePeriodMinutes: 15,
-  });
+  };
+};
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const range = getDefaultRange();
-    setForm({
-      periodStart: range.periodStart,
-      periodEnd: range.periodEnd,
-      gracePeriodMinutes: 15,
-    });
-  }, [isOpen]);
+export default function RunPayrollModal({ isOpen, onClose, onRun, isPending }: RunPayrollModalProps) {
+  const [form, setForm] = useState<CalculatePayrollInput>(() => createDefaultForm());
+
+  const handleClose = () => {
+    setForm(createDefaultForm());
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -53,7 +52,7 @@ export default function RunPayrollModal({ isOpen, onClose, onRun, isPending }: R
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <h2 className="text-xl font-bold text-slate-800">تشغيل مسير الرواتب</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-red-500 transition-colors active:scale-95">
+          <button onClick={handleClose} className="text-slate-400 hover:text-red-500 transition-colors active:scale-95">
             <X size={24} />
           </button>
         </div>
@@ -101,7 +100,7 @@ export default function RunPayrollModal({ isOpen, onClose, onRun, isPending }: R
           </div>
 
           <div className="md:col-span-2 pt-4 border-t border-slate-100 flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all active:scale-95">
+            <button type="button" onClick={handleClose} className="px-6 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all active:scale-95">
               إلغاء
             </button>
             <button

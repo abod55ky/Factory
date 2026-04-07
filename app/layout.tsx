@@ -38,6 +38,7 @@ import type { Metadata } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import WebVitalsReporter from "@/components/WebVitalsReporter";
 
 // الإبقاء على إعدادات الخط كما هي
 const tajawal = Tajawal({ 
@@ -61,6 +62,7 @@ export default function RootLayout({
       <body className={`${tajawal.className} bg-[#f8fafc] text-slate-800 antialiased`}>
         {/* تغليف المشروع بالكامل لتعمل المكتبات بشكل صحيح */}
         <Providers>
+          <WebVitalsReporter />
           {children}
         </Providers>
       </body>

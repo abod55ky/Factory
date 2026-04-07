@@ -91,7 +91,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 import { toast } from "react-hot-toast";
+import axios from "axios";
 import { Salary, SalaryInput } from "@/types/salary";
+import { QUERY_GC_TIME, QUERY_STALE_TIME } from "@/lib/query-cache";
+
+type ApiErrorBody = {
+  message?: string;
+  error?: { message?: string };
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError<ApiErrorBody>(error)) {
+    const message = error.response?.data?.error?.message ?? error.response?.data?.message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return fallback;
+};
 
 // Hook that provides salaries list + helpers for single salary + mutations
 export const useSalaries = () => {
@@ -104,6 +124,8 @@ export const useSalaries = () => {
       const data = res.data?.salaries ?? res.data;
       return Array.isArray(data) ? data : [];
     },
+    staleTime: QUERY_STALE_TIME.STANDARD,
+    gcTime: QUERY_GC_TIME.RELAXED,
   });
 
   const useEmployeeSalary = (employeeId?: string) =>
@@ -114,15 +136,17 @@ export const useSalaries = () => {
         try {
           const res = await apiClient.get(`/salary/${employeeId}`);
           return res.data ?? null;
-        } catch (err: any) {
-          const status = err?.response?.status;
+        } catch (error: unknown) {
+          const status = axios.isAxiosError(error) ? error.response?.status : undefined;
           if (status === 404 || status === 400) {
             return null;
           }
-          throw err;
+          throw error;
         }
       },
       retry: false, // لضمان عدم تكرار الطلب الفاشل في حال عدم وجود سجل
+      staleTime: QUERY_STALE_TIME.STANDARD,
+      gcTime: QUERY_GC_TIME.RELAXED,
     });
 
   const updateSalary = useMutation({
@@ -149,11 +173,14 @@ export const useSalaries = () => {
       }
       toast.success("تم حفظ مكونات الراتب بنجاح");
     },
-    onError: (error: any) => {
-      // إظهار رسالة الخطأ القادمة من السيرفر بدقة
-      const msg = error?.response?.data?.error?.message || error?.response?.data?.message || "فشل حفظ الراتب";
+    onError: (error: unknown) => {
+      const msg = getErrorMessage(error, "فشل حفظ الراتب");
       toast.error(msg);
-      console.error("❌ Salary Update Error:", error.response?.data);
+      if (axios.isAxiosError(error)) {
+        console.error("❌ Salary Update Error:", error.response?.data);
+      } else {
+        console.error("❌ Salary Update Error:", error);
+      }
     },
   });
 
@@ -168,8 +195,8 @@ export const useSalaries = () => {
       }
       toast.success("تم حذف بيانات الراتب");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "فشل حذف الراتب");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "فشل حذف الراتب"));
     },
   });
 

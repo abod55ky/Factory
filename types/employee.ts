@@ -16,12 +16,20 @@
 // }
 
 export interface Employee {
-  id: string;
+  id?: string;
+  _id?: string;
   employeeId: string; // مثل EMP001
   name: string;
-  department: string;
-  status: 'active' | 'inactive' | 'on_leave' | 'terminated';
+  email?: string;
+  phone?: string;
+  department?: string;
+  profession?: string;
+  roleId?: string;
+  status?: 'active' | 'inactive' | 'on_leave' | 'terminated';
   // الراتب يأتي من الباك إند كـ Decimal، وغالباً يصل للفرونت كـ string أو كائن
-  hourlyRate: any; 
+  hourlyRate?: number | string | { $numberDecimal: string };
+  scheduledStart?: string;
+  scheduledEnd?: string;
   avatar?: string;
+  currency?: string;
 }

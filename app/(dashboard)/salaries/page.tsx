@@ -1,17 +1,33 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import useSalaries from "@/hooks/useSalaries";
 import { useEmployees } from "@/hooks/useEmployees";
-import ManageSalaryModal from "@/components/ManageSalaryModal";
-import AddAdvanceModal from "@/components/AddAdvanceModal";
-import AddBonusModal from "@/components/AddBonusModal";
 import { useAdvances } from "@/hooks/useAdvances";
 import { useBonuses } from "@/hooks/useBonuses";
 import { useAttendance } from "@/hooks/useAttendance";
-import FinancialHubTabs, { FinancialTabKey } from "@/components/salaries/FinancialHubTabs";
-import { DollarSign, Edit, Trash, HandCoins, Gift, Calculator, Plus, Sparkles, Loader2 } from "lucide-react";
+import { usePayroll } from "@/hooks/usePayroll";
+import type { FinancialTabKey } from "@/components/salaries/FinancialHubTabs";
+import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import type { Salary } from "@/types/salary";
+import type { Employee } from "@/types/employee";
+import type { Advance } from "@/types/advance";
+import type { Bonus } from "@/types/bonus";
+
+const FinancialHubTabs = dynamic(() => import("@/components/salaries/FinancialHubTabs"), {
+  loading: () => null,
+});
+const ManageSalaryModal = dynamic(() => import("@/components/ManageSalaryModal"), {
+  loading: () => null,
+});
+const AddAdvanceModal = dynamic(() => import("@/components/AddAdvanceModal"), {
+  loading: () => null,
+});
+const AddBonusModal = dynamic(() => import("@/components/AddBonusModal"), {
+  loading: () => null,
+});
 
 const toNumber = (value: unknown) => {
   if (value && typeof value === "object" && "$numberDecimal" in (value as Record<string, unknown>)) {
@@ -35,10 +51,27 @@ const getMonthBounds = (period: string) => {
   return { start, end };
 };
 
+type SalaryPayload = {
+  profession: string;
+  baseSalary: number;
+  responsibilityAllowance: number;
+  productionIncentive: number;
+  transportAllowance: number;
+};
+
+const SkeletonRows = () => (
+  <div className="space-y-3 p-6">
+    {Array.from({ length: 5 }).map((_, i) => (
+      <div key={i} className="h-12 rounded-xl bg-slate-100/80 animate-pulse" />
+    ))}
+  </div>
+);
+
 export default function SalariesPage() {
   const { data: salaries = [], isLoading, isError, error, updateSalary, deleteSalary } = useSalaries();
   const { data: employees = [], isLoading: employeesLoading } = useEmployees();
   const { data: advances = [], createAdvance, updateAdvance, deleteAdvance } = useAdvances();
+  const { calculatePayroll } = usePayroll();
 
   const [period, setPeriod] = useState(getLocalMonth());
   const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBounds(period), [period]);
@@ -58,36 +91,37 @@ export default function SalariesPage() {
   }, [employees]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selected, setSelected] = useState<any | null>(null);
+  const [selected, setSelected] = useState<Salary | null>(null);
   const [preselectedEmployeeId, setPreselectedEmployeeId] = useState<string | undefined>(undefined);
   const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
-  const [selectedAdvance, setSelectedAdvance] = useState<any | null>(null);
+  const [selectedAdvance, setSelectedAdvance] = useState<Advance | null>(null);
   const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
-  const [selectedBonus, setSelectedBonus] = useState<any | null>(null);
+  const [selectedBonus, setSelectedBonus] = useState<Bonus | null>(null);
+  const [lastCalculatedRunId, setLastCalculatedRunId] = useState<string | null>(null);
 
-  const openFor = (salary?: any, preselectId?: string) => {
-    setSelected(salary ?? null);
+  const openFor = (salary: Salary | null = null, preselectId?: string) => {
+    setSelected(salary);
     setPreselectedEmployeeId(preselectId);
     setIsModalOpen(true);
   };
 
   // build maps and union of ids so we show employees without salary too
   const employeeMap = useMemo(() => {
-    const m = new Map<string, any>();
-    (employees || []).forEach((e: any) => { if (e?.employeeId) m.set(e.employeeId, e); });
+    const m = new Map<string, Employee>();
+    (employees || []).forEach((e) => { if (e?.employeeId) m.set(e.employeeId, e); });
     return m;
   }, [employees]);
 
   const salaryMap = useMemo(() => {
-    const m = new Map<string, any>();
-    (salaries || []).forEach((s: any) => { if (s?.employeeId) m.set(s.employeeId, s); });
+    const m = new Map<string, Salary>();
+    (salaries || []).forEach((s) => { if (s?.employeeId) m.set(s.employeeId, s); });
     return m;
   }, [salaries]);
 
   const allIds = useMemo(() => {
     const set = new Set<string>();
-    (employees || []).forEach((e: any) => e?.employeeId && set.add(e.employeeId));
-    (salaries || []).forEach((s: any) => s?.employeeId && set.add(s.employeeId));
+    (employees || []).forEach((e) => e?.employeeId && set.add(e.employeeId));
+    (salaries || []).forEach((s) => s?.employeeId && set.add(s.employeeId));
     return Array.from(set);
   }, [employees, salaries]);
 
@@ -104,9 +138,9 @@ export default function SalariesPage() {
   }, [attendanceData?.dailyRecords]);
 
   const tabStats = useMemo(() => {
-    const totalAdvances = (advances || []).reduce((sum: number, item: any) => sum + toNumber(item.remainingAmount), 0);
-    const totalBonus = (bonuses || []).reduce((sum: number, item: any) => sum + toNumber(item.bonusAmount), 0);
-    const totalDeductions = (bonuses || []).reduce((sum: number, item: any) => sum + toNumber(item.assistanceAmount), 0);
+    const totalAdvances = (advances || []).reduce((sum: number, item: Advance) => sum + toNumber(item.remainingAmount), 0);
+    const totalBonus = (bonuses || []).reduce((sum: number, item: Bonus) => sum + toNumber(item.bonusAmount), 0);
+    const totalDeductions = (bonuses || []).reduce((sum: number, item: Bonus) => sum + toNumber(item.assistanceAmount), 0);
     return { totalAdvances, totalBonus, totalDeductions };
   }, [advances, bonuses]);
 
@@ -118,12 +152,12 @@ export default function SalariesPage() {
       const baseSalary = toNumber(salary?.baseSalary);
       const proratedBase = (baseSalary / 26) * attendanceDays;
 
-      const employeeBonuses = (bonuses || []).filter((b: any) => b.employeeId === employeeId);
-      const totalBonus = employeeBonuses.reduce((sum: number, b: any) => sum + toNumber(b.bonusAmount), 0);
-      const totalDeductions = employeeBonuses.reduce((sum: number, b: any) => sum + toNumber(b.assistanceAmount), 0);
-
-      const employeeAdvances = (advances || []).filter((a: any) => a.employeeId === employeeId);
-      const advancesInstallments = employeeAdvances.reduce((sum: number, a: any) => sum + toNumber(a.installmentAmount), 0);
+const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === employeeId);
+       const totalBonus = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.bonusAmount), 0);
+       const totalDeductions = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.assistanceAmount), 0);
+       
+       const employeeAdvances = (advances || []).filter((a: Advance) => a.employeeId === employeeId);
+       const advancesInstallments = employeeAdvances.reduce((sum: number, a: Advance) => sum + toNumber(a.installmentAmount), 0);
 
       const net = proratedBase + totalBonus - totalDeductions - advancesInstallments;
 
@@ -140,7 +174,7 @@ export default function SalariesPage() {
     });
   }, [allIds, salaryMap, attendanceDaysMap, bonuses, advances, employeeNameMap]);
 
-  const handleSave = (employeeId: string, payload: any) => {
+  const handleSave = (employeeId: string, payload: SalaryPayload) => {
     if (!employeeId) return toast.error("يرجى إدخال كود الموظف");
     updateSalary.mutate({ employeeId, data: { employeeId, ...payload } });
     setIsModalOpen(false);
@@ -166,7 +200,30 @@ export default function SalariesPage() {
     deleteAdvance.isPending ||
     createBonus.isPending ||
     updateBonus.isPending ||
-    deleteBonus.isPending;
+    deleteBonus.isPending ||
+    calculatePayroll.isPending;
+
+  const handleRunPayroll = () => {
+    calculatePayroll.mutate(
+      {
+        periodStart: monthStart,
+        periodEnd: monthEnd,
+        gracePeriodMinutes: 15,
+      },
+      {
+        onSuccess: (response) => {
+          const runId = (response as { data?: { payrollRun?: { runId?: string } } })?.data?.payrollRun?.runId;
+          if (runId) {
+            setLastCalculatedRunId(runId);
+            toast.success(`تم إنشاء مسير الرواتب: ${runId}`);
+            return;
+          }
+
+          toast.success("تم إنشاء مسير الرواتب بنجاح");
+        },
+      },
+    );
+  };
 
   const openFloatingAction = () => {
     if (activeTab === "salary-config") {
@@ -187,14 +244,6 @@ export default function SalariesPage() {
   };
 
   const isFloatingActionVisible = activeTab !== "final-payroll";
-
-  const SkeletonRows = () => (
-    <div className="space-y-3 p-6">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="h-12 rounded-xl bg-slate-100/80 animate-pulse" />
-      ))}
-    </div>
-  );
 
   return (
     <div className="min-h-screen p-8 bg-[radial-gradient(circle_at_10%_20%,rgba(59,130,246,0.13),transparent_36%),radial-gradient(circle_at_90%_15%,rgba(16,185,129,0.12),transparent_35%),#f8fafc]" dir="rtl">
@@ -233,11 +282,11 @@ export default function SalariesPage() {
 
       {activeTab === "salary-config" && (
         <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-          {isLoading ? (
-            <SkeletonRows />
-          ) : isError ? (
-            <div className="p-6 text-red-600">خطأ: {(error as any)?.message ?? "فشل تحميل البيانات"}</div>
-          ) : (
+{isLoading ? (
+             <SkeletonRows />
+           ) : isError ? (
+             <div className="p-6 text-red-600">خطأ: {error?.message ?? "فشل تحميل البيانات"}</div>
+           ) : (
             <div className="w-full overflow-x-auto">
             <table className="w-full text-right min-w-245">
             <thead className="bg-slate-50 text-slate-600">
@@ -334,7 +383,7 @@ export default function SalariesPage() {
                 {(advances || []).length === 0 ? (
                   <tr><td colSpan={7} className="p-8 text-center text-slate-500">لا توجد سلف مسجلة حالياً.</td></tr>
                 ) : (
-                  (advances || []).map((item: any) => {
+                  (advances || []).map((item: Advance) => {
                     const remaining = toNumber(item.remainingAmount);
                     return (
                       <tr key={item.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
@@ -406,7 +455,7 @@ export default function SalariesPage() {
                   {(bonuses || []).length === 0 ? (
                     <tr><td colSpan={6} className="p-8 text-center text-slate-500">لا توجد سجلات في هذه الفترة.</td></tr>
                   ) : (
-                    (bonuses || []).map((item: any) => (
+                    (bonuses || []).map((item: Bonus) => (
                       <tr key={item.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
                         <td className="p-4 text-center">{employeeNameMap[item.employeeId] || item.employeeId}</td>
                         <td className="p-4 text-center">{item.period || "—"}</td>
@@ -446,13 +495,30 @@ export default function SalariesPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-center rounded-2xl border border-white/50 bg-white/75 backdrop-blur p-4">
             <h2 className="font-bold text-slate-800 flex items-center gap-2"><Calculator size={18} /> المسير النهائي للفترة</h2>
-            <input
-              type="month"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="p-2 rounded-lg border border-slate-200 bg-white"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRunPayroll}
+                disabled={calculatePayroll.isPending}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {calculatePayroll.isPending ? <Loader2 size={14} className="animate-spin" /> : <Calculator size={14} />}
+                تشغيل المسير على الخادم
+              </button>
+              <input
+                type="month"
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                className="p-2 rounded-lg border border-slate-200 bg-white"
+              />
+            </div>
           </div>
+
+          {lastCalculatedRunId ? (
+            <p className="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              آخر تشغيل ناجح للمسير: {lastCalculatedRunId}
+            </p>
+          ) : null}
 
           <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
             <div className="w-full overflow-x-auto">
@@ -502,93 +568,101 @@ export default function SalariesPage() {
         </button>
       )}
 
-      <ManageSalaryModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        initialData={selected}
-        preselectedEmployeeId={preselectedEmployeeId}
-        employees={employees}
-        employeesLoading={employeesLoading}
-        isPending={updateSalary.isPending}
-        onSave={handleSave}
-      />
+      {isModalOpen ? (
+        <ManageSalaryModal
+          key={`${isModalOpen}-${selected?.employeeId ?? preselectedEmployeeId ?? "new"}`}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          initialData={selected}
+          preselectedEmployeeId={preselectedEmployeeId}
+          employees={employees}
+          isPending={updateSalary.isPending}
+          onSave={handleSave}
+        />
+      ) : null}
 
-      <AddAdvanceModal
-        isOpen={isAdvanceModalOpen}
-        onClose={() => {
-          setIsAdvanceModalOpen(false);
-          setSelectedAdvance(null);
-        }}
-        employees={Array.isArray(employees) ? employees : []}
-        initialData={selectedAdvance}
-        isPending={createAdvance.isPending || updateAdvance.isPending}
-        onSave={(form) => {
-          if (selectedAdvance?.id) {
-            updateAdvance.mutate(
-              {
-                id: selectedAdvance.id,
-                data: {
-                  remainingAmount: form.remainingAmount,
-                  installmentAmount: form.installmentAmount,
-                  notes: form.notes,
+      {isAdvanceModalOpen ? (
+        <AddAdvanceModal
+          key={`${isAdvanceModalOpen}-${selectedAdvance?.id ?? "new"}`}
+          isOpen={isAdvanceModalOpen}
+          onClose={() => {
+            setIsAdvanceModalOpen(false);
+            setSelectedAdvance(null);
+          }}
+          employees={Array.isArray(employees) ? employees : []}
+          initialData={selectedAdvance}
+          isPending={createAdvance.isPending || updateAdvance.isPending}
+          onSave={(form) => {
+            if (selectedAdvance?.id) {
+              updateAdvance.mutate(
+                {
+                  id: selectedAdvance.id,
+                  data: {
+                    remainingAmount: form.remainingAmount,
+                    installmentAmount: form.installmentAmount,
+                    notes: form.notes,
+                  },
                 },
-              },
-              {
-                onSuccess: () => {
-                  setIsAdvanceModalOpen(false);
-                  setSelectedAdvance(null);
+                {
+                  onSuccess: () => {
+                    setIsAdvanceModalOpen(false);
+                    setSelectedAdvance(null);
+                  },
                 },
-              },
-            );
-            return;
-          }
+              );
+              return;
+            }
 
-          createAdvance.mutate(form, {
-            onSuccess: () => {
-              setIsAdvanceModalOpen(false);
-            },
-          });
-        }}
-      />
-
-      <AddBonusModal
-        isOpen={isBonusModalOpen}
-        onClose={() => {
-          setIsBonusModalOpen(false);
-          setSelectedBonus(null);
-        }}
-        employees={Array.isArray(employees) ? employees : []}
-        initialData={selectedBonus}
-        isPending={createBonus.isPending || updateBonus.isPending}
-        onSave={(form) => {
-          if (selectedBonus?.id) {
-            updateBonus.mutate(
-              {
-                id: selectedBonus.id,
-                data: {
-                  bonusAmount: form.bonusAmount,
-                  bonusReason: form.bonusReason,
-                  assistanceAmount: form.assistanceAmount,
-                  period: form.period,
-                },
+            createAdvance.mutate(form, {
+              onSuccess: () => {
+                setIsAdvanceModalOpen(false);
               },
-              {
-                onSuccess: () => {
-                  setIsBonusModalOpen(false);
-                  setSelectedBonus(null);
-                },
-              },
-            );
-            return;
-          }
+            });
+          }}
+        />
+      ) : null}
 
-          createBonus.mutate(form, {
-            onSuccess: () => {
-              setIsBonusModalOpen(false);
-            },
-          });
-        }}
-      />
+      {isBonusModalOpen ? (
+        <AddBonusModal
+          key={`${isBonusModalOpen}-${selectedBonus?.id ?? "new"}`}
+          isOpen={isBonusModalOpen}
+          onClose={() => {
+            setIsBonusModalOpen(false);
+            setSelectedBonus(null);
+          }}
+          employees={Array.isArray(employees) ? employees : []}
+          initialData={selectedBonus}
+          isPending={createBonus.isPending || updateBonus.isPending}
+          onSave={(form) => {
+            if (selectedBonus?.id) {
+              updateBonus.mutate(
+                {
+                  id: selectedBonus.id,
+                  data: {
+                    bonusAmount: form.bonusAmount,
+                    bonusReason: form.bonusReason,
+                    assistanceAmount: form.assistanceAmount,
+                    period: form.period,
+                  },
+                },
+                {
+                  onSuccess: () => {
+                    setIsBonusModalOpen(false);
+                    setSelectedBonus(null);
+                  },
+                },
+              );
+              return;
+            }
+
+            createBonus.mutate(form, {
+              onSuccess: () => {
+                setIsBonusModalOpen(false);
+              },
+            });
+          }}
+        />
+      ) : null}
 
       {isSaving && (
         <div className="fixed bottom-6 right-6 z-40 rounded-2xl border border-white/60 bg-white/85 backdrop-blur px-4 py-3 shadow-lg">

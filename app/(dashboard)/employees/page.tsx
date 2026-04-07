@@ -492,9 +492,21 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useEmployees } from "@/hooks/useEmployees";
-import AddEmployeeModal from "@/components/AddEmployeeModal";
+import type { Employee } from "@/types/employee";
 import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+
+const AddEmployeeModal = dynamic(() => import("@/components/AddEmployeeModal"), {
+  loading: () => null,
+});
+
+const asHourlyRateText = (value: Employee["hourlyRate"]) => {
+  if (value && typeof value === "object" && "$numberDecimal" in value) {
+    return value.$numberDecimal;
+  }
+  return value ?? "";
+};
 
 export default function EmployeesPage() {
   // 1. استخدام الـ Hook لجلب البيانات والعمليات
@@ -508,27 +520,27 @@ export default function EmployeesPage() {
   
   // 2. حالات التحكم في النافذة والبيانات المختارة
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   // 3. دالة الحذف مع التأكيد
   const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`هل أنت متأكد من حذف الموظف: ${name}؟`)) {
-      try {
-        await deleteEmployee.mutateAsync(id);
-      } catch (error) {
-        // الخطأ يتم معالجته غالباً داخل الـ Hook عبر Toast
-      }
-    }
+     if (window.confirm(`هل أنت متأكد من حذف الموظف: ${name}؟`)) {
+       try {
+         await deleteEmployee.mutateAsync(id);
+       } catch {
+         // الخطأ يتم معالجته غالباً داخل الـ Hook عبر Toast
+       }
+     }
   };
 
   // 4. دالة فتح النافذة للتعديل
-  const handleEditClick = (emp: any) => {
+  const handleEditClick = (emp: Employee) => {
     setSelectedEmployee(emp);
     setIsModalOpen(true);
   };
 
   // 5. دالة الحفظ الذكية (إضافة أو تعديل)
-  const handleSaveEmployee = async (formData: any) => {
+  const handleSaveEmployee = async (formData: Employee) => {
     try {
       if (selectedEmployee) {
         // تعديل موظف موجود
@@ -542,7 +554,7 @@ export default function EmployeesPage() {
       }
       setIsModalOpen(false);
       setSelectedEmployee(null);
-    } catch (error) {
+    } catch {
       // الخطأ يظهر عبر التوست في الـ Hook
     }
   };
@@ -596,7 +608,7 @@ export default function EmployeesPage() {
                 </td>
               </tr>
             ) : (
-              employees?.map((emp: any) => (
+employees?.map((emp: Employee) => (
                 <tr key={emp.employeeId} className="hover:bg-slate-50/50 transition-colors">
                   <td className="p-4">
                     <div className="font-bold text-slate-700">{emp.name}</div>
@@ -608,7 +620,7 @@ export default function EmployeesPage() {
                     </span>
                   </td>
                   <td className="p-4 text-center font-mono font-bold text-slate-600">
-                    {emp.hourlyRate?.$numberDecimal || emp.hourlyRate} 
+                    {asHourlyRateText(emp.hourlyRate)}
                   </td>
                   <td className="p-4 text-center">
                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
@@ -644,16 +656,19 @@ export default function EmployeesPage() {
       </div>
 
       {/* نافذة الإضافة والتعديل */}
-      <AddEmployeeModal 
-        isOpen={isModalOpen} 
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedEmployee(null);
-        }} 
-        onSave={handleSaveEmployee}
-        isPending={createEmployee.isPending || updateEmployee.isPending}
-        initialData={selectedEmployee}
-      />
+      {isModalOpen ? (
+        <AddEmployeeModal 
+          key={`${isModalOpen}-${selectedEmployee?.employeeId ?? "new"}`}
+          isOpen={isModalOpen} 
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedEmployee(null);
+          }} 
+          onSave={handleSaveEmployee}
+          isPending={createEmployee.isPending || updateEmployee.isPending}
+          initialData={selectedEmployee ?? undefined}
+        />
+      ) : null}
     </div>
   );
 }

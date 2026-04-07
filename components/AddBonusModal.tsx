@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2, Save, X } from "lucide-react";
 import { BonusInput } from "@/types/bonus";
 
@@ -13,12 +13,19 @@ interface AddBonusModalProps {
   initialData?: {
     id?: string;
     employeeId?: string;
-    bonusAmount?: number | string;
-    bonusReason?: string;
-    assistanceAmount?: number | string;
-    period?: string;
+    bonusAmount?: number | string | { $numberDecimal: string };
+    bonusReason?: string | null;
+    assistanceAmount?: number | string | { $numberDecimal: string };
+    period?: string | null;
   } | null;
 }
+
+const asStringAmount = (value?: number | string | { $numberDecimal: string }) => {
+  if (value && typeof value === "object" && "$numberDecimal" in value) {
+    return value.$numberDecimal || "";
+  }
+  return value?.toString() || "";
+};
 
 const currentPeriod = (() => {
   const date = new Date();
@@ -36,24 +43,21 @@ const defaultForm: BonusInput = {
 };
 
 export default function AddBonusModal({ isOpen, onClose, onSave, isPending, employees, initialData }: AddBonusModalProps) {
-  const [form, setForm] = useState<BonusInput>(defaultForm);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
+  const [form, setForm] = useState<BonusInput>(() => {
     if (initialData) {
-      setForm({
+      return {
         employeeId: initialData.employeeId || "",
-        bonusAmount: initialData.bonusAmount?.toString() || "",
+        bonusAmount: asStringAmount(initialData.bonusAmount),
         bonusReason: initialData.bonusReason || "",
-        assistanceAmount: initialData.assistanceAmount?.toString() || "",
+        assistanceAmount: asStringAmount(initialData.assistanceAmount),
         period: initialData.period || currentPeriod,
-      });
-      return;
+      };
     }
+    return defaultForm;
+  });
 
-    setForm(defaultForm);
-  }, [isOpen, initialData]);
+  // No need for useEffect to set form when initialData changes
+  // The useState initializer function handles this correctly
 
   if (!isOpen) return null;
 

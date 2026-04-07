@@ -1,7 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import axios from "axios";
 import apiClient from "@/lib/api-client";
 import { Advance, AdvanceInput } from "@/types/advance";
+import { QUERY_GC_TIME, QUERY_STALE_TIME } from "@/lib/query-cache";
+
+type ApiErrorBody = {
+  message?: string;
+  error?: { message?: string };
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError<ApiErrorBody>(error)) {
+    const message = error.response?.data?.error?.message ?? error.response?.data?.message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return fallback;
+};
 
 export const useAdvances = (employeeId?: string) => {
   const queryClient = useQueryClient();
@@ -12,7 +32,8 @@ export const useAdvances = (employeeId?: string) => {
       const res = await apiClient.get("/advances", { params: { employeeId } });
       return Array.isArray(res.data) ? res.data : [];
     },
-    staleTime: 1000 * 30,
+    staleTime: QUERY_STALE_TIME.STANDARD,
+    gcTime: QUERY_GC_TIME.RELAXED,
   });
 
   const createAdvance = useMutation({
@@ -30,8 +51,8 @@ export const useAdvances = (employeeId?: string) => {
       queryClient.invalidateQueries({ queryKey: ["advances"], exact: false });
       toast.success("تمت إضافة السلفة بنجاح");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "فشل إضافة السلفة");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "فشل إضافة السلفة"));
     },
   });
 
@@ -48,8 +69,8 @@ export const useAdvances = (employeeId?: string) => {
       queryClient.invalidateQueries({ queryKey: ["advances"], exact: false });
       toast.success("تم تحديث السلفة");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "فشل تحديث السلفة");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "فشل تحديث السلفة"));
     },
   });
 
@@ -61,8 +82,8 @@ export const useAdvances = (employeeId?: string) => {
       queryClient.invalidateQueries({ queryKey: ["advances"], exact: false });
       toast.success("تم حذف السلفة");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "فشل حذف السلفة");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "فشل حذف السلفة"));
     },
   });
 

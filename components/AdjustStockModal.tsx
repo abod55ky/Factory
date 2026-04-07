@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowDownCircle, ArrowUpCircle, Loader2, Save, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowDownCircle, ArrowUpCircle, Loader2, X } from "lucide-react";
 import { AdjustStockInput, InventoryItem } from "@/types/inventory";
 
 interface AdjustStockModalProps {
@@ -21,11 +21,6 @@ const defaultForm: Omit<AdjustStockInput, "productId"> = {
 
 export default function AdjustStockModal({ isOpen, onClose, onSave, isPending = false, item }: AdjustStockModalProps) {
   const [form, setForm] = useState(defaultForm);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setForm(defaultForm);
-  }, [isOpen]);
 
   if (!isOpen || !item) return null;
 

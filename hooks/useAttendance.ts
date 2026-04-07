@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import apiClient from "@/lib/api-client";
+import { QUERY_GC_TIME, QUERY_STALE_TIME } from "@/lib/query-cache";
 
 export type AttendanceSource = "manual" | "device";
 export type AttendanceType = "IN" | "OUT";
@@ -194,7 +195,8 @@ export const useAttendance = (params?: AttendanceQueryParams) => {
         dailyRecords: toDailyRecords(records, resolvedStartDate, resolvedEndDate),
       };
     },
-    staleTime: 1000 * 30,
+    staleTime: QUERY_STALE_TIME.FAST,
+    gcTime: QUERY_GC_TIME.RELAXED,
   });
 
   const createAttendance = useMutation({

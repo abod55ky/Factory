@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2, Save, X } from "lucide-react";
 import { InventoryItemInput } from "@/types/inventory";
 
@@ -23,13 +23,9 @@ const defaultForm: InventoryItemInput = {
 };
 
 export default function AddEditItemModal({ isOpen, onClose, onSave, isPending = false, initialData }: AddEditItemModalProps) {
-  const [form, setForm] = useState<InventoryItemInput>(defaultForm);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
+  const [form, setForm] = useState<InventoryItemInput>(() => {
     if (initialData) {
-      setForm({
+      return {
         sku: initialData.sku || "",
         name: initialData.name || "",
         category: initialData.category || "",
@@ -37,12 +33,13 @@ export default function AddEditItemModal({ isOpen, onClose, onSave, isPending = 
         costPrice: initialData.costPrice?.toString() || "",
         reorderLevel: initialData.reorderLevel?.toString() || "10",
         unit: initialData.unit || "قطعة",
-      });
-      return;
+      };
     }
+    return defaultForm;
+  });
 
-    setForm(defaultForm);
-  }, [isOpen, initialData]);
+  // No need for useEffect to set form when initialData changes
+  // The useState initializer function handles this correctly
 
   if (!isOpen) return null;
 

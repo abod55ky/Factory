@@ -1,39 +1,42 @@
-// import axios from 'axios';
-
-// const apiClient = axios.create({
-//   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api',
-// });
-
-// // "Interceptor" لإضافة التوكن تلقائياً لكل طلب يخرج من الفرونت إند
-// apiClient.interceptors.request.use((config) => {
-//   const token = localStorage.getItem('token'); // سنخزن التوكن هنا عند تسجيل الدخول
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// });
-
-// export default apiClient;
-
 import axios from 'axios';
+import { clearAuthSession } from '@/lib/auth-session';
+import { resetAuthVerificationCache } from '@/lib/auth-verify';
+import { useAuthStore } from '@/stores/auth-store';
 
-// استبدل هذا الرابط برابط السيرفر الحقيقي للباك إند
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const DEFAULT_API_URL = 'https://werehouse-production-dabe.up.railway.app/api';
+const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, '');
+const LOGIN_REDIRECT_COOLDOWN_MS = 1500;
+let lastLoginRedirectAt = 0;
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// إضافة "انترسيبتور" لإرفاق التوكن مع كل طلب بشكل آلي
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+
+    if (status === 401 && typeof window !== 'undefined') {
+      clearAuthSession();
+      useAuthStore.getState().clear();
+      resetAuthVerificationCache();
+
+      const now = Date.now();
+      const canRedirect = now - lastLoginRedirectAt > LOGIN_REDIRECT_COOLDOWN_MS;
+
+      if (canRedirect && window.location.pathname !== '/login') {
+        lastLoginRedirectAt = now;
+        window.location.href = '/login';
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 export default apiClient;

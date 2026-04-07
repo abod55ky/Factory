@@ -1,7 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import axios from "axios";
 import apiClient from "@/lib/api-client";
 import { CalculatePayrollInput, PayrollRun } from "@/types/payroll";
+import { QUERY_GC_TIME, QUERY_STALE_TIME } from "@/lib/query-cache";
+
+type ApiErrorBody = {
+  message?: string;
+  error?: { message?: string };
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError<ApiErrorBody>(error)) {
+    const message = error.response?.data?.error?.message ?? error.response?.data?.message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return fallback;
+};
 
 export const usePayrollSummary = (period?: { start?: string; end?: string }) => {
   return useQuery({
@@ -10,7 +30,8 @@ export const usePayrollSummary = (period?: { start?: string; end?: string }) => 
       const res = await apiClient.get("/payroll/summary", { params: { periodStart: period?.start, periodEnd: period?.end } });
       return res.data;
     },
-    staleTime: 1000 * 30,
+    staleTime: QUERY_STALE_TIME.STANDARD,
+    gcTime: QUERY_GC_TIME.RELAXED,
   });
 };
 
@@ -21,7 +42,8 @@ export const usePayrollList = (params?: { page?: number; limit?: number; status?
       const res = await apiClient.get("/payroll", { params });
       return res.data;
     },
-    staleTime: 1000 * 30,
+    staleTime: QUERY_STALE_TIME.STANDARD,
+    gcTime: QUERY_GC_TIME.RELAXED,
   });
 };
 
@@ -37,7 +59,8 @@ export const usePayroll = (params?: { page?: number; limit?: number; status?: st
         pagination: res.data?.pagination,
       };
     },
-    staleTime: 1000 * 30,
+    staleTime: QUERY_STALE_TIME.STANDARD,
+    gcTime: QUERY_GC_TIME.RELAXED,
   });
 
   const calculatePayroll = useMutation({
@@ -53,8 +76,8 @@ export const usePayroll = (params?: { page?: number; limit?: number; status?: st
       queryClient.invalidateQueries({ queryKey: ["payroll"], exact: false });
       toast.success("تم احتساب مسير الرواتب بنجاح");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "فشل احتساب مسير الرواتب");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "فشل احتساب مسير الرواتب"));
     },
   });
 
@@ -66,8 +89,8 @@ export const usePayroll = (params?: { page?: number; limit?: number; status?: st
       queryClient.invalidateQueries({ queryKey: ["payroll"], exact: false });
       toast.success("تم اعتماد المسير");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "فشل اعتماد المسير");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "فشل اعتماد المسير"));
     },
   });
 
@@ -79,8 +102,8 @@ export const usePayroll = (params?: { page?: number; limit?: number; status?: st
       queryClient.invalidateQueries({ queryKey: ["payroll"], exact: false });
       toast.success("تم رفض المسير");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "فشل رفض المسير");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "فشل رفض المسير"));
     },
   });
 

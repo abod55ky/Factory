@@ -198,17 +198,30 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X, Loader2, Save } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
+import type { Employee } from "@/types/employee";
+
+const asHourlyRateText = (value?: Employee["hourlyRate"]) => {
+  if (value && typeof value === "object" && "$numberDecimal" in value) {
+    return value.$numberDecimal;
+  }
+  return value?.toString() || "";
+};
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: Employee) => void;
   isPending: boolean;
-  initialData?: any;
+  initialData?: Employee;
+}
+
+interface RoleOption {
+  id: string;
+  name: string;
 }
 
 // القالب الأساسي لتصفير الفورم
@@ -224,48 +237,45 @@ const defaultFormState = {
 };
 
 export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, initialData }: Props) {
-  const [formData, setFormData] = useState(defaultFormState);
+  const [formData, setFormData] = useState(() => {
+    if (initialData) {
+      return {
+        employeeId: initialData.employeeId || "",
+        name: initialData.name || "",
+        email: initialData.email || "",
+        department: initialData.department || "Warehouse",
+        hourlyRate: asHourlyRateText(initialData.hourlyRate),
+        scheduledStart: initialData.scheduledStart || "08:00",
+        scheduledEnd: initialData.scheduledEnd || "16:00",
+        roleId: initialData.roleId || "",
+      };
+    }
+    return {
+      ...defaultFormState,
+      roleId: "",
+    };
+  });
 
   // جلب الصلاحيات من الباك إند
-  const { data: roles, isLoading: rolesLoading } = useQuery({
+  const { data: roles = [], isLoading: rolesLoading } = useQuery<RoleOption[]>({
     queryKey: ["roles"],
     queryFn: async () => {
       const response = await apiClient.get("/auth/roles");
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     },
     enabled: isOpen, // لا تقم بالجلب إلا إذا كانت النافذة مفتوحة
   });
 
-  // مراقبة فتح النافذة: هل هي للإضافة أم للتعديل؟
-  useEffect(() => {
-    if (isOpen) {
-      if (initialData) {
-        // وضع التعديل: تعبئة البيانات
-        setFormData({
-          employeeId: initialData.employeeId || "",
-          name: initialData.name || "",
-          email: initialData.email || "",
-          department: initialData.department || "Warehouse",
-          hourlyRate: initialData.hourlyRate?.$numberDecimal || initialData.hourlyRate || "",
-          scheduledStart: initialData.scheduledStart || "08:00",
-          scheduledEnd: initialData.scheduledEnd || "16:00",
-          roleId: initialData.roleId || (roles && roles.length > 0 ? roles[0].id : ""),
-        });
-      } else {
-        // وضع الإضافة: تصفير الفورم
-        setFormData({
-          ...defaultFormState,
-          roleId: roles && roles.length > 0 ? roles[0].id : "",
-        });
-      }
-    }
-  }, [isOpen, initialData, roles]);
+  const resolvedRoleId = formData.roleId || initialData?.roleId || roles[0]?.id || "";
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave({
+      ...formData,
+      roleId: resolvedRoleId,
+    });
   };
 
   return (
@@ -334,14 +344,14 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
             <select 
               required
               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-              value={formData.roleId}
+              value={resolvedRoleId}
               onChange={(e) => setFormData({...formData, roleId: e.target.value})}
               disabled={rolesLoading}
             >
               {rolesLoading ? (
                 <option value="">جاري التحميل...</option>
               ) : (
-                roles?.map((role: any) => (
+                roles.map((role) => (
                   <option key={role.id} value={role.id}>{role.name}</option>
                 ))
               )}

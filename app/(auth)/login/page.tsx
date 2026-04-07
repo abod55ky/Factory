@@ -265,13 +265,46 @@
 
 "use client"; // لأن الصفحة تحتوي على تفاعل المستخدم (كتابة ونقر)
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, Lock, Loader2, AlertCircle } from "lucide-react";
 import apiClient from "@/lib/api-client"; // ملف الاتصال الذي أنشأناه سابقاً
+import axios from "axios";
+import { resetAuthVerificationCache, verifyAuthSession } from "@/lib/auth-verify";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function LoginPage() {
   const router = useRouter();
+  const setUser = useAuthStore((state) => state.setUser);
+  const setStatus = useAuthStore((state) => state.setStatus);
+  const clear = useAuthStore((state) => state.clear);
+
+  useEffect(() => {
+    let active = true;
+
+    const checkExistingSession = async () => {
+      const result = await verifyAuthSession();
+
+      if (result.authorized) {
+        if (active) {
+          setStatus("authenticated");
+          router.replace("/home");
+        }
+        return;
+      }
+
+      if (result.status === 401 || result.status === 403) {
+        setStatus("unauthenticated");
+        clear();
+      }
+    };
+
+    checkExistingSession();
+
+    return () => {
+      active = false;
+    };
+  }, [router, clear, setStatus]);
   
   // 1. تعريف حالات الصفحة (States)
   const [username, setUsername] = useState("");
@@ -285,53 +318,48 @@ const handleLogin = async (e: React.FormEvent) => {
     setIsLoading(true);
     setErrorMessage("");
 
-    // 1. بدأنا المؤقت وبدأنا المراقبة
-    console.log("🚀 [Login] بدء محاولة تسجيل الدخول...");
-    console.log(`👤 [Login] المستخدم: ${username}`);
-    console.time("⏱️ [Login Duration]"); // بدء حساب الوقت
-
     try {
-      console.log("🌐 [Login] جاري إرسال الطلب إلى السيرفر (Railway)...");
-      
       const response = await apiClient.post("/auth/login", {
         username: username,
         password: password,
       });
 
-      // 2. إذا نجح الطلب
-      console.log("✅ [Login] السيرفر رد بنجاح!", response.status);
-      console.log("📦 [Login] البيانات المستلمة:", response.data);
+      const { user } = response.data as { user?: unknown };
+      setUser((user ?? null) as { name?: string; username?: string; role?: string } | null);
+      resetAuthVerificationCache();
 
-      const { token, user } = response.data;
+      const sessionCheck = await verifyAuthSession({ force: true });
+      if (!sessionCheck.authorized) {
+        setStatus("unauthenticated");
+        clear();
+        setErrorMessage("تم تسجيل الدخول لكن لم يتم تثبيت جلسة آمنة. تحقق من إعدادات الكوكيز في الخادم.");
+        return;
+      }
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      console.log("💾 [Login] تم حفظ التوكن بنجاح في المتصفح. جاري التوجيه...");
-      
-      router.push("/employees");
-
-    } catch (error: any) {
+      setStatus("authenticated");
+      router.push("/home");
+ 
+     } catch (error: unknown) {
       // 3. إذا فشل الطلب (هنا نصطاد الخطأ بدقة)
       console.error("❌ [Login Error] حدث خطأ أثناء الاتصال:");
       
-      if (error.response) {
+      if (axios.isAxiosError<{ message?: string }>(error) && error.response) {
         // السيرفر رد ولكن بوجود خطأ (مثل: كلمة سر خاطئة)
         console.error("📌 تفاصيل من السيرفر:", error.response.data);
-        setErrorMessage(error.response.data.message || "بيانات الدخول غير صحيحة");
-      } else if (error.request) {
+        setErrorMessage(error.response.data?.message || "بيانات الدخول غير صحيحة");
+      } else if (axios.isAxiosError(error) && error.request) {
         // السيرفر لم يرد أبداً (السيرفر طافي أو هناك مشكلة بالإنترنت)
         console.error("📌 السيرفر لا يستجيب أبداً:", error.request);
         setErrorMessage("السيرفر لا يستجيب. قد يكون نائماً، انتظر قليلاً وجرب مرة أخرى.");
+      } else if (error instanceof Error) {
+        console.error("📌 خطأ داخلي في المتصفح:", error.message);
+        setErrorMessage("حدث خطأ غير متوقع.");
       } else {
         // خطأ في كود الفرونت إند نفسه
-        console.error("📌 خطأ داخلي في المتصفح:", error.message);
+        console.error("📌 خطأ داخلي في المتصفح:", error);
         setErrorMessage("حدث خطأ غير متوقع.");
       }
     } finally {
-      // 4. إيقاف المؤقت وعرض الوقت المستغرق
-      console.timeEnd("⏱️ [Login Duration]"); 
-      console.log("🏁 [Login] انتهت العملية بالكامل.");
       setIsLoading(false);
     }
   };

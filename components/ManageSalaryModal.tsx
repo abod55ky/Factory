@@ -1,20 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X, Loader2, Save } from "lucide-react";
+import type { Employee } from "@/types/employee";
+import type { Salary } from "@/types/salary";
+
+type SalaryPayload = {
+  profession: string;
+  baseSalary: number;
+  responsibilityAllowance: number;
+  productionIncentive: number;
+  transportAllowance: number;
+};
+
+type SalaryFormState = {
+  employeeId: string;
+  profession: string;
+  baseSalary: string;
+  responsibilityAllowance: string;
+  productionIncentive: string;
+  transportAllowance: string;
+};
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (employeeId: string, data: any) => void;
+  onSave: (employeeId: string, data: SalaryPayload) => void;
   isPending?: boolean;
-  initialData?: any | null;
-  employees?: any[];
-  employeesLoading?: boolean;
+  initialData?: Salary | null;
+  employees?: Employee[];
   preselectedEmployeeId?: string | undefined;
 }
 
-const defaultForm = {
+const defaultForm: SalaryFormState = {
   employeeId: "",
   profession: "",
   baseSalary: "",
@@ -23,46 +41,60 @@ const defaultForm = {
   transportAllowance: "",
 };
 
-export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, initialData, employees = [], employeesLoading = false, preselectedEmployeeId }: Props) {
-  const [form, setForm] = useState(defaultForm);
+const toText = (value: number | string | { $numberDecimal: string } | undefined) => {
+  if (value && typeof value === "object" && "$numberDecimal" in value) {
+    return value.$numberDecimal;
+  }
+  return value?.toString() ?? "";
+};
 
-  const calculateBaseSalary = (employee: any) => {
-    const raw = employee?.hourlyRate?.$numberDecimal ?? employee?.hourlyRate;
-    const hourly = Number(raw || 0);
-    return Math.round(hourly * 8 * 26).toString();
-  };
+const calculateBaseSalary = (employee: Employee) => {
+  const raw = employee.hourlyRate;
+  const hourly = Number(toText(raw) || 0);
+  return Math.round(hourly * 8 * 26).toString();
+};
 
-  useEffect(() => {
-    if (isOpen) {
-      if (initialData) {
-        setForm({
-          employeeId: initialData.employeeId || "",
-          profession: initialData.profession || "",
-          baseSalary: initialData.baseSalary?.toString() ?? "",
-          responsibilityAllowance: initialData.responsibilityAllowance?.toString() ?? "",
-          productionIncentive: initialData.productionIncentive?.toString() ?? "",
-          transportAllowance: initialData.transportAllowance?.toString() ?? "",
-        });
-      } else if (preselectedEmployeeId) {
-        // opening modal to add salary for specific employee
-        const emp = (employees || []).find((x: any) => x.employeeId === preselectedEmployeeId);
-        if (emp) {
-          setForm({
-            employeeId: preselectedEmployeeId,
-            profession: emp.department || "",
-            baseSalary: calculateBaseSalary(emp),
-            responsibilityAllowance: "",
-            productionIncentive: "",
-            transportAllowance: "",
-          });
-        } else {
-          setForm(defaultForm);
-        }
-      } else {
-        setForm(defaultForm);
-      }
+const buildForm = ({
+  initialData,
+  preselectedEmployeeId,
+  employees,
+}: {
+  initialData?: Salary | null;
+  preselectedEmployeeId?: string;
+  employees: Employee[];
+}): SalaryFormState => {
+  if (initialData) {
+    return {
+      employeeId: initialData.employeeId || "",
+      profession: initialData.profession || "",
+      baseSalary: toText(initialData.baseSalary),
+      responsibilityAllowance: toText(initialData.responsibilityAllowance),
+      productionIncentive: toText(initialData.productionIncentive),
+      transportAllowance: toText(initialData.transportAllowance),
+    };
+  }
+
+  if (preselectedEmployeeId) {
+    const employee = employees.find((entry) => entry.employeeId === preselectedEmployeeId);
+    if (employee) {
+      return {
+        employeeId: preselectedEmployeeId,
+        profession: employee.department || "",
+        baseSalary: calculateBaseSalary(employee),
+        responsibilityAllowance: "",
+        productionIncentive: "",
+        transportAllowance: "",
+      };
     }
-  }, [isOpen, initialData, preselectedEmployeeId, employees]);
+  }
+
+  return defaultForm;
+};
+
+export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, initialData, employees = [], preselectedEmployeeId }: Props) {
+  const [form, setForm] = useState<SalaryFormState>(() =>
+    buildForm({ initialData, preselectedEmployeeId, employees }),
+  );
 
   if (!isOpen) return null;
 
@@ -98,7 +130,7 @@ export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, 
               value={form.employeeId}
               onChange={(e) => {
                 const empId = e.target.value;
-                const emp = (employees || []).find((x: any) => x.employeeId === empId);
+                const emp = employees.find((entry) => entry.employeeId === empId);
 
                 if (!emp) {
                   setForm((p) => ({ ...p, employeeId: empId }));
@@ -117,7 +149,7 @@ export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, 
               disabled={!!initialData}
             >
               <option value="">اختر موظفاً...</option>
-              {employees?.map((emp: any) => (
+              {employees.map((emp) => (
                 <option key={emp.employeeId} value={emp.employeeId}>
                   {emp.employeeId} — {emp.name}
                 </option>
@@ -135,7 +167,13 @@ export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, 
               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <datalist id="profession-options">
-              {Array.from(new Set((employees || []).map((emp: any) => emp?.department).filter(Boolean))).map((department: string) => (
+              {Array.from(
+                new Set(
+                  employees
+                    .map((emp) => emp.department)
+                    .filter((department): department is string => Boolean(department)),
+                ),
+              ).map((department) => (
                 <option key={department} value={department} />
               ))}
             </datalist>

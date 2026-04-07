@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import apiClient from "@/lib/api-client";
 import { AdjustStockInput, InventoryItem, InventoryItemInput, StockMovement } from "@/types/inventory";
+import { QUERY_GC_TIME, QUERY_STALE_TIME } from "@/lib/query-cache";
 
 type InventoryListResponse = {
   products: Array<{
@@ -70,7 +71,9 @@ export const useProducts = (params?: { page?: number; limit?: number; search?: s
         pagination: res.data?.pagination,
       };
     },
-    staleTime: 1000 * 30,
+    staleTime: QUERY_STALE_TIME.STANDARD,
+    gcTime: QUERY_GC_TIME.RELAXED,
+    placeholderData: keepPreviousData,
   });
 };
 

@@ -126,7 +126,7 @@ export default function DashboardPage() {
   const departmentSummary = Object.entries(employeesStats?.byDepartment || {}).map(([name, count]) => ({ name, count: `${count} موظف`, late: '—', overtime: '—', color: 'bg-blue-50 text-blue-600' }));
 
   // fallback mock for lateEmployees if attendanceStats doesn't provide a list
-  const lateEmployees = (attendanceStats && (attendanceStats as any).topLateEmployees) || [
+  const lateEmployees = (attendanceStats && 'topLateEmployees' in attendanceStats && attendanceStats.topLateEmployees) || [
     { name: '—', dept: '—', late: '—', earlyExit: '—', initial: '-', color: 'bg-blue-500' },
   ];
 
@@ -192,7 +192,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-col">
-            {lateEmployees.map((emp: any, index: number) => (
+            {lateEmployees.map((emp: { name: string; dept: string; late: string; earlyExit: string; initial: string; color: string }, index: number) => (
               <div key={index} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0 last:pb-0 first:pt-0">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full ${emp.color || 'bg-blue-500'} text-white flex items-center justify-center text-sm font-bold shadow-sm`}>

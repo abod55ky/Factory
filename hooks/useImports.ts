@@ -15,6 +15,7 @@ const supportedForUpload = new Set<string>(['employees', 'products']);
 const toMessage = (error: unknown, fallback: string) => {
   const err = error as {
     response?: {
+      status?: number;
       data?: {
         message?: string | string[];
         error?: string | { message?: string };
@@ -22,6 +23,10 @@ const toMessage = (error: unknown, fallback: string) => {
     };
     message?: string;
   };
+
+  if (err?.response?.status === 401) {
+    return 'انتهت الجلسة أو لم يتم تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى.';
+  }
 
   const apiMessage = err?.response?.data?.message;
   if (Array.isArray(apiMessage) && apiMessage.length > 0) return apiMessage.join(' | ');
@@ -48,7 +53,7 @@ export const useImports = () => {
 
       const form = new FormData();
       form.append('file', payload.file);
-      const res = await apiClient.post(`/imports/${backendEntity}`, form, {
+      const res = await apiClient.post(`/imports/${backendEntity}/async`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return res.data;
