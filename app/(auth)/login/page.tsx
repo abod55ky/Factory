@@ -178,6 +178,7 @@ import { useRouter } from "next/navigation";
 import { User, Lock, Loader2, AlertCircle, Hexagon } from "lucide-react";
 import apiClient from "@/lib/api-client";
 import axios from "axios";
+import { setAuthSession } from "@/lib/auth-session";
 import { resetAuthVerificationCache, verifyAuthSession } from "@/lib/auth-verify";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -230,7 +231,11 @@ export default function LoginPage() {
         password: password,
       });
 
-      const { user } = response.data as { user?: unknown };
+      const { user, token } = response.data as {
+        user?: unknown;
+        token?: string;
+      };
+      setAuthSession(user ?? null, typeof token === "string" ? token : null);
       setUser((user ?? null) as { name?: string; username?: string; role?: string } | null);
       resetAuthVerificationCache();
 
@@ -255,7 +260,7 @@ export default function LoginPage() {
         console.error("📌 السيرفر لا يستجيب أبداً:", error.request);
         setErrorMessage("السيرفر لا يستجيب. قد يكون نائماً، انتظر قليلاً وجرب مرة أخرى.");
       } else if (error instanceof Error) {
-        console.error("📌 خطأ داخلي في المتصفح:", error.message);
+        console.warn("[Login] Browser/runtime error", error.message);
         setErrorMessage("حدث خطأ غير متوقع.");
       } else {
         console.error("📌 خطأ داخلي في المتصفح:", error);

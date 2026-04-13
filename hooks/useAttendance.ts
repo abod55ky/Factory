@@ -51,6 +51,10 @@ export interface AttendanceQueryParams {
   limit?: number;
 }
 
+export interface AttendanceQueryOptions {
+  enabled?: boolean;
+}
+
 export interface AttendancePayload {
   employeeId: string;
   timestamp: string;
@@ -74,6 +78,48 @@ export interface MarkAttendanceInput {
 }
 
 const HH_MM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const ATTENDANCE_MAX_LIMIT = 200;
+const ATTENDANCE_DEFAULT_LIMIT = 200;
+
+type ApiErrorShape = {
+  response?: {
+    data?: {
+      message?: string | string[];
+      error?: string;
+    };
+  };
+  message?: string;
+};
+
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+  const typed = error as ApiErrorShape;
+  const apiMessage = typed?.response?.data?.message;
+
+  if (Array.isArray(apiMessage) && apiMessage.length > 0) {
+    return apiMessage.join(" | ");
+  }
+
+  if (typeof apiMessage === "string" && apiMessage.trim()) {
+    return apiMessage;
+  }
+
+  const nestedError = typed?.response?.data?.error;
+  if (typeof nestedError === "string" && nestedError.trim()) {
+    return nestedError;
+  }
+
+  if (typeof typed?.message === "string" && typed.message.trim()) {
+    return typed.message;
+  }
+
+  return fallback;
+};
+
+const sanitizePositiveInt = (value: number | undefined, fallback: number) => {
+  if (!Number.isFinite(value)) return fallback;
+  const normalized = Math.trunc(Number(value));
+  return normalized > 0 ? normalized : fallback;
+};
 
 const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
@@ -160,9 +206,13 @@ const toDailyRecords = (records: AttendanceRecord[], startDate?: string, endDate
   return rows.sort((a, b) => `${b.date}-${b.employeeId}`.localeCompare(`${a.date}-${a.employeeId}`));
 };
 
-export const useAttendance = (params?: AttendanceQueryParams) => {
+export const useAttendance = (params?: AttendanceQueryParams, options?: AttendanceQueryOptions) => {
   const queryClient = useQueryClient();
   const fallbackToday = getLocalDateString();
+  const requestedPage = sanitizePositiveInt(params?.page, 1);
+  const requestedLimit = sanitizePositiveInt(params?.limit, ATTENDANCE_DEFAULT_LIMIT);
+  const perRequestLimit = Math.min(requestedLimit, ATTENDANCE_MAX_LIMIT);
+  const hasExplicitPage = Number.isFinite(params?.page) && Number(params?.page) > 0;
 
   const requestDate = params?.date ?? (!params?.startDate && !params?.endDate ? fallbackToday : undefined);
   const resolvedStartDate = params?.startDate ?? requestDate;
@@ -175,26 +225,65 @@ export const useAttendance = (params?: AttendanceQueryParams) => {
       requestDate || "all-dates",
       resolvedStartDate || "no-start",
       resolvedEndDate || "no-end",
-      params?.page || 1,
-      params?.limit || 300,
+      requestedPage,
+      requestedLimit,
     ],
     queryFn: async () => {
-      const requestParams = {
-        employeeId: params?.employeeId,
-        date: requestDate,
-        page: params?.page,
-        limit: params?.limit ?? 300,
+      const fetchPage = async (page: number) => {
+        return await apiClient.get("/attendance", {
+          params: {
+            employeeId: params?.employeeId,
+            date: requestDate,
+            page,
+            limit: perRequestLimit,
+          },
+        });
       };
 
-      const res = await apiClient.get("/attendance", { params: requestParams });
-      const records: AttendanceRecord[] = Array.isArray(res.data?.records) ? res.data.records : [];
+      try {
+        if (requestedLimit <= ATTENDANCE_MAX_LIMIT || hasExplicitPage) {
+          const res = await fetchPage(requestedPage);
+          const records: AttendanceRecord[] = Array.isArray(res.data?.records) ? res.data.records : [];
 
-      return {
-        records,
-        pagination: res.data?.pagination,
-        dailyRecords: toDailyRecords(records, resolvedStartDate, resolvedEndDate),
-      };
+          return {
+            records,
+            pagination: res.data?.pagination,
+            dailyRecords: toDailyRecords(records, resolvedStartDate, resolvedEndDate),
+          };
+        }
+
+        const aggregatedRecords: AttendanceRecord[] = [];
+        let pageCursor = requestedPage;
+        let lastPagination: AttendanceListResponse["pagination"] | undefined;
+
+        while (true) {
+          const res = await fetchPage(pageCursor);
+          const pageRecords: AttendanceRecord[] = Array.isArray(res.data?.records) ? res.data.records : [];
+          aggregatedRecords.push(...pageRecords);
+          lastPagination = res.data?.pagination;
+
+          const totalPages = Number(lastPagination?.pages || pageCursor);
+          const isLastPage = pageCursor >= totalPages;
+          const reachedRequestedSize = aggregatedRecords.length >= requestedLimit;
+
+          if (isLastPage || reachedRequestedSize || pageRecords.length === 0) {
+            break;
+          }
+
+          pageCursor += 1;
+        }
+
+        const records = aggregatedRecords.slice(0, requestedLimit);
+        return {
+          records,
+          pagination: lastPagination,
+          dailyRecords: toDailyRecords(records, resolvedStartDate, resolvedEndDate),
+        };
+      } catch (error) {
+        throw new Error(getApiErrorMessage(error, "فشل تحميل الحضور"));
+      }
     },
+    enabled: options?.enabled ?? true,
     staleTime: QUERY_STALE_TIME.FAST,
     gcTime: QUERY_GC_TIME.RELAXED,
   });
@@ -300,7 +389,7 @@ export const useAttendance = (params?: AttendanceQueryParams) => {
       toast.success("تم تسجيل الحضور بنجاح");
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "فشل تسجيل الحضور";
+      const message = getApiErrorMessage(error, "فشل تسجيل الحضور");
       toast.error(message);
     },
   });
