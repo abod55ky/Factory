@@ -4,17 +4,20 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, Users, ClipboardList, 
-  Wallet, Box, FileInput, Settings, Factory, LogOut
+  Wallet, Box, FileInput, Settings, Factory, LogOut, ReceiptText, HandCoins, Gift
 } from 'lucide-react';
 import { resetAuthVerificationCache } from '@/lib/auth-verify';
 import apiClient from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
 
 const menuItems = [
-  { name: 'لوحة التحكم', icon: LayoutDashboard, href: '/home' },
+  { name: 'لوحة التحكم', icon: LayoutDashboard, href: '/dashboard' },
   { name: 'الموظفون', icon: Users, href: '/employees', roles: ['admin', 'hr', 'manager'] },
   { name: 'سجل الحضور', icon: ClipboardList, href: '/attendance', roles: ['admin', 'hr', 'manager'] },
-  { name: 'الرواتب', icon: Wallet, href: '/salaries', roles: ['admin', 'finance', 'manager'] },
+  { name: 'الرواتب', icon: Wallet, href: '/payroll', roles: ['admin', 'finance', 'manager'] },
+  { name: 'السلف', icon: HandCoins, href: '/finances/advances', roles: ['admin', 'finance', 'manager'] },
+  { name: 'المكافآت', icon: Gift, href: '/finances/bonuses', roles: ['admin', 'finance', 'manager'] },
+  { name: 'قسائم القبض', icon: ReceiptText, href: '/vouchers', roles: ['admin', 'finance', 'manager'] },
   { name: 'المخزون', icon: Box, href: '/inventory', roles: ['admin', 'warehouse', 'manager'] },
   { name: 'استيراد البيانات', icon: FileInput, href: '/importData', roles: ['admin', 'manager'] },
   { name: 'الإعدادات', icon: Settings, href: '/settings', roles: ['admin'] },
@@ -59,11 +62,12 @@ export default function Sidebar() {
       {/* الروابط */}
       <nav className="flex-1 space-y-1">
         {visibleMenuItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group ${
                 isActive 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 

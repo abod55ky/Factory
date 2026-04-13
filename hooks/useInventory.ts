@@ -28,6 +28,77 @@ type StockBySkuResponse = {
   }>;
 };
 
+const STOCK_CACHE_TTL_MS = 45_000;
+const STOCK_CACHE_MAX_ITEMS = 1_000;
+
+const stockQuantityCache = new Map<string, { quantity: number; expiresAt: number }>();
+const stockQuantityInFlight = new Map<string, Promise<number>>();
+
+const now = () => Date.now();
+
+const pruneStockCache = () => {
+  const currentTime = now();
+
+  for (const [sku, value] of stockQuantityCache.entries()) {
+    if (value.expiresAt <= currentTime) {
+      stockQuantityCache.delete(sku);
+    }
+  }
+
+  while (stockQuantityCache.size > STOCK_CACHE_MAX_ITEMS) {
+    const oldestKey = stockQuantityCache.keys().next().value as string | undefined;
+    if (!oldestKey) break;
+    stockQuantityCache.delete(oldestKey);
+  }
+};
+
+const getCachedStockQuantity = (sku: string): number | null => {
+  const cached = stockQuantityCache.get(sku);
+  if (!cached) return null;
+
+  if (cached.expiresAt <= now()) {
+    stockQuantityCache.delete(sku);
+    return null;
+  }
+
+  return cached.quantity;
+};
+
+const fetchStockQuantityBySku = async (sku: string): Promise<number> => {
+  const cached = getCachedStockQuantity(sku);
+  if (cached !== null) {
+    return cached;
+  }
+
+  const inFlight = stockQuantityInFlight.get(sku);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const request = (async () => {
+    try {
+      const stockRes = await apiClient.get<StockBySkuResponse>(`/inventory/stock/${sku}`);
+      const levels = Array.isArray(stockRes.data?.stockLevels) ? stockRes.data.stockLevels : [];
+      const quantity = levels.reduce((sum, level) => sum + Number(level.available ?? level.quantity ?? 0), 0);
+
+      stockQuantityCache.set(sku, {
+        quantity,
+        expiresAt: now() + STOCK_CACHE_TTL_MS,
+      });
+      pruneStockCache();
+
+      return quantity;
+    } catch {
+      return 0;
+    } finally {
+      stockQuantityInFlight.delete(sku);
+    }
+  })();
+
+  stockQuantityInFlight.set(sku, request);
+  return request;
+};
+
 const toInventoryItem = (product: InventoryListResponse["products"][number], quantity: number): InventoryItem => ({
   id: product.id,
   name: product.name,
@@ -50,16 +121,18 @@ export const useProducts = (params?: { page?: number; limit?: number; search?: s
       const res = await apiClient.get<InventoryListResponse>("/inventory/products", { params });
       const products = Array.isArray(res.data?.products) ? res.data.products : [];
 
+      if (products.length === 0) {
+        return {
+          products,
+          items: [],
+          pagination: res.data?.pagination,
+        };
+      }
+
       const stockResponses = await Promise.all(
         products.map(async (product) => {
-          try {
-            const stockRes = await apiClient.get<StockBySkuResponse>(`/inventory/stock/${product.sku}`);
-            const levels = Array.isArray(stockRes.data?.stockLevels) ? stockRes.data.stockLevels : [];
-            const quantity = levels.reduce((sum, level) => sum + Number(level.available ?? level.quantity ?? 0), 0);
-            return [product.sku, quantity] as const;
-          } catch {
-            return [product.sku, 0] as const;
-          }
+          const quantity = await fetchStockQuantityBySku(product.sku);
+          return [product.sku, quantity] as const;
         }),
       );
 
