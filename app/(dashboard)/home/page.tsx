@@ -96,6 +96,7 @@ export default function DashboardPage() {
           
           {/* ملخص الأقسام */}
           <div className="bg-slate-50/40 rounded-4xl p-6 border border-slate-100">
+          <div className="bg-slate-50/40 rounded-4xl p-6 border border-slate-100">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
                <h2 className="text-xl font-black text-[#00bba7]">كفاءة الأقسام</h2>
                <Users className="text-[#E7C873]" size={24} />
@@ -122,6 +123,7 @@ export default function DashboardPage() {
           </div>
 
           {/* سجل التأخير */}
+          <div className="bg-slate-50/40 rounded-4xl p-6 border border-slate-100">
           <div className="bg-slate-50/40 rounded-4xl p-6 border border-slate-100">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
               <h2 className="text-xl font-black text-[#00bba7]">تنبيهات الحضور اليومية</h2>

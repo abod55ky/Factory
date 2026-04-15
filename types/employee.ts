@@ -1,19 +1,3 @@
-// // تعريف شكل بيانات الموظف بناءً على كود الباك إند
-// export interface Employee {
-//   _id: string;               // معرف قاعدة البيانات
-//   employeeId: string;        // كود الموظف (مثلاً EMP001)
-//   name: string;              // الاسم
-//   email?: string;
-//   phone?: string;
-//   hourlyRate: {              // الباك إند يرسل الراتب بهذا الشكل (Decimal)
-//     $numberDecimal: string; 
-//   } | number;                // أو رقم عادي
-//   currency: string;
-//   department: string;        // القسم (Warehouse, HR, إلخ)
-//   status: 'active' | 'inactive' | 'on_leave' | 'terminated';
-//   scheduledStart: string;    // وقت البدء
-//   scheduledEnd: string;      // وقت الانتهاء
-// }
 
 export interface Employee {
   id?: string;
@@ -21,7 +5,11 @@ export interface Employee {
   employeeId: string; // مثل EMP001
   name: string;
   email?: string;
-  phone?: string;
+  phone?: string; // Legacy alias kept for backward compatibility.
+  mobile?: string | null;
+  nationalId?: string | null;
+  employmentStartDate?: string | null;
+  terminationDate?: string | null;
   department?: string;
   profession?: string;
   roleId?: string;

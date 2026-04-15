@@ -106,6 +106,7 @@ export default function LoginPage() {
 
       {/* الحاوية الرئيسية (البطاقة المقسمة) */}
       <div className="bg-white rounded-4xl shadow-2xl w-full max-w-5xl flex overflow-hidden relative z-10 min-h-137.5">
+      <div className="bg-white rounded-4xl shadow-2xl w-full max-w-5xl flex overflow-hidden relative z-10 min-h-137.5">
         
         {/* القسم الأيمن (الترحيب الملون - يظهر في الشاشات المتوسطة والكبيرة فقط) */}
         <div className="hidden md:flex md:w-5/12 bg-teal-500 flex-col items-center justify-center p-12 text-center relative overflow-hidden">

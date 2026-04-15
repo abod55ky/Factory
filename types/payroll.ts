@@ -32,3 +32,21 @@ export interface CalculatePayrollInput {
   periodEnd: string;
   gracePeriodMinutes?: number | string;
 }
+
+export interface PayrollReportTotals {
+  totalGrossPay: number;
+  totalDeductions: number;
+  totalNetPay: number;
+}
+
+export interface PayrollReportResponse {
+  month: string;
+  period: {
+    startDate: string;
+    endDate: string;
+  };
+  runsCount: number;
+  latestRun: PayrollRun | null;
+  totals: PayrollReportTotals;
+  items: PayrollItem[];
+}

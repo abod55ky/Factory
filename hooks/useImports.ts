@@ -10,7 +10,7 @@ const entityToBackend: Record<ImportEntity, 'employees' | 'products' | 'attendan
   attendance: 'attendance',
 };
 
-const supportedForUpload = new Set<string>(['employees', 'products']);
+const supportedForUpload = new Set<string>(['employees', 'products', 'attendance']);
 
 const toMessage = (error: unknown, fallback: string) => {
   const err = error as {
@@ -53,9 +53,21 @@ export const useImports = () => {
 
       const form = new FormData();
       form.append('file', payload.file);
-      const res = await apiClient.post(`/imports/${backendEntity}/async`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+
+      const endpoint = backendEntity === 'attendance' ? '/attendance/upload' : `/imports/${backendEntity}/async`;
+      const res = await apiClient.post(endpoint, form);
+
+      if (backendEntity === 'attendance') {
+        const payloadData = res.data || {};
+        return {
+          ...payloadData,
+          successRows: Number(payloadData.importedRows || 0),
+          errorRows: Number(payloadData.failedRows || 0),
+          totalRows: Number(payloadData.totalRows || 0),
+          jobId: payloadData.jobId || null,
+        };
+      }
+
       return res.data;
     },
   });
@@ -67,11 +79,19 @@ export const useImports = () => {
         throw new Error('التحقق لهذا القسم غير مدعوم حالياً من الخادم');
       }
 
+      if (backendEntity === 'attendance') {
+        // Attendance import endpoint performs row-level validation during upload.
+        return {
+          totalRows: 0,
+          errorRows: 0,
+          successRows: 0,
+          errors: [],
+        };
+      }
+
       const form = new FormData();
       form.append('file', payload.file);
-      const res = await apiClient.post(`/imports/${backendEntity}/validate`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await apiClient.post(`/imports/${backendEntity}/validate`, form);
       return res.data;
     },
   });
