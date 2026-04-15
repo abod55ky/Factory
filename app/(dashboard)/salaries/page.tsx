@@ -80,15 +80,20 @@ export default function SalariesPage() {
 
   const [activeTab, setActiveTab] = useState<FinancialTabKey>("salary-config");
 
+  const activeEmployees = useMemo(
+    () => (employees || []).filter((employee) => employee.status !== "terminated"),
+    [employees],
+  );
+
   const employeeNameMap = useMemo(() => {
     const map: Record<string, string> = {};
-    if (Array.isArray(employees)) {
-      for (const emp of employees) {
+    if (Array.isArray(activeEmployees)) {
+      for (const emp of activeEmployees) {
         if (emp?.employeeId) map[emp.employeeId] = emp.name || emp.employeeId;
       }
     }
     return map;
-  }, [employees]);
+  }, [activeEmployees]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selected, setSelected] = useState<Salary | null>(null);
@@ -108,9 +113,9 @@ export default function SalariesPage() {
   // build maps and union of ids so we show employees without salary too
   const employeeMap = useMemo(() => {
     const m = new Map<string, Employee>();
-    (employees || []).forEach((e) => { if (e?.employeeId) m.set(e.employeeId, e); });
+    (activeEmployees || []).forEach((e) => { if (e?.employeeId) m.set(e.employeeId, e); });
     return m;
-  }, [employees]);
+  }, [activeEmployees]);
 
   const salaryMap = useMemo(() => {
     const m = new Map<string, Salary>();
@@ -119,11 +124,10 @@ export default function SalariesPage() {
   }, [salaries]);
 
   const allIds = useMemo(() => {
-    const set = new Set<string>();
-    (employees || []).forEach((e) => e?.employeeId && set.add(e.employeeId));
-    (salaries || []).forEach((s) => s?.employeeId && set.add(s.employeeId));
-    return Array.from(set);
-  }, [employees, salaries]);
+    return activeEmployees
+      .map((employee) => employee.employeeId)
+      .filter((employeeId): employeeId is string => Boolean(employeeId));
+  }, [activeEmployees]);
 
   const attendanceDaysMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -147,9 +151,10 @@ export default function SalariesPage() {
   const finalPayrollRows = useMemo(() => {
     return allIds.map((employeeId: string) => {
       const salary = salaryMap.get(employeeId);
+      const employee = employeeMap.get(employeeId);
       const attendanceDays = attendanceDaysMap.get(employeeId) || 0;
 
-      const baseSalary = toNumber(salary?.baseSalary);
+      const baseSalary = salary ? toNumber(salary.baseSalary) : toNumber(employee?.hourlyRate);
       const proratedBase = (baseSalary / 26) * attendanceDays;
 
 const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === employeeId);
@@ -172,7 +177,7 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
         net,
       };
     });
-  }, [allIds, salaryMap, attendanceDaysMap, bonuses, advances, employeeNameMap]);
+  }, [allIds, salaryMap, employeeMap, attendanceDaysMap, bonuses, advances, employeeNameMap]);
 
   const handleSave = (employeeId: string, payload: SalaryPayload) => {
     if (!employeeId) return toast.error("يرجى إدخال كود الموظف");
@@ -310,17 +315,20 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
 
                   if (!s) {
                     // Employee exists but no salary record
+                    const baseFromEmployee = toNumber(emp?.hourlyRate);
+                    const monthlyFixedTotal = baseFromEmployee;
+
                     return (
                       <tr key={id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
                         <td className="p-4 font-mono text-center">{id}</td>
                         <td className="p-4 text-center">{employeesLoading ? "جارٍ التحميل..." : (emp?.name ?? "موظف محذوف")}</td>
-                        <td className="p-4 text-center">{emp?.profession ?? "—"}</td>
-                        <td className="p-4 text-center">—</td>
-                        <td className="p-4 text-center">—</td>
-                        <td className="p-4 font-bold text-center">لم يتم ضبط الراتب</td>
+                        <td className="p-4 text-center">{emp?.profession ?? emp?.department ?? "—"}</td>
+                        <td className="p-4 text-center">{baseFromEmployee > 0 ? baseFromEmployee.toLocaleString() : "—"}</td>
+                        <td className="p-4 text-center">0</td>
+                        <td className="p-4 font-bold text-center">{monthlyFixedTotal > 0 ? monthlyFixedTotal.toLocaleString() : "لم يتم ضبط الراتب"}</td>
                         <td className="p-4 text-center">
                           <div className="flex items-center gap-3 justify-center">
-                            <button onClick={() => openFor(null, id)} className="px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-95">إضافة راتب</button>
+                            <button onClick={() => openFor(null, id)} className="px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-95">تعديل</button>
                           </div>
                         </td>
                       </tr>
@@ -575,7 +583,7 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
           onClose={() => setIsModalOpen(false)}
           initialData={selected}
           preselectedEmployeeId={preselectedEmployeeId}
-          employees={employees}
+          employees={activeEmployees}
           isPending={updateSalary.isPending}
           onSave={handleSave}
         />
@@ -589,7 +597,7 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
             setIsAdvanceModalOpen(false);
             setSelectedAdvance(null);
           }}
-          employees={Array.isArray(employees) ? employees : []}
+          employees={Array.isArray(activeEmployees) ? activeEmployees : []}
           initialData={selectedAdvance}
           isPending={createAdvance.isPending || updateAdvance.isPending}
           onSave={(form) => {
@@ -630,7 +638,7 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
             setIsBonusModalOpen(false);
             setSelectedBonus(null);
           }}
-          employees={Array.isArray(employees) ? employees : []}
+          employees={Array.isArray(activeEmployees) ? activeEmployees : []}
           initialData={selectedBonus}
           isPending={createBonus.isPending || updateBonus.isPending}
           onSave={(form) => {

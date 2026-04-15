@@ -131,6 +131,17 @@ import axios from "axios";
 import type { Employee } from "@/types/employee";
 import { QUERY_GC_TIME, QUERY_STALE_TIME } from "@/lib/query-cache";
 
+export const MAX_HOURLY_RATE = 99_999_999.99;
+
+export type UseEmployeesOptions = {
+  status?: Employee["status"];
+  includeTerminated?: boolean;
+  department?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
 type ApiErrorBody = {
   message?: string | string[];
   error?: { message?: string | string[] };
@@ -161,24 +172,92 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-const toHourlyRateNumber = (value: Employee["hourlyRate"]) => {
+export const toHourlyRateNumber = (value: Employee["hourlyRate"]) => {
   if (value && typeof value === "object" && "$numberDecimal" in value) {
     return Number(value.$numberDecimal || 0);
+  }
+  if (typeof value === "string") {
+    const normalized = value.replace(/,/g, "").trim();
+    return Number(normalized || 0);
   }
   return Number(value || 0);
 };
 
-export const useEmployees = () => {
+export const assertHourlyRate = (hourlyRate: number) => {
+  if (!Number.isFinite(hourlyRate) || hourlyRate <= 0) {
+    throw new Error("أجر الساعة يجب أن يكون رقمًا موجبًا أكبر من الصفر");
+  }
+
+  if (hourlyRate > MAX_HOURLY_RATE) {
+    throw new Error(`أجر الساعة كبير جدًا (الحد الأقصى ${MAX_HOURLY_RATE})`);
+  }
+};
+
+export const filterEmployeesByOptions = (employees: Employee[], options?: UseEmployeesOptions) => {
+  const shouldExcludeTerminated = !options?.status && options?.includeTerminated !== true;
+
+  if (options?.status) {
+    return employees.filter((employee) => employee.status === options.status);
+  }
+
+  if (shouldExcludeTerminated) {
+    return employees.filter((employee) => employee.status !== "terminated");
+  }
+
+  return employees;
+};
+
+export const useEmployees = (options?: UseEmployeesOptions) => {
   const queryClient = useQueryClient();
+
+  const safeLimit = Math.min(Math.max(options?.limit ?? 200, 1), 200);
+
+  const shouldExcludeTerminated = !options?.status && options?.includeTerminated !== true;
 
   // 1. جلب الموظفين
   const query = useQuery<Employee[]>({
-    queryKey: ["employees"],
+    queryKey: [
+      "employees",
+      options?.status || "all-statuses",
+      shouldExcludeTerminated ? "exclude-terminated" : "include-terminated",
+      options?.department || "all-departments",
+      options?.search || "no-search",
+      options?.page || 1,
+      safeLimit,
+    ],
     queryFn: async () => {
-      const response = await apiClient.get("/employees");
-      const employeesData = response.data?.employees;
-      if (Array.isArray(employeesData)) return employeesData;
-      return [];
+      const requestEmployees = async (page?: number) => {
+        const params = {
+          ...(options?.status ? { status: options.status } : {}),
+          ...(options?.department ? { department: options.department } : {}),
+          ...(options?.search ? { search: options.search } : {}),
+          ...(page ? { page } : {}),
+          limit: safeLimit,
+        };
+
+        return apiClient.get("/employees", { params });
+      };
+
+      const firstPage = options?.page || 1;
+      const response = await requestEmployees(firstPage);
+
+      let employeesData: Employee[] = Array.isArray(response.data?.employees)
+        ? response.data.employees
+        : [];
+
+      const pagination = response.data?.pagination;
+
+      if (!options?.page && pagination?.pages && pagination.pages > firstPage) {
+        for (let page = firstPage + 1; page <= pagination.pages; page += 1) {
+          const pageResponse = await requestEmployees(page);
+          const pageEmployees: Employee[] = Array.isArray(pageResponse.data?.employees)
+            ? pageResponse.data.employees
+            : [];
+          employeesData = employeesData.concat(pageEmployees);
+        }
+      }
+
+  return filterEmployeesByOptions(employeesData, options);
     },
     staleTime: QUERY_STALE_TIME.STANDARD,
     gcTime: QUERY_GC_TIME.RELAXED,
@@ -187,7 +266,9 @@ export const useEmployees = () => {
   // 2. إضافة موظف
   const createMutation = useMutation({
     mutationFn: async (newEmployee: Employee) => {
-      const payload = { ...newEmployee, hourlyRate: toHourlyRateNumber(newEmployee.hourlyRate) };
+      const hourlyRate = toHourlyRateNumber(newEmployee.hourlyRate);
+      assertHourlyRate(hourlyRate);
+      const payload = { ...newEmployee, hourlyRate };
       return await apiClient.post("/employees", payload);
     },
     onSuccess: () => {
@@ -206,9 +287,16 @@ export const useEmployees = () => {
   // 3. تعديل موظف (استخدمنا employeeId بناءً على الباك إند)
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Employee> }) => {
+      const normalizedHourlyRate =
+        data.hourlyRate !== undefined ? toHourlyRateNumber(data.hourlyRate) : undefined;
+
+      if (normalizedHourlyRate !== undefined) {
+        assertHourlyRate(normalizedHourlyRate);
+      }
+
       const payload = {
         ...data,
-        ...(data.hourlyRate !== undefined ? { hourlyRate: toHourlyRateNumber(data.hourlyRate) } : {}),
+        ...(normalizedHourlyRate !== undefined ? { hourlyRate: normalizedHourlyRate } : {}),
       };
       return await apiClient.put(`/employees/${id}`, payload);
     },
@@ -243,3 +331,5 @@ export const useEmployees = () => {
     deleteEmployee: deleteMutation 
   };
 };
+
+export const useResignedEmployees = () => useEmployees({ status: "terminated", includeTerminated: true });

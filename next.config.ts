@@ -71,8 +71,21 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
+const upstreamApiBase = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://werehouse-production-f4f4.up.railway.app/api"
+).replace(/\/+$/, "");
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${upstreamApiBase}/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {
