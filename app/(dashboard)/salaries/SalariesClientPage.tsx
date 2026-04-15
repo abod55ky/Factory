@@ -83,21 +83,18 @@ export default function SalariesPage() {
   const requestedTab = searchParams.get("tab");
   const { data: salaries = [], isLoading, isError, error, updateSalary, deleteSalary } = useSalaries();
   const { data: employees = [], isLoading: employeesLoading } = useEmployees({
-    fetchAll: true,
     limit: 200,
     status: "active",
   });
   const { data: advances = [], createAdvance, updateAdvance, deleteAdvance } = useAdvances();
   const { calculatePayroll } = usePayroll();
   const activeTab = toFinancialTab(requestedTab);
-  const shouldLoadAttendanceForPayroll = activeTab === "final-payroll";
 
   const [period, setPeriod] = useState(getLocalMonth());
   const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBounds(period), [period]);
   const { data: bonuses = [], createBonus, updateBonus, deleteBonus } = useBonuses({ period });
   const { data: attendanceData } = useAttendance(
-    { startDate: monthStart, endDate: monthEnd, limit: 2000 },
-    { enabled: shouldLoadAttendanceForPayroll },
+    { startDate: monthStart, endDate: monthEnd, limit: 2000 }
   );
 
   const handleTabChange = (tab: FinancialTabKey) => {

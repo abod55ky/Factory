@@ -16,6 +16,8 @@ let inFlightVerification: Promise<VerifyResult> | null = null;
 let cachedResult: VerifyResult | null = null;
 let cacheExpiresAt = 0;
 let blockedUntil = 0;
+let cacheGeneration = 0;
+let latestVerificationId = 0;
 
 const now = () => Date.now();
 
@@ -26,6 +28,7 @@ export const resetAuthVerificationCache = () => {
   cachedResult = null;
   cacheExpiresAt = 0;
   blockedUntil = 0;
+  cacheGeneration += 1;
 };
 
 export const verifyAuthSession = async (options?: { force?: boolean }) => {
@@ -47,7 +50,10 @@ export const verifyAuthSession = async (options?: { force?: boolean }) => {
     return inFlightVerification;
   }
 
-  inFlightVerification = (async () => {
+  const generationAtStart = cacheGeneration;
+  const verificationId = ++latestVerificationId;
+
+  const verificationPromise: Promise<VerifyResult> = (async () => {
     try {
       await apiClient.get("/auth/me", {
         headers: {
@@ -55,25 +61,38 @@ export const verifyAuthSession = async (options?: { force?: boolean }) => {
           Pragma: "no-cache",
         },
       });
-      cachedResult = { authorized: true };
-      cacheExpiresAt = now() + SUCCESS_TTL_MS;
-      blockedUntil = 0;
+
+      if (generationAtStart === cacheGeneration) {
+        cachedResult = { authorized: true };
+        cacheExpiresAt = now() + SUCCESS_TTL_MS;
+        blockedUntil = 0;
+      }
+
       return { authorized: true };
     } catch (error: unknown) {
       const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-      cachedResult = { authorized: false, status };
-      cacheExpiresAt = now() + FAILURE_TTL_MS;
 
-      if (status === 429) {
-        blockedUntil = now() + RATE_LIMIT_COOLDOWN_MS;
-        cachedResult = { authorized: false, status, rateLimited: true };
+      if (generationAtStart === cacheGeneration) {
+        cachedResult = { authorized: false, status };
+        cacheExpiresAt = now() + FAILURE_TTL_MS;
+
+        if (status === 429) {
+          blockedUntil = now() + RATE_LIMIT_COOLDOWN_MS;
+          cachedResult = { authorized: false, status, rateLimited: true };
+        }
       }
 
-      return cachedResult;
+      return status === 429
+        ? { authorized: false, status, rateLimited: true }
+        : { authorized: false, status };
     } finally {
-      inFlightVerification = null;
+      if (generationAtStart === cacheGeneration && verificationId === latestVerificationId) {
+        inFlightVerification = null;
+      }
     }
   })();
 
-  return inFlightVerification;
+  inFlightVerification = verificationPromise;
+
+  return verificationPromise;
 };

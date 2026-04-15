@@ -22,6 +22,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [checking, setChecking] = useState(true);
   const status = useAuthStore((state) => state.status);
+  const currentUser = useAuthStore((state) => state.user);
   const hasAnyRole = useAuthStore((state) => state.hasAnyRole);
   const setStatus = useAuthStore((state) => state.setStatus);
   const clear = useAuthStore((state) => state.clear);
@@ -32,23 +33,39 @@ export default function DashboardLayout({
     const verifySession = async () => {
       const result = await verifyAuthSession();
 
-      if (result.authorized) {
-        if (active) {
-          setStatus("authenticated");
-          setChecking(false);
-        }
+      if (!active) {
         return;
       }
 
-      if (result.status === 401 || result.status === 403) {
-        setStatus("unauthenticated");
-        clear();
+      if (result.authorized) {
+        setStatus("authenticated");
+        setChecking(false);
+        return;
       }
 
-      if (active) {
+      const isHardAuthFailure = result.status === 401 || result.status === 403;
+      if (isHardAuthFailure) {
+        setStatus("unauthenticated");
+        clear();
         setChecking(false);
         router.replace("/login");
+        return;
       }
+
+      const isTransientFailure =
+        result.status === 429
+        || result.status === 503
+        || result.status === 504
+        || typeof result.status === "undefined";
+
+      if (isTransientFailure && currentUser) {
+        setStatus("authenticated");
+        setChecking(false);
+        return;
+      }
+
+      setChecking(false);
+      router.replace("/login");
     };
 
     verifySession();
@@ -56,7 +73,7 @@ export default function DashboardLayout({
     return () => {
       active = false;
     };
-  }, [router, clear, setStatus]);
+  }, [router, clear, currentUser, setStatus]);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -88,7 +105,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-        <main className="flex-1 min-w-0">{children}</main>
+      <main className="flex-1 min-w-0">{children}</main>
     </div>
   );
 }

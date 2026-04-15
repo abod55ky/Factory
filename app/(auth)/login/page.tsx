@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, Lock, Loader2, AlertCircle, Hexagon, Eye, EyeOff } from "lucide-react";
 import apiClient from "@/lib/api-client";
 import axios from "axios";
 import { resetAuthVerificationCache, verifyAuthSession } from "@/lib/auth-verify";
 import { useAuthStore } from "@/stores/auth-store";
-import { setAuthAccessToken } from "@/lib/auth-session";
+import { clearAuthAccessToken, setAuthAccessToken } from "@/lib/auth-session";
 
 export default function LoginPage() {
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
   const setStatus = useAuthStore((state) => state.setStatus);
   const clear = useAuthStore((state) => state.clear);
+  const skipInitialSessionProbeRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -21,11 +22,13 @@ export default function LoginPage() {
     const checkExistingSession = async () => {
       const result = await verifyAuthSession();
 
+      if (!active || skipInitialSessionProbeRef.current) {
+        return;
+      }
+
       if (result.authorized) {
-        if (active) {
-          setStatus("authenticated");
-          router.replace("/home");
-        }
+        setStatus("authenticated");
+        router.replace("/home");
         return;
       }
 
@@ -50,13 +53,25 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    skipInitialSessionProbeRef.current = true;
     setIsLoading(true);
     setErrorMessage("");
 
+    const normalizedUsername = username.trim();
+    const normalizedPassword = password;
+
+    if (!normalizedUsername || !normalizedPassword) {
+      setErrorMessage("يرجى إدخال اسم المستخدم وكلمة المرور.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await apiClient.post("/auth/login", {
-        username: username,
-        password: password,
+        username: normalizedUsername,
+        password: normalizedPassword,
+      }, {
+        timeout: 15_000,
       });
 
       const authResponse = response.data as {
@@ -67,23 +82,18 @@ export default function LoginPage() {
       };
       const token = authResponse.token || authResponse.accessToken || authResponse.access_token;
       setAuthAccessToken(token);
-  setUser((authResponse.user ?? null) as { name?: string; username?: string; role?: string } | null);
+      setUser((authResponse.user ?? null) as { name?: string; username?: string; role?: string } | null);
       resetAuthVerificationCache();
 
-      const sessionCheck = await verifyAuthSession({ force: true });
-      if (!sessionCheck.authorized) {
-        setStatus("unauthenticated");
-        clear();
-        setErrorMessage("تم تسجيل الدخول لكن لم يتم تثبيت جلسة آمنة. تحقق من إعدادات الكوكيز في الخادم.");
-        return;
-      }
-
       setStatus("authenticated");
-      router.push("/home");
+      router.replace("/home");
  
      } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: string }>(error) && error.response) {
-        setErrorMessage(error.response.data?.message || "بيانات الدخول غير صحيحة");
+        const serverMessage = error.response.data?.message;
+        setErrorMessage(typeof serverMessage === "string" && serverMessage.trim()
+          ? serverMessage
+          : "بيانات الدخول غير صحيحة");
       } else if (axios.isAxiosError(error) && error.request) {
           setErrorMessage("تعذر الوصول لخادم المصادقة. تحقق من تشغيل الخادم الخلفي وإعدادات CORS/Proxy.");
       } else if (error instanceof Error) {
@@ -91,6 +101,14 @@ export default function LoginPage() {
       } else {
         setErrorMessage("حدث خطأ غير متوقع.");
       }
+
+      setStatus("unauthenticated");
+      clearAuthAccessToken();
+      resetAuthVerificationCache();
+      clear();
+
+      // allow session probe again after a failed login attempt
+      skipInitialSessionProbeRef.current = false;
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +123,6 @@ export default function LoginPage() {
       <div className="absolute -top-20 -right-20 w-80 h-80 bg-rose-400 rounded-full opacity-40 blur-2xl"></div>
 
       {/* الحاوية الرئيسية (البطاقة المقسمة) */}
-      <div className="bg-white rounded-4xl shadow-2xl w-full max-w-5xl flex overflow-hidden relative z-10 min-h-137.5">
       <div className="bg-white rounded-4xl shadow-2xl w-full max-w-5xl flex overflow-hidden relative z-10 min-h-137.5">
         
         {/* القسم الأيمن (الترحيب الملون - يظهر في الشاشات المتوسطة والكبيرة فقط) */}

@@ -8,7 +8,6 @@ import {
 import { DEFAULT_API_URL, normalizeApiUrl } from "@/lib/api-url";
 
 const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL, DEFAULT_API_URL);
-const USE_API_PROXY = /^https?:\/\//i.test(API_URL);
 const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
 const SESSION_CHECK_TIMEOUT_MS = IS_DEVELOPMENT ? 600 : 2_500;
 const SESSION_SUCCESS_CACHE_TTL_MS = 10_000;
@@ -161,10 +160,6 @@ const setCachedSessionResult = (cacheKey: string, result: SessionCheckResult) =>
 };
 
 const toAbsoluteBackendUrl = (request: NextRequest, path: string) => {
-  if (USE_API_PROXY) {
-    return new URL(`/backend-api${path}`, request.url).toString();
-  }
-
   if (/^https?:\/\//i.test(API_URL)) {
     return `${API_URL}${path}`;
   }
