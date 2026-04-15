@@ -550,7 +550,7 @@ export default function ImportPage() {
       const csvBody = rowsToCsv(preview.headers, editedRows);
       const baseName = preview.fileName.replace(/\.(xlsx|xls|xlsm|xlsb|ods|csv|tsv|txt|json)$/i, "");
       const payloadFile = new File([csvBody], `${baseName || preview.entity}-edited.csv`, {
-        type: "text/csv;charset=utf-8;",
+        type: "text/csv",
       });
 
       setStatus("جاري التحقق النهائي من النسخة المعدلة...");

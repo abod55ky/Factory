@@ -8,6 +8,7 @@ import { useEmployees } from "@/hooks/useEmployees";
 type TableStatus = "present" | "late" | "absent";
 
 const HH_MM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const ATTENDANCE_EMPLOYEE_RENDER_LIMIT = 300;
 
 const toMinutes = (time?: string) => {
   if (!time) return null;
@@ -88,7 +89,11 @@ export default function AttendancePage() {
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
 
-  const { data: employees = [], isLoading: employeesLoading } = useEmployees();
+  const { data: employees = [], isLoading: employeesLoading } = useEmployees({
+    page: 1,
+    limit: 200,
+    status: "active",
+  });
   const { data, isLoading, isFetching, isError, error, markAttendance } = useAttendance({
     startDate,
     endDate,
@@ -116,20 +121,30 @@ export default function AttendancePage() {
     return map;
   }, [employees]);
 
+  const allEmployeeIdsInRange = useMemo(() => {
+    const ids = new Set<string>();
+    (employees || []).forEach((employee) => {
+      if (employee?.employeeId) ids.add(employee.employeeId);
+    });
+    (data?.dailyRecords || []).forEach((record) => {
+      if (record?.employeeId) ids.add(record.employeeId);
+    });
+    return Array.from(ids).sort();
+  }, [employees, data?.dailyRecords]);
+
+  const isEmployeeListTruncated = allEmployeeIdsInRange.length > ATTENDANCE_EMPLOYEE_RENDER_LIMIT;
+  const employeeIdsForTable = allEmployeeIdsInRange.slice(0, ATTENDANCE_EMPLOYEE_RENDER_LIMIT);
+
   const rows = useMemo(() => {
     const dateRange = getDateRange(startDate, endDate);
     const daily = data?.dailyRecords || [];
 
     const byKey = new Map(daily.map((item) => [item.key, item]));
 
-    const employeeIds = new Set<string>();
-    (employees || []).forEach((e) => e?.employeeId && employeeIds.add(e.employeeId));
-    (daily || []).forEach((d) => d?.employeeId && employeeIds.add(d.employeeId));
-
     const tableRows: AttendanceTableRow[] = [];
 
     for (const date of dateRange) {
-      for (const employeeId of Array.from(employeeIds).sort()) {
+      for (const employeeId of employeeIdsForTable) {
         const key = `${employeeId}-${date}`;
         const entry = byKey.get(key);
         const checkIn = entry?.checkIn || "";
@@ -151,7 +166,7 @@ export default function AttendancePage() {
     }
 
     return tableRows.sort((a, b) => `${b.date}-${b.employeeId}`.localeCompare(`${a.date}-${a.employeeId}`));
-  }, [data?.dailyRecords, employees, startDate, endDate, employeeNameMap, employeeScheduleMap]);
+  }, [data?.dailyRecords, employeeIdsForTable, startDate, endDate, employeeNameMap, employeeScheduleMap]);
 
   const stats = useMemo(() => {
     return rows.reduce(
@@ -329,6 +344,12 @@ export default function AttendancePage() {
         </table>
         </div>
       </div>
+
+      {isEmployeeListTruncated ? (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+          تم عرض أول {ATTENDANCE_EMPLOYEE_RENDER_LIMIT} موظف فقط للحفاظ على سرعة الصفحة. استخدم نطاق تاريخ أقصر أو فلترة أدق لعرض المزيد.
+        </div>
+      ) : null}
 
       <div className="mt-4 text-xs text-slate-500 flex items-center gap-2">
         <Clock3 size={14} />

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import useSalaries from "@/hooks/useSalaries";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAdvances } from "@/hooks/useAdvances";
@@ -77,13 +77,19 @@ const SkeletonRows = () => (
 );
 
 export default function SalariesPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const { data: salaries = [], isLoading, isError, error, updateSalary, deleteSalary } = useSalaries();
-  const { data: employees = [], isLoading: employeesLoading } = useEmployees();
+  const { data: employees = [], isLoading: employeesLoading } = useEmployees({
+    fetchAll: true,
+    limit: 200,
+    status: "active",
+  });
   const { data: advances = [], createAdvance, updateAdvance, deleteAdvance } = useAdvances();
   const { calculatePayroll } = usePayroll();
-  const [activeTab, setActiveTab] = useState<FinancialTabKey>(() => toFinancialTab(requestedTab));
+  const activeTab = toFinancialTab(requestedTab);
   const shouldLoadAttendanceForPayroll = activeTab === "final-payroll";
 
   const [period, setPeriod] = useState(getLocalMonth());
@@ -94,10 +100,18 @@ export default function SalariesPage() {
     { enabled: shouldLoadAttendanceForPayroll },
   );
 
-  useEffect(() => {
-    const nextTab = toFinancialTab(requestedTab);
-    setActiveTab((currentTab) => (currentTab === nextTab ? currentTab : nextTab));
-  }, [requestedTab]);
+  const handleTabChange = (tab: FinancialTabKey) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (tab === "salary-config") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   const employeeNameMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -294,7 +308,7 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
           </div>
 
           <div className="mt-6">
-            <FinancialHubTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+            <FinancialHubTabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
           </div>
         </div>
       </div>

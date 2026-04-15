@@ -1,10 +1,36 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import type { Employee } from "@/types/employee";
 import { QUERY_GC_TIME, QUERY_STALE_TIME } from "@/lib/query-cache";
+
+type EmployeeStatus = "active" | "inactive" | "terminated";
+
+type EmployeesPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+};
+
+type EmployeesListResponse = {
+  employees: Employee[];
+  pagination?: EmployeesPagination;
+};
+
+type UseEmployeesParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  department?: string;
+  status?: EmployeeStatus;
+  fetchAll?: boolean;
+};
+
+const EMPLOYEE_MAX_LIMIT = 200;
+const EMPLOYEE_DEFAULT_LIMIT = 50;
 
 type ApiErrorBody = {
   message?: string | string[];
@@ -36,6 +62,12 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
+const sanitizePositiveInt = (value: number | undefined, fallback: number) => {
+  if (!Number.isFinite(value)) return fallback;
+  const normalized = Math.trunc(Number(value));
+  return normalized > 0 ? normalized : fallback;
+};
+
 const toHourlyRateNumber = (value: Employee["hourlyRate"]) => {
   if (value && typeof value === "object" && "$numberDecimal" in value) {
     return Number(value.$numberDecimal || 0);
@@ -43,30 +75,89 @@ const toHourlyRateNumber = (value: Employee["hourlyRate"]) => {
   return Number(value || 0);
 };
 
-export const useEmployees = () => {
+export const useEmployees = (params?: UseEmployeesParams) => {
   const queryClient = useQueryClient();
+  const requestedPage = sanitizePositiveInt(params?.page, 1);
+  const requestedLimit = sanitizePositiveInt(params?.limit, EMPLOYEE_DEFAULT_LIMIT);
+  const limit = Math.min(requestedLimit, EMPLOYEE_MAX_LIMIT);
+  const normalizedSearch = params?.search?.trim() || undefined;
+  const normalizedDepartment = params?.department?.trim() || undefined;
+  const normalizedStatus = params?.status;
+  const shouldFetchAll = Boolean(params?.fetchAll);
 
-  // 1. جلب الموظفين
-  const query = useQuery<Employee[]>({
-    queryKey: ["employees"],
+  const query = useQuery<EmployeesListResponse>({
+    queryKey: [
+      "employees",
+      requestedPage,
+      limit,
+      normalizedSearch || "",
+      normalizedDepartment || "",
+      normalizedStatus || "",
+      shouldFetchAll ? "all" : "page",
+    ],
     queryFn: async () => {
-      const response = await apiClient.get("/employees");
-      const employeesData = response.data?.employees;
-      if (Array.isArray(employeesData)) return employeesData;
-      return [];
+      const fetchPage = async (page: number): Promise<EmployeesListResponse> => {
+        const response = await apiClient.get("/employees", {
+          params: {
+            page,
+            limit,
+            search: normalizedSearch,
+            department: normalizedDepartment,
+            status: normalizedStatus,
+          },
+        });
+
+        return {
+          employees: Array.isArray(response.data?.employees) ? response.data.employees : [],
+          pagination: response.data?.pagination,
+        };
+      };
+
+      if (!shouldFetchAll) {
+        return fetchPage(requestedPage);
+      }
+
+      const firstPage = await fetchPage(1);
+      const totalPages = Number(firstPage.pagination?.pages || 1);
+
+      if (totalPages <= 1) {
+        return firstPage;
+      }
+
+      const mergedEmployees = [...firstPage.employees];
+      for (let page = 2; page <= totalPages; page += 1) {
+        const nextPage = await fetchPage(page);
+        if (nextPage.employees.length === 0) {
+          break;
+        }
+        mergedEmployees.push(...nextPage.employees);
+      }
+
+      return {
+        employees: mergedEmployees,
+        pagination: {
+          page: 1,
+          limit: mergedEmployees.length,
+          total: mergedEmployees.length,
+          pages: 1,
+        },
+      };
     },
-    staleTime: QUERY_STALE_TIME.STANDARD,
+    staleTime: shouldFetchAll ? QUERY_STALE_TIME.RELAXED : QUERY_STALE_TIME.STANDARD,
     gcTime: QUERY_GC_TIME.RELAXED,
+    placeholderData: keepPreviousData,
   });
 
-  // 2. إضافة موظف
+  const employees = Array.isArray(query.data?.employees) ? query.data.employees : [];
+  const pagination = query.data?.pagination;
+
   const createMutation = useMutation({
     mutationFn: async (newEmployee: Employee) => {
       const payload = { ...newEmployee, hourlyRate: toHourlyRateNumber(newEmployee.hourlyRate) };
       return await apiClient.post("/employees", payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"], exact: false });
       toast.success("تم إضافة الموظف بنجاح!");
     },
     onError: (error: unknown) => {
@@ -78,7 +169,6 @@ export const useEmployees = () => {
     }
   });
 
-  // 3. تعديل موظف (استخدمنا employeeId بناءً على الباك إند)
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Employee> }) => {
       const payload = {
@@ -88,7 +178,7 @@ export const useEmployees = () => {
       return await apiClient.put(`/employees/${id}`, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"], exact: false });
       toast.success("تم تحديث بيانات الموظف بنجاح!");
     },
     onError: (error: unknown) => {
@@ -96,13 +186,12 @@ export const useEmployees = () => {
     }
   });
 
-  // 4. حذف موظف
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       return await apiClient.delete(`/employees/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"], exact: false });
       toast.success("تم حذف الموظف بنجاح!");
     },
     onError: (error: unknown) => {
@@ -110,11 +199,13 @@ export const useEmployees = () => {
     }
   });
 
-  // إرجاع كل الدوال لتعمل في الصفحة
-  return { 
-    ...query, 
-    createEmployee: createMutation, 
-    updateEmployee: updateMutation, 
-    deleteEmployee: deleteMutation 
+  return {
+    ...query,
+    data: employees,
+    pagination,
+    listData: query.data,
+    createEmployee: createMutation,
+    updateEmployee: updateMutation,
+    deleteEmployee: deleteMutation,
   };
 };

@@ -55,9 +55,7 @@ export const useImports = () => {
       form.append('file', payload.file);
 
       const endpoint = backendEntity === 'attendance' ? '/attendance/upload' : `/imports/${backendEntity}/async`;
-      const res = await apiClient.post(endpoint, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await apiClient.post(endpoint, form);
 
       if (backendEntity === 'attendance') {
         const payloadData = res.data || {};
@@ -93,9 +91,7 @@ export const useImports = () => {
 
       const form = new FormData();
       form.append('file', payload.file);
-      const res = await apiClient.post(`/imports/${backendEntity}/validate`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await apiClient.post(`/imports/${backendEntity}/validate`, form);
       return res.data;
     },
   });

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useMemo, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Printer } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import usePayrollReport from "@/hooks/usePayrollReport";
@@ -19,16 +19,25 @@ const getLocalMonth = () => {
 };
 
 export default function VouchersPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const requestedMonth = searchParams.get("month");
-  const [month, setMonth] = useState(getLocalMonth());
+  const month = requestedMonth || getLocalMonth();
   const printRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (requestedMonth) {
-      setMonth(requestedMonth);
+  const handleMonthChange = (nextMonth: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (!nextMonth || nextMonth === getLocalMonth()) {
+      params.delete("month");
+    } else {
+      params.set("month", nextMonth);
     }
-  }, [requestedMonth]);
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   const { data, isLoading, isError, error } = usePayrollReport(month);
 
@@ -53,7 +62,7 @@ export default function VouchersPage() {
               <input
                 type="month"
                 value={month}
-                onChange={(event) => setMonth(event.target.value)}
+                onChange={(event) => handleMonthChange(event.target.value)}
                 className="rounded-lg border border-slate-300 px-3 py-2"
               />
               <button

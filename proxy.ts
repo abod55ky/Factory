@@ -9,7 +9,8 @@ import { DEFAULT_API_URL, normalizeApiUrl } from "@/lib/api-url";
 
 const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL, DEFAULT_API_URL);
 const USE_API_PROXY = /^https?:\/\//i.test(API_URL);
-const SESSION_CHECK_TIMEOUT_MS = 2_500;
+const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
+const SESSION_CHECK_TIMEOUT_MS = IS_DEVELOPMENT ? 600 : 2_500;
 const SESSION_SUCCESS_CACHE_TTL_MS = 10_000;
 const SESSION_FAILURE_CACHE_TTL_MS = 1_500;
 const SESSION_RATE_LIMIT_CACHE_TTL_MS = 15_000;
@@ -46,14 +47,25 @@ const normalizePathname = (pathname: string) => {
   return trimmed || "/";
 };
 
-const hasSessionHints = (request: NextRequest) => {
-  const cookieHeader = request.headers.get("cookie");
-  const authHeader = request.headers.get("authorization");
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  return Boolean(
-    (cookieHeader && cookieHeader.trim().length > 0) ||
-    (authHeader && authHeader.trim().length > 0),
-  );
+const hasSessionHints = (request: NextRequest) => {
+  const cookieHeader = request.headers.get("cookie") || "";
+  const authHeader = request.headers.get("authorization");
+  const hasAuthCookie = AUTH_COOKIE_CANDIDATES.some((cookieName) => {
+    if (!cookieName) return false;
+    const pattern = new RegExp(`(?:^|;\\s*)${escapeRegExp(cookieName)}=`);
+    return pattern.test(cookieHeader);
+  });
+
+  return Boolean(hasAuthCookie || (authHeader && authHeader.trim().length > 0));
+};
+
+const isPrefetchRequest = (request: NextRequest) => {
+  const purpose = request.headers.get("purpose")?.toLowerCase();
+  const nextRouterPrefetch = request.headers.get("next-router-prefetch");
+
+  return purpose === "prefetch" || nextRouterPrefetch === "1";
 };
 
 const getCookieValue = (cookieHeader: string | null, cookieName: string) => {
@@ -255,6 +267,11 @@ export async function proxy(request: NextRequest) {
   const isProtected = isProtectedRoute(pathname);
   const hasHints = hasSessionHints(request);
 
+  // Avoid blocking route prefetch requests with auth round-trips.
+  if (isPrefetchRequest(request)) {
+    return NextResponse.next();
+  }
+
   if (!isRootRoute && !isLoginRoute && !isProtected) {
     return NextResponse.next();
   }
@@ -293,9 +310,17 @@ export async function proxy(request: NextRequest) {
   const session = await checkSession(request);
 
   if (!session.authorized) {
+    const status = session.status || 401;
+    const isTransientUpstreamFailure = status === 429 || status === 503 || status === 504;
+
+    if (IS_DEVELOPMENT && hasHints && isTransientUpstreamFailure) {
+      // In local/dev, don't lock navigation on temporary backend slowdowns.
+      return NextResponse.next();
+    }
+
     return buildRedirectResponse(request, "/login", {
       unauthorized: "true",
-      status: String(session.status || 401),
+      status: String(status),
     });
   }
 

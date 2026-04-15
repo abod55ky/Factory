@@ -185,7 +185,7 @@
 // app/(dashboard)/employees/page.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEmployees } from "@/hooks/useEmployees";
@@ -204,32 +204,45 @@ const asHourlyRateText = (value: Employee["hourlyRate"]) => {
 };
 
 export default function EmployeesPage() {
-  const { data: employees, isLoading, createEmployee, updateEmployee, deleteEmployee } = useEmployees();
+  const PAGE_SIZE = 20;
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   
-  // حالات البحث والفلترة
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [selectedDept, setSelectedDept] = useState("الكل");
+  const [page, setPage] = useState(1);
 
-  // استخراج الأقسام الفريدة للفلتر
+  const deferredSearch = useDeferredValue(searchInput.trim());
+  const departmentFilter = selectedDept === "الكل" ? undefined : selectedDept;
+
+  const {
+    data: employees = [],
+    pagination,
+    isLoading,
+    isFetching,
+    createEmployee,
+    updateEmployee,
+    deleteEmployee,
+  } = useEmployees({
+    page,
+    limit: PAGE_SIZE,
+    search: deferredSearch || undefined,
+    department: departmentFilter,
+  });
+
   const departments = useMemo(() => {
-    if (!employees) return ["الكل"];
-    const depts = new Set(employees.map(emp => emp.department));
+    const depts = new Set((employees || []).map((emp) => emp.department).filter(Boolean) as string[]);
+    if (selectedDept !== "الكل") {
+      depts.add(selectedDept);
+    }
     return ["الكل", ...Array.from(depts)];
-  }, [employees]);
+  }, [employees, selectedDept]);
 
-  // تطبيق البحث والفلترة
-  const filteredEmployees = useMemo(() => {
-    if (!employees) return [];
-    return employees.filter(emp => {
-      const matchesSearch = emp.name.includes(searchTerm) || emp.employeeId.includes(searchTerm);
-      const matchesDept = selectedDept === "الكل" || emp.department === selectedDept;
-      return matchesSearch && matchesDept;
-    });
-  }, [employees, searchTerm, selectedDept]);
+  const currentPage = pagination?.page || page;
+  const totalPages = Math.max(pagination?.pages || 1, 1);
+  const totalRows = pagination?.total || employees.length;
 
   const handleDelete = async (id: string, name: string) => {
      if (window.confirm(`هل أنت متأكد من حذف الموظف: ${name}؟`)) {
@@ -279,10 +292,13 @@ export default function EmployeesPage() {
               <input 
                 type="text" 
                 placeholder="ابحث بالاسم أو الرمز..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setPage(1);
+                }}
                 onFocus={() => setIsSearchExpanded(true)}
-                onBlur={() => { if(!searchTerm) setIsSearchExpanded(false) }}
+                onBlur={() => { if(!searchInput) setIsSearchExpanded(false) }}
                 className={`bg-transparent text-sm font-medium outline-none transition-all w-full ${isSearchExpanded ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}
               />
             </div>
@@ -293,13 +309,20 @@ export default function EmployeesPage() {
             <Filter size={16} className="text-slate-400 ml-2" />
             <select 
               value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
+              onChange={(e) => {
+                setSelectedDept(e.target.value);
+                setPage(1);
+              }}
               className="bg-transparent text-sm font-bold text-slate-700 outline-none cursor-pointer"
             >
-              {departments.map(dept => (
+              {departments.map((dept) => (
                 <option key={dept} value={dept}>{dept}</option>
               ))}
             </select>
+          </div>
+
+          <div className="text-xs font-bold text-slate-500 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            {isFetching ? "جاري التحديث..." : `إجمالي النتائج: ${totalRows}`}
           </div>
             </div>
           <div className="w-full md:w-auto flex justify-end">
@@ -337,14 +360,14 @@ export default function EmployeesPage() {
                     </div>
                   </td>
                 </tr>
-              ) : filteredEmployees.length === 0 ? (
+              ) : employees.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-12 text-center text-slate-500 font-medium">
                     لا يوجد بيانات مطابقة.
                   </td>
                 </tr>
               ) : (
-                filteredEmployees.map((emp: Employee) => (
+                employees.map((emp: Employee) => (
                   <tr key={emp.employeeId} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="p-4">
                       {/* رابط لصفحة البروفايل */}
@@ -355,7 +378,7 @@ export default function EmployeesPage() {
                     </td>
                     <td className="p-4 text-center">
                       <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-[11px] font-bold">
-                        {emp.department}
+                        {emp.department || "—"}
                       </span>
                     </td>
                     <td className="p-4 text-center font-mono font-bold text-slate-700">
@@ -392,6 +415,30 @@ export default function EmployeesPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          disabled={currentPage <= 1 || isLoading || isFetching}
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+          className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          الصفحة السابقة
+        </button>
+
+        <p className="text-xs font-bold text-slate-500">
+          صفحة {currentPage} من {totalPages}
+        </p>
+
+        <button
+          type="button"
+          disabled={currentPage >= totalPages || isLoading || isFetching}
+          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+          className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          الصفحة التالية
+        </button>
       </div>
 
       {isModalOpen && (

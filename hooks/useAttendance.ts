@@ -229,11 +229,16 @@ export const useAttendance = (params?: AttendanceQueryParams, options?: Attendan
       requestedLimit,
     ],
     queryFn: async () => {
+      const startDateParam = requestDate ? undefined : resolvedStartDate;
+      const endDateParam = requestDate ? undefined : resolvedEndDate;
+
       const fetchPage = async (page: number) => {
         return await apiClient.get("/attendance", {
           params: {
             employeeId: params?.employeeId,
             date: requestDate,
+            startDate: startDateParam,
+            endDate: endDateParam,
             page,
             limit: perRequestLimit,
           },

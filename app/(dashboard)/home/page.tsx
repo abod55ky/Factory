@@ -202,7 +202,7 @@ export default function DashboardPage() {
           </button>
 
           {isNotificationsOpen && (
-            <div className="absolute left-0 mt-4 w-80 bg-white/95 backdrop-blur-lg border border-slate-100 rounded-[1.5rem] shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="absolute left-0 mt-4 w-80 bg-white/95 backdrop-blur-lg border border-slate-100 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
               <div className="bg-slate-50/80 p-4 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="text-sm font-bold text-slate-800">تنبيهات النظام</h3>
                 <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{notifications.length} جديد</span>
@@ -247,7 +247,7 @@ export default function DashboardPage() {
         {/* شبكة الإحصائيات (Stats Grid) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {stats.map((stat, index) => (
-            <div key={index} className="bg-white p-6 rounded-[1.5rem] border border-slate-100 hover:border-blue-200 hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex items-center justify-between group cursor-default">
+            <div key={index} className="bg-white p-6 rounded-3xl border border-slate-100 hover:border-blue-200 hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex items-center justify-between group cursor-default">
               <div className="text-right">
                 <p className="text-slate-500 text-xs font-bold mb-2 uppercase tracking-wider">{stat.title}</p>
                 <h3 className="text-3xl font-black text-slate-900 tracking-tight">{stat.value}</h3>
@@ -264,7 +264,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* ملخص الأقسام */}
-          <div className="bg-slate-50/40 rounded-[2rem] p-6 border border-slate-100">
+          <div className="bg-slate-50/40 rounded-4xl p-6 border border-slate-100">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
                <h2 className="text-lg font-black text-slate-800">كفاءة الأقسام</h2>
                <Users className="text-blue-500" size={20} />
@@ -291,7 +291,7 @@ export default function DashboardPage() {
           </div>
 
           {/* سجل التأخير */}
-          <div className="bg-slate-50/40 rounded-[2rem] p-6 border border-slate-100">
+          <div className="bg-slate-50/40 rounded-4xl p-6 border border-slate-100">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
               <h2 className="text-lg font-black text-slate-800">تنبيهات الحضور اليومية</h2>
               <AlertTriangle className="text-orange-500" size={20} />
