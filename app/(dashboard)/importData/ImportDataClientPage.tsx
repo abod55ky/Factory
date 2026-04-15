@@ -51,13 +51,9 @@ type GeneralListedFile = {
 };
 
 const PREVIEW_ROWS_LIMIT = 100;
-const SUPPORTED_IMPORT_ACCEPT = ".xlsx,.xls,.xlsm,.xlsb,.ods,.csv,.tsv,.txt,.json";
+const SUPPORTED_IMPORT_ACCEPT = ".xlsx,.csv,.tsv,.txt,.json";
 const SUPPORTED_IMPORT_EXTENSIONS = new Set([
   "xlsx",
-  "xls",
-  "xlsm",
-  "xlsb",
-  "ods",
   "csv",
   "tsv",
   "txt",
@@ -234,27 +230,22 @@ const parseFileForPreview = async (file: File): Promise<ParsedPreviewFile> => {
   } else if (extension === "txt") {
     const text = await file.text();
     matrix = parseDelimitedText(text, text.includes("\t") ? "\t" : ",");
-  } else {
-    const XLSX = await import("xlsx");
-    const workbook = XLSX.read(await file.arrayBuffer(), {
-      type: "array",
-      raw: false,
-      cellDates: false,
-      dense: true,
-    });
+  } else if (extension === "xlsx") {
+    try {
+      const { default: readXlsxFile } = await import("read-excel-file/browser");
+      const workbookSheets = await readXlsxFile(file);
+      const firstSheet = Array.isArray(workbookSheets) ? workbookSheets[0] : undefined;
 
-    const firstSheetName = workbook.SheetNames?.[0];
-    if (!firstSheetName) {
-      throw new Error("الملف لا يحتوي أي Sheet يمكن قراءتها");
+      if (!firstSheet?.data || !Array.isArray(firstSheet.data)) {
+        throw new Error("الملف لا يحتوي أي Sheet يمكن قراءتها");
+      }
+
+      matrix = firstSheet.data as unknown[][];
+    } catch {
+      throw new Error("تعذر قراءة ملف XLSX. يرجى حفظ الملف كـ XLSX/CSV وإعادة المحاولة");
     }
-
-    const worksheet = workbook.Sheets[firstSheetName];
-    matrix = XLSX.utils.sheet_to_json(worksheet, {
-      header: 1,
-      raw: false,
-      defval: "",
-      blankrows: false,
-    }) as unknown[][];
+  } else {
+    throw new Error("صيغة الملف غير مدعومة للمعاينة. استخدم .xlsx أو .csv أو .tsv أو .txt أو .json");
   }
 
   return matrixToPreview(matrix);
@@ -326,7 +317,7 @@ const importSections = [
 ];
 
 const instructions = [
-  "الملفات المدعومة: .xlsx, .xls, .xlsm, .xlsb, .ods, .csv, .tsv, .txt, .json",
+  "الملفات المدعومة: .xlsx, .csv, .tsv, .txt, .json",
   "ملفات Word/PDF غير مناسبة لاستيراد جداول الموظفين أو المخزون",
   "لرفع الملفات العامة (PDF/Word/صور) استخدم بطاقة (رفع ملفات عامة) بالأسفل",
   "يجب أن يحتوي السطر الأول على عناوين الأعمدة",
@@ -548,7 +539,7 @@ export default function ImportPage() {
       }
 
       const csvBody = rowsToCsv(preview.headers, editedRows);
-      const baseName = preview.fileName.replace(/\.(xlsx|xls|xlsm|xlsb|ods|csv|tsv|txt|json)$/i, "");
+      const baseName = preview.fileName.replace(/\.(xlsx|csv|tsv|txt|json)$/i, "");
       const payloadFile = new File([csvBody], `${baseName || preview.entity}-edited.csv`, {
         type: "text/csv",
       });
@@ -688,7 +679,7 @@ export default function ImportPage() {
                       : "اسحب الملف هنا أو انقر للرفع"
                     : "غير مدعوم حالياً"}
                 </p>
-                <p className="text-[10px] text-slate-400">.xlsx, .xls, .xlsm, .xlsb, .ods, .csv, .tsv, .txt, .json</p>
+                <p className="text-[10px] text-slate-400">.xlsx, .csv, .tsv, .txt, .json</p>
               </div>
             </label>
 
