@@ -1,14 +1,13 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Lock, Loader2, AlertCircle, Hexagon } from "lucide-react";
+import { User, Lock, Loader2, AlertCircle, Hexagon, Eye, EyeOff } from "lucide-react";
 import apiClient from "@/lib/api-client";
 import axios from "axios";
-import { setAuthSession } from "@/lib/auth-session";
 import { resetAuthVerificationCache, verifyAuthSession } from "@/lib/auth-verify";
 import { useAuthStore } from "@/stores/auth-store";
+import { setAuthAccessToken } from "@/lib/auth-session";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,6 +44,7 @@ export default function LoginPage() {
   
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -59,12 +59,15 @@ export default function LoginPage() {
         password: password,
       });
 
-      const { user, token } = response.data as {
+      const authResponse = response.data as {
         user?: unknown;
         token?: string;
+        accessToken?: string;
+        access_token?: string;
       };
-      setAuthSession(user ?? null, typeof token === "string" ? token : null);
-      setUser((user ?? null) as { name?: string; username?: string; role?: string } | null);
+      const token = authResponse.token || authResponse.accessToken || authResponse.access_token;
+      setAuthAccessToken(token);
+  setUser((authResponse.user ?? null) as { name?: string; username?: string; role?: string } | null);
       resetAuthVerificationCache();
 
       const sessionCheck = await verifyAuthSession({ force: true });
@@ -79,19 +82,13 @@ export default function LoginPage() {
       router.push("/home");
  
      } catch (error: unknown) {
-      console.error("❌ [Login Error] حدث خطأ أثناء الاتصال:");
-      
       if (axios.isAxiosError<{ message?: string }>(error) && error.response) {
-        console.error("📌 تفاصيل من السيرفر:", error.response.data);
         setErrorMessage(error.response.data?.message || "بيانات الدخول غير صحيحة");
       } else if (axios.isAxiosError(error) && error.request) {
-        console.error("📌 السيرفر لا يستجيب أبداً:", error.request);
-        setErrorMessage("السيرفر لا يستجيب. قد يكون نائماً، انتظر قليلاً وجرب مرة أخرى.");
+          setErrorMessage("تعذر الوصول لخادم المصادقة. تحقق من تشغيل الخادم الخلفي وإعدادات CORS/Proxy.");
       } else if (error instanceof Error) {
-        console.warn("[Login] Browser/runtime error", error.message);
-        setErrorMessage("حدث خطأ غير متوقع.");
+          setErrorMessage(error.message || "حدث خطأ غير متوقع.");
       } else {
-        console.error("📌 خطأ داخلي في المتصفح:", error);
         setErrorMessage("حدث خطأ غير متوقع.");
       }
     } finally {
@@ -108,6 +105,7 @@ export default function LoginPage() {
       <div className="absolute -top-20 -right-20 w-80 h-80 bg-rose-400 rounded-full opacity-40 blur-2xl"></div>
 
       {/* الحاوية الرئيسية (البطاقة المقسمة) */}
+      <div className="bg-white rounded-4xl shadow-2xl w-full max-w-5xl flex overflow-hidden relative z-10 min-h-137.5">
       <div className="bg-white rounded-4xl shadow-2xl w-full max-w-5xl flex overflow-hidden relative z-10 min-h-137.5">
         
         {/* القسم الأيمن (الترحيب الملون - يظهر في الشاشات المتوسطة والكبيرة فقط) */}
@@ -164,10 +162,19 @@ export default function LoginPage() {
                 <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                   <Lock className="text-slate-400 group-focus-within:text-teal-500 transition-colors" size={20} />
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 hover:text-teal-500 transition-colors"
+                  title={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                  aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
-                  className="w-full pl-4 pr-12 py-4 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
+                  className="w-full pl-12 pr-12 py-4 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
                   placeholder="كلمة المرور"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -197,3 +204,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

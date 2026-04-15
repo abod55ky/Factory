@@ -1,10 +1,8 @@
 import type { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
-import { DEFAULT_API_URL, normalizeApiUrl } from "./lib/api-url";
 
 const isProduction = process.env.NODE_ENV === "production";
-const apiUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL, DEFAULT_API_URL);
-const useApiProxy = /^https?:\/\//i.test(apiUrl);
+const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "").trim();
 const apiOrigin = (() => {
   if (!apiUrl) return "";
   try {
@@ -73,21 +71,18 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
+const upstreamApiBase = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://werehouse-production-f4f4.up.railway.app/api"
+).replace(/\/+$/, "");
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  reactStrictMode: false,
-  experimental: {
-    optimizePackageImports: ["lucide-react", "react-hot-toast"],
-  },
   async rewrites() {
-    if (!useApiProxy) {
-      return [];
-    }
-
     return [
       {
-        source: "/backend-api/:path*",
-        destination: `${apiUrl}/:path*`,
+        source: "/api/:path*",
+        destination: `${upstreamApiBase}/:path*`,
       },
     ];
   },

@@ -1,12 +1,38 @@
 import { useQueries } from '@tanstack/react-query';
-import apiClient from '@/lib/api-client';
-import type {
-  EmployeesStats,
-  AttendanceStats,
-  InventoryStats,
-  AttendanceAlertsResponse,
-} from '@/types/dashboard';
-import { QUERY_GC_TIME, QUERY_STALE_TIME } from '@/lib/query-cache';
+import type { EmployeesStats, AttendanceStats, InventoryStats, DashboardKpis } from '@/types/dashboard';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useAttendance } from '@/hooks/useAttendance';
+import { useSalaries } from '@/hooks/useSalaries';
+import { calculateAttendanceMetrics } from '@/lib/attendance-metrics';
+import { api } from '@/lib/http/api';
+import { queryKeys } from '@/lib/query-keys';
+
+const fallbackEmployeesStats: EmployeesStats = {
+  total: 0,
+  active: 0,
+  byDepartment: {},
+};
+
+const fallbackAttendanceStats: AttendanceStats = {
+  statistics: {
+    totalLateArrivals: 0,
+  },
+  topLateEmployees: [],
+};
+
+const fallbackInventoryStats: InventoryStats = {
+  totalQuantity: 0,
+  totalProducts: 0,
+};
+
+const fallbackKpis: DashboardKpis = {
+  totalEmployees: 0,
+  activeToday: 0,
+  totalAbsentToday: 0,
+  totalDueSalaries: 0,
+  totalLateMinutesToday: 0,
+  totalOvertimeMinutesToday: 0,
+};
 
 const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
@@ -15,64 +41,111 @@ const getLocalDateString = (date = new Date()) => {
   return `${year}-${month}-${day}`;
 };
 
-export const useDashboard = (opts?: { startDate?: string; endDate?: string; alertDate?: string }) => {
-  const alertsDate = opts?.alertDate ?? opts?.startDate ?? opts?.endDate ?? getLocalDateString();
+const toNumber = (value: unknown) => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+};
+
+const withFallback = async <T>(fetcher: () => Promise<T>, fallback: T): Promise<T> => {
+  try {
+    const result = await fetcher();
+    return result ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+export const useDashboard = (opts?: { startDate?: string; endDate?: string }) => {
+  const today = getLocalDateString();
+  const employeesQuery = useEmployees();
+  const salariesQuery = useSalaries();
+  const attendanceQuery = useAttendance({ startDate: today, endDate: today, limit: 200 });
 
   const queries = useQueries({
     queries: [
       {
-        queryKey: ['employees', 'stats'],
-        queryFn: async () => {
-          const res = await apiClient.get('/employees/stats');
-          return res.data;
-        },
-        staleTime: QUERY_STALE_TIME.STANDARD,
-        gcTime: QUERY_GC_TIME.RELAXED,
+        queryKey: queryKeys.employees.stats(),
+        queryFn: () => withFallback(() => api.get<EmployeesStats>('/employees/stats'), fallbackEmployeesStats),
       },
       {
-        queryKey: ['attendance', 'stats', opts?.startDate, opts?.endDate],
-        queryFn: async () => {
-          const res = await apiClient.get('/attendance/stats', {
-            params: { startDate: opts?.startDate, endDate: opts?.endDate },
-          });
-          return res.data;
+        queryKey: queryKeys.attendance.stats(opts?.startDate, opts?.endDate),
+        queryFn: () => {
+          const hasDateRange = Boolean(opts?.startDate && opts?.endDate);
+          return withFallback(
+            () =>
+              api.get<AttendanceStats>('/attendance/stats', {
+                params: hasDateRange
+                  ? { startDate: opts?.startDate, endDate: opts?.endDate }
+                  : undefined,
+              }),
+            fallbackAttendanceStats,
+          );
         },
-        staleTime: QUERY_STALE_TIME.STANDARD,
-        gcTime: QUERY_GC_TIME.RELAXED,
       },
       {
-        queryKey: ['inventory', 'stats'],
-        queryFn: async () => {
-          const res = await apiClient.get('/inventory/stats');
-          return res.data;
-        },
-        staleTime: QUERY_STALE_TIME.STANDARD,
-        gcTime: QUERY_GC_TIME.RELAXED,
-      },
-      {
-        queryKey: ['attendance', 'alerts', alertsDate],
-        queryFn: async () => {
-          const res = await apiClient.get('/attendance/alerts', {
-            params: {
-              date: alertsDate,
-              lateThresholdMinutes: 15,
-            },
-          });
-          return res.data;
-        },
-        staleTime: QUERY_STALE_TIME.FAST,
-        gcTime: QUERY_GC_TIME.STANDARD,
-        refetchInterval: 60 * 1000,
+        queryKey: queryKeys.inventory.stats(),
+        queryFn: () => withFallback(() => api.get<InventoryStats>('/inventory/stats'), fallbackInventoryStats),
       },
     ],
   });
 
+  const employees = Array.isArray(employeesQuery.data) ? employeesQuery.data : [];
+  const salaries = Array.isArray(salariesQuery.data) ? salariesQuery.data : [];
+  const todayDailyRecords = Array.isArray(attendanceQuery.data?.dailyRecords)
+    ? attendanceQuery.data.dailyRecords.map((record) => ({
+        employeeId: record.employeeId,
+        checkIn: record.checkIn,
+        checkOut: record.checkOut,
+      }))
+    : [];
+
+  const employeesStats = (queries[0]?.data as EmployeesStats | undefined) ?? fallbackEmployeesStats;
+  const attendanceStats = (queries[1]?.data as AttendanceStats | undefined) ?? fallbackAttendanceStats;
+  const inventoryStats = (queries[2]?.data as InventoryStats | undefined) ?? fallbackInventoryStats;
+
+  const attendanceMetrics = calculateAttendanceMetrics(employees, todayDailyRecords);
+
+  const activeToday = attendanceMetrics.active;
+  const totalEmployees = attendanceMetrics.totalEmployees || employeesStats.total || 0;
+  const totalAbsentToday = attendanceMetrics.absent;
+  const totalLateMinutesToday = attendanceMetrics.totalLateMinutes;
+  const totalOvertimeMinutesToday = attendanceMetrics.totalOvertimeMinutes;
+
+  const salaryByEmployee = new Map(salaries.map((salary) => [salary.employeeId, salary]));
+
+  const totalDueSalaries = employees.reduce((sum, employee) => {
+    if (!employee?.employeeId || employee.status === 'terminated') return sum;
+
+    const salary = salaryByEmployee.get(employee.employeeId);
+    const baseSalary = salary ? toNumber(salary.baseSalary) : toNumber(employee.hourlyRate);
+    const responsibilityAllowance = salary ? toNumber(salary.responsibilityAllowance) : 0;
+    const productionIncentive = salary ? toNumber(salary.productionIncentive) : 0;
+    const transportAllowance = salary ? toNumber(salary.transportAllowance) : 0;
+
+    return sum + baseSalary + responsibilityAllowance + productionIncentive + transportAllowance;
+  }, 0);
+
+  const kpis: DashboardKpis = {
+    ...fallbackKpis,
+    totalEmployees,
+    activeToday,
+    totalAbsentToday,
+    totalDueSalaries,
+    totalLateMinutesToday,
+    totalOvertimeMinutesToday,
+  };
+
   return {
-    employeesStats: queries[0]?.data as EmployeesStats | undefined,
-    attendanceStats: queries[1]?.data as AttendanceStats | undefined,
-    inventoryStats: queries[2]?.data as InventoryStats | undefined,
-    attendanceAlerts: queries[3]?.data as AttendanceAlertsResponse | undefined,
-    isLoading: queries.some((q) => q.isLoading),
-    isError: queries.some((q) => q.isError),
+    employeesStats,
+    attendanceStats,
+    inventoryStats,
+    kpis,
+    isLoading: queries.some((q) => q.isLoading) || employeesQuery.isLoading || salariesQuery.isLoading || attendanceQuery.isLoading,
+    isError: queries.some((q) => q.isError) || Boolean(employeesQuery.error) || Boolean(salariesQuery.error) || Boolean(attendanceQuery.error),
   };
 };
+

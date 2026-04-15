@@ -20,4 +20,6 @@ export interface Employee {
   scheduledEnd?: string;
   avatar?: string;
   currency?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

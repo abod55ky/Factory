@@ -50,8 +50,8 @@ const toText = (value: number | string | { $numberDecimal: string } | undefined)
 
 const calculateBaseSalary = (employee: Employee) => {
   const raw = employee.hourlyRate;
-  const hourly = Number(toText(raw) || 0);
-  return Math.round(hourly * 8 * 26).toString();
+  const enteredWage = Number(toText(raw) || 0);
+  return enteredWage > 0 ? enteredWage.toString() : "";
 };
 
 const buildForm = ({

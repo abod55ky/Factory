@@ -1,377 +1,359 @@
+// app/(dashboard)/employees/[id]/page.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { use, useMemo } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CalendarCheck,
   ChevronLeft,
-  Clock3,
+  Clock,
+  Coins,
   CreditCard,
-  Flag,
   Loader2,
   Phone,
-  RefreshCw,
-  ShieldAlert,
+  TrendingDown,
+  TrendingUp,
   Wallet,
 } from "lucide-react";
-import { useEmployeeProfile } from "@/hooks/useEmployeeProfile";
-import type { EmployeeProfileAttendanceRecord } from "@/types/employee-profile";
+import apiClient from "@/lib/api-client";
+import { useAdvances } from "@/hooks/useAdvances";
+import { useAttendance } from "@/hooks/useAttendance";
+import { useBonuses } from "@/hooks/useBonuses";
+import useSalaries from "@/hooks/useSalaries";
+import { toLocalDateString } from "@/lib/date-time";
+import type { Employee } from "@/types/employee";
+import type { Salary } from "@/types/salary";
 
 const toNumber = (value: unknown) => {
   if (value && typeof value === "object" && "$numberDecimal" in (value as Record<string, unknown>)) {
     return Number((value as { $numberDecimal: string }).$numberDecimal || 0);
   }
-  return Number(value || 0);
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const getLocalMonth = () => {
+const toMinutes = (time?: string) => {
+  if (!time) return null;
+  const normalized = time.slice(0, 5);
+  const [h, m] = normalized.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
+};
+
+const formatMoney = (value: number) => Math.round(value).toLocaleString("en-US");
+
+const toDateKey = (value?: string | Date) => {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return toLocalDateString(date);
+};
+
+const daysBetweenInclusive = (start: string, end: string) => {
+  const startDate = new Date(`${start}T00:00:00`);
+  const endDate = new Date(`${end}T00:00:00`);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || endDate < startDate) {
+    return 1;
+  }
+  const diff = Math.floor((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+  return diff + 1;
+};
+
+const getMonthBoundsToDate = () => {
   const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  return `${y}-${m}`;
-};
+  const year = now.getFullYear();
+  const month = now.getMonth();
 
-const getMonthBounds = (period: string) => {
-  const [y, m] = period.split("-").map(Number);
-  const start = `${y}-${String(m).padStart(2, "0")}-01`;
-  const endDate = new Date(y, m, 0);
-  const end = `${y}-${String(m).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`;
-  return { start, end };
-};
+  const start = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+  const end = `${year}-${String(month + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const period = `${year}-${String(month + 1).padStart(2, "0")}`;
 
-const formatDateLabel = (value: string) => {
-  const parsed = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString("ar-EG");
-};
-
-const formatTimeLabel = (value?: string) => {
-  if (!value) return "--:--";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "--:--";
-
-  return parsed.toLocaleTimeString("ar-EG", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-};
-
-type DailyAttendanceRow = {
-  date: string;
-  checkIn?: string;
-  checkOut?: string;
-  eventsCount: number;
-};
-
-const buildDailyAttendanceRows = (records: EmployeeProfileAttendanceRecord[]): DailyAttendanceRow[] => {
-  const grouped = new Map<string, DailyAttendanceRow>();
-
-  records.forEach((record) => {
-    const dateKey = record.date || record.timestamp.slice(0, 10);
-    if (!dateKey) return;
-
-    const current = grouped.get(dateKey) || {
-      date: dateKey,
-      eventsCount: 0,
-    };
-
-    current.eventsCount += 1;
-
-    if (record.type === "IN") {
-      const nextCheckIn = !current.checkIn || record.timestamp < current.checkIn ? record.timestamp : current.checkIn;
-      current.checkIn = nextCheckIn;
-    }
-
-    if (record.type === "OUT") {
-      const nextCheckOut =
-        !current.checkOut || record.timestamp > current.checkOut ? record.timestamp : current.checkOut;
-      current.checkOut = nextCheckOut;
-    }
-
-    grouped.set(dateKey, current);
-  });
-
-  return Array.from(grouped.values()).sort((a, b) => b.date.localeCompare(a.date));
-};
-
-export default function EmployeeProfilePage({ params }: { params: { id: string } }) {
-  const [period, setPeriod] = useState(getLocalMonth());
-  const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBounds(period), [period]);
-
-  const { data, isLoading, isFetching, isError, error, refetch } = useEmployeeProfile(params.id, {
+  return {
+    start,
+    end,
     period,
-    startDate: monthStart,
-    endDate: monthEnd,
-    attendanceLimit: 200,
-    advancesLimit: 100,
-    bonusesLimit: 100,
+    elapsedDays: now.getDate(),
+  };
+};
+
+export default function EmployeeProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: employeeId } = use(params);
+  const month = useMemo(() => getMonthBoundsToDate(), []);
+  const today = useMemo(() => toLocalDateString(), []);
+
+  const {
+    data: employee,
+    isLoading: isEmployeeLoading,
+    isError: isEmployeeError,
+    error: employeeError,
+  } = useQuery<Employee | null>({
+    queryKey: ["employee-profile", employeeId],
+    enabled: Boolean(employeeId),
+    queryFn: async () => {
+      const res = await apiClient.get(`/employees/${employeeId}`);
+      return (res.data?.employee ?? res.data ?? null) as Employee | null;
+    },
+    retry: false,
   });
 
-  const employee = data?.employee;
-  const salary = data?.salary;
-  const attendance = data?.attendance;
-  const advances = data?.advances;
-  const bonuses = data?.bonuses;
+  const { data: salaries = [] } = useSalaries();
 
-  const baseSalary = toNumber(salary?.baseSalary);
-  const responsibilityAllowance = toNumber(salary?.responsibilityAllowance);
-  const productionIncentive = toNumber(salary?.productionIncentive);
-  const transportAllowance = toNumber(salary?.transportAllowance);
-  const totalAllowances = responsibilityAllowance + productionIncentive + transportAllowance;
-  const monthlyFixedTotal = baseSalary + totalAllowances;
+  const salary = useMemo<Salary | null>(() => {
+    if (!employeeId) return null;
+    const found = (salaries || []).find((entry) => entry.employeeId === employeeId);
+    return found || null;
+  }, [employeeId, salaries]);
 
-  const totalBonus = toNumber(bonuses?.summary?.totalBonus);
-  const totalAssistance = toNumber(bonuses?.summary?.totalAssistance);
-  const remainingAdvances = toNumber(advances?.summary?.remainingAmount);
-  const estimatedCurrentDues = monthlyFixedTotal + totalBonus - totalAssistance;
+  const attendanceRange = useMemo(() => {
+    const startFromEmployee = toDateKey(employee?.createdAt) || today;
+    const tentativeEnd =
+      employee?.status === "terminated"
+        ? toDateKey(employee?.updatedAt) || today
+        : today;
 
-  const dailyAttendanceRows = useMemo(() => {
-    return buildDailyAttendanceRows(attendance?.records || []).slice(0, 8);
-  }, [attendance?.records]);
+    const end = tentativeEnd < startFromEmployee ? startFromEmployee : tentativeEnd;
 
-  const errorMessage = error instanceof Error && error.message ? error.message : "تعذر تحميل بيانات الموظف";
+    return {
+      startDate: startFromEmployee,
+      endDate: end,
+      totalDays: daysBetweenInclusive(startFromEmployee, end),
+    };
+  }, [employee?.createdAt, employee?.status, employee?.updatedAt, today]);
 
-  if (isLoading) {
+  const { data: advances = [], isLoading: isAdvancesLoading } = useAdvances(employeeId);
+  const { data: bonuses = [], isLoading: isBonusesLoading } = useBonuses({ employeeId, period: month.period });
+  const { data: attendanceData, isLoading: isAttendanceLoading } = useAttendance({
+    employeeId,
+    startDate: attendanceRange.startDate,
+    endDate: attendanceRange.endDate,
+    limit: 200,
+  });
+
+  const attendanceSummary = useMemo(() => {
+  const dailyRecords = (attendanceData?.dailyRecords || []).filter((record) => record.employeeId === employeeId);
+    const scheduledStart = employee?.scheduledStart || "08:00";
+    const scheduledEnd = employee?.scheduledEnd || "16:00";
+    const scheduledStartMinutes = toMinutes(scheduledStart);
+    const scheduledEndMinutes = toMinutes(scheduledEnd);
+
+    let daysAttended = 0;
+    let lateMinutes = 0;
+    let overtimeMinutes = 0;
+
+    for (const record of dailyRecords) {
+      if (!record?.checkIn) continue;
+      daysAttended += 1;
+
+      const checkInMinutes = toMinutes(record.checkIn);
+      if (
+        checkInMinutes !== null &&
+        scheduledStartMinutes !== null &&
+        checkInMinutes > scheduledStartMinutes + 15
+      ) {
+        lateMinutes += checkInMinutes - scheduledStartMinutes;
+      }
+
+      const checkOutMinutes = toMinutes(record.checkOut);
+      if (
+        checkOutMinutes !== null &&
+        scheduledEndMinutes !== null &&
+        checkOutMinutes > scheduledEndMinutes
+      ) {
+        overtimeMinutes += checkOutMinutes - scheduledEndMinutes;
+      }
+    }
+
+  const absentDays = Math.max(attendanceRange.totalDays - daysAttended, 0);
+
+    return {
+      daysAttended,
+      lateMinutes,
+      overtimeMinutes,
+      absentDays,
+    };
+  }, [attendanceData?.dailyRecords, attendanceRange.totalDays, employee?.scheduledEnd, employee?.scheduledStart, employeeId]);
+
+  const salaryBreakdown = useMemo(() => {
+    const baseSalary = salary ? toNumber(salary.baseSalary) : toNumber(employee?.hourlyRate);
+    const responsibilityAllowance = salary ? toNumber(salary.responsibilityAllowance) : 0;
+    const productionIncentive = salary ? toNumber(salary.productionIncentive) : 0;
+    const transportAllowance = salary ? toNumber(salary.transportAllowance) : 0;
+
+    const bonusesTotal = bonuses.reduce((sum, item) => {
+      return sum + toNumber(item.bonusAmount) + toNumber(item.assistanceAmount);
+    }, 0);
+
+    const advancesInstallments = advances.reduce((sum, item) => sum + toNumber(item.installmentAmount), 0);
+
+    const totalDues =
+      baseSalary +
+      responsibilityAllowance +
+      productionIncentive +
+      transportAllowance +
+      bonusesTotal -
+      advancesInstallments;
+
+    return {
+      baseSalary,
+      extraAndBonuses: bonusesTotal,
+      deductions: advancesInstallments,
+      advances: advancesInstallments,
+      totalDues,
+    };
+  }, [salary, employee?.hourlyRate, bonuses, advances]);
+
+  const isSecondaryLoading = isAttendanceLoading || isAdvancesLoading || isBonusesLoading;
+
+  if (isEmployeeLoading) {
     return (
-      <div className="p-6 md:p-8 font-sans bg-slate-50 min-h-screen" dir="rtl">
-        <div className="rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-sm">
-          <Loader2 className="mx-auto mb-3 animate-spin text-blue-600" size={28} />
-          <p className="text-sm font-bold text-slate-700">جاري تحميل ملف الموظف...</p>
-        </div>
+      <div className="p-8 h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="animate-spin text-[#00bba7]" size={36} />
       </div>
     );
   }
 
-  if (isError || !employee) {
+  if (isEmployeeError) {
     return (
-      <div className="p-6 md:p-8 font-sans bg-slate-50 min-h-screen" dir="rtl">
-        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-8 shadow-sm">
-          <p className="text-sm font-bold text-rose-700">{errorMessage}</p>
-          <div className="mt-4 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700"
-            >
-              إعادة المحاولة
-            </button>
-            <Link
-              href="/employees"
-              className="rounded-lg border border-rose-300 px-4 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
-            >
-              العودة لقائمة الموظفين
-            </Link>
-          </div>
-        </div>
+      <div className="p-8 text-red-600" dir="rtl">
+        حدث خطأ أثناء تحميل بروفايل الموظف: {(employeeError as Error)?.message || "خطأ غير معروف"}
       </div>
     );
   }
+
+  if (!employee) {
+    return (
+      <div className="p-8 text-slate-600" dir="rtl">
+        الموظف غير موجود أو لا تملك صلاحية الوصول إليه.
+      </div>
+    );
+  }
+
+  const contactPhone = employee.phone || "—";
+  const contactIdentity = employee.email || "—";
 
   return (
     <div className="p-6 md:p-8 font-sans bg-slate-50 min-h-screen" dir="rtl">
-      <nav className="mb-6 flex items-center gap-2 text-xs font-bold text-slate-400">
-        <Link href="/employees" className="hover:text-slate-700">
-          إدارة الموارد البشرية
-        </Link>
+      <nav className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-8">
+        <Link href="/employees" className="hover:text-[#00bba7] transition-colors">إدارة الموارد البشرية</Link>
         <ChevronLeft size={14} />
-        <Link href="/employees" className="hover:text-slate-700">
-          قائمة الموظفين
-        </Link>
+        <Link href="/employees" className="hover:text-[#00bba7] transition-colors">قائمة الموظفين</Link>
         <ChevronLeft size={14} />
-        <span className="text-slate-800">بروفايل الموظف</span>
+        <span className="text-[#00bba7]">بروفايل الموظف</span>
       </nav>
 
-      <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm md:p-8">
-        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-start">
-          <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-600">
-              <Flag size={32} />
+  <div className="bg-white rounded-4xl shadow-sm border border-slate-100 p-8 mb-8 relative overflow-hidden">
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#E7C873] opacity-10 rounded-full blur-2xl" />
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#00bba7] opacity-5 rounded-full blur-2xl" />
+
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="w-20 h-20 bg-[#E7C873] text-white rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg shadow-[#E7C873]/30">
+              {employee.name?.[0] || "م"}
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-800">{employee.name}</h1>
-              <p className="mt-1 text-xs font-bold text-slate-500">#{employee.employeeId}</p>
-              <p className="mt-1 text-xs font-bold text-slate-500">القسم: {employee.department || "--"}</p>
+              <h1 className="text-3xl font-black text-slate-800 mb-1.5">{employee.name}</h1>
+              <div className="flex items-center gap-3">
+                <span className="bg-[#00bba7]/10 text-[#00bba7] px-3 py-1 rounded-lg text-xs font-bold border border-[#00bba7]/20">
+                  {employee.department || "—"}
+                </span>
+                <span className="text-sm font-bold text-slate-400 font-mono">#{employee.employeeId}</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm font-bold text-slate-600">
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <span dir="ltr">{employee.mobile || employee.phone || "غير متوفر"}</span>
-              <Phone size={16} className="text-blue-500" />
+          <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
+            <div className="flex flex-col gap-3 text-slate-600 text-sm font-bold bg-slate-50 p-4 rounded-2xl border border-slate-100 w-full sm:w-auto">
+              <div className="flex items-center gap-3">
+                <Phone size={18} className="text-[#E7C873]" />
+                <span dir="ltr" className="tracking-wider">{contactPhone}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CreditCard size={18} className="text-[#E7C873]" />
+                <span className="tracking-wider">{contactIdentity}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <span>{employee.nationalId || "غير متوفر"}</span>
-              <CreditCard size={16} className="text-blue-500" />
-            </div>
-          </div>
-        </div>
 
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-teal-100 bg-teal-50/60 px-4 py-3">
-          <div>
-            <p className="text-xs font-bold text-teal-700">المستحق الحالي التقديري</p>
-            <p className="text-3xl font-black text-teal-700">{estimatedCurrentDues.toLocaleString()}</p>
-            <p className="text-[11px] font-bold text-teal-600">يعتمد على الراتب الثابت + مكافآت/خصومات الفترة</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="month"
-              value={period}
-              onChange={(event) => setPeriod(event.target.value)}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
-            />
-            <button
-              type="button"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-            >
-              {isFetching ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-              تحديث
-            </button>
+            <div className="bg-[#00bba7]/5 rounded-2xl p-6 text-center border border-[#00bba7]/20 min-w-50 w-full sm:w-auto">
+              <p className="text-[#00bba7] font-extrabold mb-1 text-xs uppercase tracking-wider">المستحقات الحالية</p>
+              <div className="flex justify-center items-baseline gap-2">
+                <h2 className="text-4xl font-black text-[#00bba7]">{formatMoney(salaryBreakdown.totalDues)}</h2>
+                <span className="text-[#E7C873] font-bold text-sm">ل.س</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-          <div className="mb-5 flex items-center gap-2 border-b border-slate-100 pb-3">
-            <Wallet className="text-blue-500" size={18} />
-            <h2 className="text-base font-black text-slate-800">تفاصيل الراتب</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div className="bg-white rounded-4xl shadow-sm border border-slate-100 p-8">
+          <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-5">
+            <div className="p-2.5 bg-[#E7C873]/10 rounded-xl text-[#E7C873]"><Wallet size={24} /></div>
+            <h3 className="text-xl font-black text-[#00bba7]">تفاصيل الراتب</h3>
           </div>
 
-          {!data.access.salary ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-700">
-              <div className="mb-1 flex items-center gap-2">
-                <ShieldAlert size={16} />
-                <span>عرض الراتب غير متاح حسب الصلاحيات.</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="bg-[#00bba7]/5 p-5 rounded-2xl border border-[#00bba7]/10 flex items-start justify-between">
+              <div>
+                <p className="text-xs font-bold text-[#00bba7] mb-1">الراتب الأساسي</p>
+                <p className="text-2xl font-black text-slate-800">{formatMoney(salaryBreakdown.baseSalary)}</p>
               </div>
+              <Coins className="text-[#00bba7] opacity-40" size={24} />
             </div>
-          ) : !salary ? (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-600">
-              لا يوجد إعداد راتب محفوظ لهذا الموظف.
+
+            <div className="bg-[#E7C873]/10 p-5 rounded-2xl border border-[#E7C873]/20 flex items-start justify-between">
+              <div>
+                <p className="text-xs font-bold text-[#c2a042] mb-1">الإضافي والمكافآت</p>
+                <p className="text-2xl font-black text-slate-800">+{formatMoney(salaryBreakdown.extraAndBonuses)}</p>
+              </div>
+              <TrendingUp className="text-[#E7C873] opacity-40" size={24} />
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-[11px] font-bold text-slate-500">الراتب الأساسي</p>
-                <p className="mt-1 text-lg font-black text-slate-800">{baseSalary.toLocaleString()}</p>
+
+            <div className="bg-rose-50 p-5 rounded-2xl border border-rose-100 flex items-start justify-between">
+              <div>
+                <p className="text-xs font-bold text-rose-600 mb-1">الخصومات</p>
+                <p className="text-2xl font-black text-rose-700">-{formatMoney(salaryBreakdown.deductions)}</p>
               </div>
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
-                <p className="text-[11px] font-bold text-emerald-600">إجمالي البدلات</p>
-                <p className="mt-1 text-lg font-black text-emerald-700">{totalAllowances.toLocaleString()}</p>
-              </div>
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-3">
-                <p className="text-[11px] font-bold text-blue-600">الإجمالي الثابت</p>
-                <p className="mt-1 text-lg font-black text-blue-700">{monthlyFixedTotal.toLocaleString()}</p>
-              </div>
-              <div className="rounded-2xl border border-orange-200 bg-orange-50 p-3">
-                <p className="text-[11px] font-bold text-orange-600">السلف المتبقية</p>
-                <p className="mt-1 text-lg font-black text-orange-700">
-                  {data.access.advances ? remainingAdvances.toLocaleString() : "غير متاح"}
-                </p>
-              </div>
+              <TrendingDown className="text-rose-400 opacity-40" size={24} />
             </div>
-          )}
+
+            <div className="bg-orange-50 p-5 rounded-2xl border border-orange-100 flex items-start justify-between">
+              <div>
+                <p className="text-xs font-bold text-orange-600 mb-1">السلف المسحوبة</p>
+                <p className="text-2xl font-black text-orange-700">{formatMoney(salaryBreakdown.advances)}</p>
+              </div>
+              <CreditCard className="text-orange-400 opacity-40" size={24} />
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-          <div className="mb-5 flex items-center gap-2 border-b border-slate-100 pb-3">
-            <Clock3 className="text-indigo-500" size={18} />
-            <h2 className="text-base font-black text-slate-800">ملخص الحضور للفترة</h2>
+  <div className="bg-white rounded-4xl shadow-sm border border-slate-100 p-8">
+          <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-5">
+            <div className="p-2.5 bg-[#00bba7]/10 rounded-xl text-[#00bba7]"><Clock size={24} /></div>
+            <h3 className="text-xl font-black text-[#00bba7]">سجل الدوام (حتى اليوم)</h3>
+            {isSecondaryLoading && <Loader2 size={16} className="animate-spin text-slate-400" />}
           </div>
 
-          {!data.access.attendance ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-700">
-              <div className="mb-1 flex items-center gap-2">
-                <ShieldAlert size={16} />
-                <span>عرض الحضور غير متاح حسب الصلاحيات.</span>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="bg-[#00bba7]/5 flex items-center gap-4 p-5 rounded-2xl border border-[#00bba7]/10">
+              <CalendarCheck className="text-[#00bba7]" size={24} />
+              <div><p className="text-xs font-bold text-[#00bba7]">أيام الحضور</p><p className="text-2xl font-black text-slate-800">{attendanceSummary.daysAttended}</p></div>
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50 p-3">
-                  <CalendarCheck className="text-indigo-500" size={20} />
-                  <div>
-                    <p className="text-[11px] font-bold text-indigo-600">أيام مسجلة</p>
-                    <p className="text-lg font-black text-indigo-900">{attendance?.statistics.totalDays || 0}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50 p-3">
-                  <AlertTriangle className="text-orange-500" size={20} />
-                  <div>
-                    <p className="text-[11px] font-bold text-orange-600">إجمالي السجلات</p>
-                    <p className="text-lg font-black text-orange-900">{attendance?.statistics.totalRecords || 0}</p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
-                <table className="w-full text-right">
-                  <thead className="bg-slate-50 text-[11px] font-bold text-slate-500">
-                    <tr>
-                      <th className="px-3 py-2">التاريخ</th>
-                      <th className="px-3 py-2 text-center">دخول</th>
-                      <th className="px-3 py-2 text-center">خروج</th>
-                      <th className="px-3 py-2 text-center">عدد الحركات</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-xs font-bold text-slate-700">
-                    {dailyAttendanceRows.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-3 py-6 text-center text-slate-500">
-                          لا توجد سجلات حضور ضمن الفترة المختارة.
-                        </td>
-                      </tr>
-                    ) : (
-                      dailyAttendanceRows.map((row) => (
-                        <tr key={row.date} className="border-t border-slate-100">
-                          <td className="px-3 py-2">{formatDateLabel(row.date)}</td>
-                          <td className="px-3 py-2 text-center">{formatTimeLabel(row.checkIn)}</td>
-                          <td className="px-3 py-2 text-center">{formatTimeLabel(row.checkOut)}</td>
-                          <td className="px-3 py-2 text-center">{row.eventsCount}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-bold text-slate-500">ملخص المكافآت والخصومات ({period})</p>
-          {data.access.bonuses ? (
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-                <p className="text-[11px] font-bold text-emerald-600">المكافآت</p>
-                <p className="text-lg font-black text-emerald-700">{totalBonus.toLocaleString()}</p>
-              </div>
-              <div className="rounded-xl border border-rose-100 bg-rose-50 p-3">
-                <p className="text-[11px] font-bold text-rose-600">الخصومات</p>
-                <p className="text-lg font-black text-rose-700">{totalAssistance.toLocaleString()}</p>
-              </div>
+            <div className="bg-[#E7C873]/10 flex items-center gap-4 p-5 rounded-2xl border border-[#E7C873]/20">
+              <Clock className="text-[#E7C873]" size={24} />
+              <div><p className="text-xs font-bold text-[#c2a042]">دقائق إضافية</p><p className="text-2xl font-black text-slate-800">{attendanceSummary.overtimeMinutes}</p></div>
             </div>
-          ) : (
-            <p className="mt-2 text-sm font-bold text-amber-700">غير متاح حسب الصلاحيات.</p>
-          )}
-        </div>
 
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-bold text-slate-500">بيانات التوظيف الرسمية</p>
-          <div className="mt-2 grid grid-cols-2 gap-3 text-xs font-bold">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700">
-              <p className="text-[11px] text-slate-500">تاريخ بدء التوظيف</p>
-              <p className="mt-1">{employee.employmentStartDate ? formatDateLabel(employee.employmentStartDate) : "غير محدد"}</p>
+            <div className="bg-orange-50 flex items-center gap-4 p-5 rounded-2xl border border-orange-100">
+              <AlertTriangle className="text-orange-500" size={24} />
+              <div><p className="text-xs font-bold text-orange-600">دقائق التأخير</p><p className="text-2xl font-black text-orange-900">{attendanceSummary.lateMinutes}</p></div>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700">
-              <p className="text-[11px] text-slate-500">تاريخ إنهاء الخدمة</p>
-              <p className="mt-1">{employee.terminationDate ? formatDateLabel(employee.terminationDate) : "غير محدد"}</p>
+
+            <div className="bg-rose-50 flex items-center gap-4 p-5 rounded-2xl border border-rose-100">
+              <CalendarCheck className="text-rose-500" size={24} />
+              <div><p className="text-xs font-bold text-rose-600">أيام الغياب</p><p className="text-2xl font-black text-rose-900">{attendanceSummary.absentDays}</p></div>
             </div>
           </div>
         </div>

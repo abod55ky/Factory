@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import axios from "axios";
 import apiClient from "@/lib/api-client";
+import { HH_MM_REGEX, normalizeHHmm } from "@/lib/attendance-time";
+import { toLocalDateString } from "@/lib/date-time";
 import { QUERY_GC_TIME, QUERY_STALE_TIME } from "@/lib/query-cache";
 
 export type AttendanceSource = "manual" | "device";
@@ -51,10 +54,6 @@ export interface AttendanceQueryParams {
   limit?: number;
 }
 
-export interface AttendanceQueryOptions {
-  enabled?: boolean;
-}
-
 export interface AttendancePayload {
   employeeId: string;
   timestamp: string;
@@ -77,61 +76,10 @@ export interface MarkAttendanceInput {
   notes?: string;
 }
 
-const HH_MM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
-const ATTENDANCE_MAX_LIMIT = 200;
-const ATTENDANCE_DEFAULT_LIMIT = 200;
-
-type ApiErrorShape = {
-  response?: {
-    data?: {
-      message?: string | string[];
-      error?: string;
-    };
-  };
-  message?: string;
-};
-
-const getApiErrorMessage = (error: unknown, fallback: string) => {
-  const typed = error as ApiErrorShape;
-  const apiMessage = typed?.response?.data?.message;
-
-  if (Array.isArray(apiMessage) && apiMessage.length > 0) {
-    return apiMessage.join(" | ");
-  }
-
-  if (typeof apiMessage === "string" && apiMessage.trim()) {
-    return apiMessage;
-  }
-
-  const nestedError = typed?.response?.data?.error;
-  if (typeof nestedError === "string" && nestedError.trim()) {
-    return nestedError;
-  }
-
-  if (typeof typed?.message === "string" && typed.message.trim()) {
-    return typed.message;
-  }
-
-  return fallback;
-};
-
-const sanitizePositiveInt = (value: number | undefined, fallback: number) => {
-  if (!Number.isFinite(value)) return fallback;
-  const normalized = Math.trunc(Number(value));
-  return normalized > 0 ? normalized : fallback;
-};
-
-const getLocalDateString = (date = new Date()) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
 const toDateKey = (value: string | Date) => {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return getLocalDateString(date);
+  return toLocalDateString(date);
 };
 
 const toHHmm = (value: string | Date) => {
@@ -147,13 +95,48 @@ const buildTimestampFromDateAndTime = (date: string, hhmm: string) => {
     throw new Error("الوقت يجب أن يكون بصيغة HH:mm");
   }
 
-  const [hours, minutes] = hhmm.split(":").map(Number);
-  const parsed = new Date(`${date}T00:00:00`);
-  parsed.setHours(hours, minutes, 0, 0);
-  return parsed.toISOString();
+  // مهم: إرسال timezone offset المحلي يمنع انحراف الساعات عند خادم يعمل بتوقيت مختلف (مثل UTC).
+  // المثال: 14:30 في GMT+3 تُرسل 2026-04-15T14:30:00+03:00 وتُعرض لاحقًا بنفس 14:30 محليًا.
+  const localDateTime = new Date(`${date}T${hhmm}:00`);
+  if (Number.isNaN(localDateTime.getTime())) {
+    throw new Error("تعذر تكوين التاريخ والوقت");
+  }
+
+  const offsetMinutes = -localDateTime.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absOffset = Math.abs(offsetMinutes);
+  const offsetHours = String(Math.floor(absOffset / 60)).padStart(2, "0");
+  const offsetMins = String(absOffset % 60).padStart(2, "0");
+
+  return `${date}T${hhmm}:00${sign}${offsetHours}:${offsetMins}`;
 };
 
 const normalizeSource = (source?: string): AttendanceSource => (source === "device" ? "device" : "manual");
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError(error)) {
+    const responseData = error.response?.data as
+      | { message?: string | string[]; error?: { message?: string | string[] } }
+      | undefined;
+
+    const serverMessage = responseData?.error?.message ?? responseData?.message;
+    if (Array.isArray(serverMessage)) {
+      return serverMessage.join(" | ");
+    }
+    if (typeof serverMessage === "string" && serverMessage.trim()) {
+      return serverMessage;
+    }
+    if (typeof error.message === "string" && error.message.trim()) {
+      return error.message;
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
+};
 
 const inDateRange = (date: string, startDate?: string, endDate?: string) => {
   if (!startDate && !endDate) return true;
@@ -206,15 +189,22 @@ const toDailyRecords = (records: AttendanceRecord[], startDate?: string, endDate
   return rows.sort((a, b) => `${b.date}-${b.employeeId}`.localeCompare(`${a.date}-${a.employeeId}`));
 };
 
-export const useAttendance = (params?: AttendanceQueryParams, options?: AttendanceQueryOptions) => {
+export const useAttendance = (params?: AttendanceQueryParams) => {
   const queryClient = useQueryClient();
-  const fallbackToday = getLocalDateString();
-  const requestedPage = sanitizePositiveInt(params?.page, 1);
-  const requestedLimit = sanitizePositiveInt(params?.limit, ATTENDANCE_DEFAULT_LIMIT);
-  const perRequestLimit = Math.min(requestedLimit, ATTENDANCE_MAX_LIMIT);
-  const hasExplicitPage = Number.isFinite(params?.page) && Number(params?.page) > 0;
+  const fallbackToday = toLocalDateString();
+  const safeLimit = Math.min(Math.max(params?.limit ?? 200, 1), 200);
 
-  const requestDate = params?.date ?? (!params?.startDate && !params?.endDate ? fallbackToday : undefined);
+  const singleDayFromRange =
+    !params?.date &&
+    Boolean(params?.startDate && params?.endDate) &&
+    params?.startDate === params?.endDate
+      ? params?.startDate
+      : undefined;
+
+  const requestDate =
+    params?.date ??
+    singleDayFromRange ??
+    (!params?.startDate && !params?.endDate ? fallbackToday : undefined);
   const resolvedStartDate = params?.startDate ?? requestDate;
   const resolvedEndDate = params?.endDate ?? requestDate;
 
@@ -225,70 +215,84 @@ export const useAttendance = (params?: AttendanceQueryParams, options?: Attendan
       requestDate || "all-dates",
       resolvedStartDate || "no-start",
       resolvedEndDate || "no-end",
-      requestedPage,
-      requestedLimit,
+      params?.page || 1,
+      safeLimit,
     ],
     queryFn: async () => {
-      const startDateParam = requestDate ? undefined : resolvedStartDate;
-      const endDateParam = requestDate ? undefined : resolvedEndDate;
-
-      const fetchPage = async (page: number) => {
-        return await apiClient.get("/attendance", {
-          params: {
-            employeeId: params?.employeeId,
-            date: requestDate,
-            startDate: startDateParam,
-            endDate: endDateParam,
-            page,
-            limit: perRequestLimit,
+      const requestList = async (requestParams: {
+        employeeId?: string;
+        date?: string;
+        page?: number;
+        limit: number;
+      }) => {
+        return apiClient.get("/attendance", {
+          params: requestParams,
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
           },
         });
       };
 
+      const requestParams = {
+        employeeId: params?.employeeId,
+        date: requestDate,
+        page: params?.page,
+        limit: safeLimit,
+      };
+
       try {
-        if (requestedLimit <= ATTENDANCE_MAX_LIMIT || hasExplicitPage) {
-          const res = await fetchPage(requestedPage);
-          const records: AttendanceRecord[] = Array.isArray(res.data?.records) ? res.data.records : [];
+        const res = await requestList(requestParams);
+        let records: AttendanceRecord[] = Array.isArray(res.data?.records) ? res.data.records : [];
+        const pagination = res.data?.pagination;
+
+        // عند عرض يوم محدد: حمّل جميع الصفحات لتجنب اختفاء سجل الموظف بسبب pagination
+        if (requestDate && !params?.page && pagination?.pages && pagination.pages > 1) {
+          for (let page = 2; page <= pagination.pages; page += 1) {
+            const pageRes = await requestList({ ...requestParams, page });
+            const pageRecords: AttendanceRecord[] = Array.isArray(pageRes.data?.records) ? pageRes.data.records : [];
+            records = records.concat(pageRecords);
+          }
+        }
+
+        return {
+          records,
+          pagination,
+          dailyRecords: toDailyRecords(records, resolvedStartDate, resolvedEndDate),
+        };
+      } catch (error: unknown) {
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+
+        // Fallback: بعض بيئات الخادم ترفض date في list endpoint
+        if (status === 400 && requestDate) {
+          const fallbackParams = {
+            employeeId: params?.employeeId,
+            page: params?.page,
+            limit: safeLimit,
+          };
+
+          const retryRes = await requestList(fallbackParams);
+          let retryRecords: AttendanceRecord[] = Array.isArray(retryRes.data?.records) ? retryRes.data.records : [];
+          const retryPagination = retryRes.data?.pagination;
+
+          if (requestDate && !params?.page && retryPagination?.pages && retryPagination.pages > 1) {
+            for (let page = 2; page <= retryPagination.pages; page += 1) {
+              const pageRes = await requestList({ ...fallbackParams, page });
+              const pageRecords: AttendanceRecord[] = Array.isArray(pageRes.data?.records) ? pageRes.data.records : [];
+              retryRecords = retryRecords.concat(pageRecords);
+            }
+          }
 
           return {
-            records,
-            pagination: res.data?.pagination,
-            dailyRecords: toDailyRecords(records, resolvedStartDate, resolvedEndDate),
+            records: retryRecords,
+            pagination: retryPagination,
+            dailyRecords: toDailyRecords(retryRecords, resolvedStartDate, resolvedEndDate),
           };
         }
 
-        const aggregatedRecords: AttendanceRecord[] = [];
-        let pageCursor = requestedPage;
-        let lastPagination: AttendanceListResponse["pagination"] | undefined;
-
-        while (true) {
-          const res = await fetchPage(pageCursor);
-          const pageRecords: AttendanceRecord[] = Array.isArray(res.data?.records) ? res.data.records : [];
-          aggregatedRecords.push(...pageRecords);
-          lastPagination = res.data?.pagination;
-
-          const totalPages = Number(lastPagination?.pages || pageCursor);
-          const isLastPage = pageCursor >= totalPages;
-          const reachedRequestedSize = aggregatedRecords.length >= requestedLimit;
-
-          if (isLastPage || reachedRequestedSize || pageRecords.length === 0) {
-            break;
-          }
-
-          pageCursor += 1;
-        }
-
-        const records = aggregatedRecords.slice(0, requestedLimit);
-        return {
-          records,
-          pagination: lastPagination,
-          dailyRecords: toDailyRecords(records, resolvedStartDate, resolvedEndDate),
-        };
-      } catch (error) {
-        throw new Error(getApiErrorMessage(error, "فشل تحميل الحضور"));
+        throw new Error(getErrorMessage(error, "فشل تحميل بيانات الحضور"));
       }
     },
-    enabled: options?.enabled ?? true,
     staleTime: QUERY_STALE_TIME.FAST,
     gcTime: QUERY_GC_TIME.RELAXED,
   });
@@ -320,12 +324,135 @@ export const useAttendance = (params?: AttendanceQueryParams, options?: Attendan
   });
 
   const markAttendance = useMutation({
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: ["attendance"], exact: false });
+
+      const previousEntries = queryClient.getQueriesData<AttendanceListResponse>({
+        queryKey: ["attendance"],
+        exact: false,
+      });
+
+  const attendanceDate = input.date || toLocalDateString();
+      const source = input.source || "manual";
+          const normalizedCheckIn = normalizeHHmm(input.checkIn);
+          const normalizedCheckOut = normalizeHHmm(input.checkOut);
+
+      queryClient.setQueriesData<AttendanceListResponse>(
+        { queryKey: ["attendance"], exact: false },
+        (old) => {
+          if (!old) return old;
+
+          const nextRecords = [...(old.records || [])];
+
+          const upsertRecord = (type: AttendanceType, hhmm?: string, pickLatest = false) => {
+            if (!hhmm) return;
+
+            let timestamp: string;
+            try {
+              timestamp = buildTimestampFromDateAndTime(attendanceDate, hhmm);
+            } catch {
+              return;
+            }
+
+            const matchingIndexes = nextRecords
+              .map((record, index) => ({
+                record,
+                index,
+                dateKey: record.date || toDateKey(record.timestamp),
+              }))
+              .filter(
+                ({ record, dateKey }) =>
+                  record.employeeId === input.employeeId &&
+                  record.type === type &&
+                  dateKey === attendanceDate,
+              )
+              .map(({ index }) => index);
+
+            const targetIndex =
+              matchingIndexes.length === 0
+                ? -1
+                : pickLatest
+                  ? matchingIndexes[matchingIndexes.length - 1]
+                  : matchingIndexes[0];
+
+            if (targetIndex >= 0) {
+              nextRecords[targetIndex] = {
+                ...nextRecords[targetIndex],
+                employeeId: input.employeeId,
+                type,
+                timestamp,
+                date: attendanceDate,
+                source,
+              };
+              return;
+            }
+
+            nextRecords.push({
+              id: `temp-${input.employeeId}-${attendanceDate}-${type}`,
+              employeeId: input.employeeId,
+              type,
+              timestamp,
+              date: attendanceDate,
+              source,
+            });
+          };
+
+          upsertRecord("IN", normalizedCheckIn, false);
+          upsertRecord("OUT", normalizedCheckOut, true);
+
+          const rowKey = `${input.employeeId}-${attendanceDate}`;
+          const nextDaily = [...(old.dailyRecords || [])];
+          const rowIndex = nextDaily.findIndex((row) => row.key === rowKey);
+
+          const nextRow: AttendanceDailyRecord = rowIndex >= 0
+            ? { ...nextDaily[rowIndex] }
+            : {
+                key: rowKey,
+                employeeId: input.employeeId,
+                date: attendanceDate,
+                checkIn: "",
+                checkOut: "",
+                source,
+                verified: true,
+              };
+
+          if (normalizedCheckIn) nextRow.checkIn = normalizedCheckIn;
+          if (normalizedCheckOut) nextRow.checkOut = normalizedCheckOut;
+          nextRow.source = source;
+
+          if (rowIndex >= 0) {
+            nextDaily[rowIndex] = nextRow;
+          } else {
+            nextDaily.push(nextRow);
+          }
+
+          return {
+            ...old,
+            records: nextRecords,
+            dailyRecords: nextDaily.sort((a, b) => `${b.date}-${b.employeeId}`.localeCompare(`${a.date}-${a.employeeId}`)),
+          };
+        },
+      );
+
+      return { previousEntries };
+    },
     mutationFn: async (input: MarkAttendanceInput) => {
       if (!input.checkIn && !input.checkOut) {
         throw new Error("يجب إدخال checkIn أو checkOut على الأقل");
       }
 
-      const attendanceDate = input.date || getLocalDateString();
+      const normalizedCheckIn = normalizeHHmm(input.checkIn);
+      const normalizedCheckOut = normalizeHHmm(input.checkOut);
+
+      if (input.checkIn && !normalizedCheckIn) {
+        throw new Error("صيغة checkIn غير صحيحة. استخدم HH:mm");
+      }
+
+      if (input.checkOut && !normalizedCheckOut) {
+        throw new Error("صيغة checkOut غير صحيحة. استخدم HH:mm");
+      }
+
+  const attendanceDate = input.date || toLocalDateString();
       const source = input.source || "manual";
 
       console.log("[Attendance] markAttendance request", {
@@ -346,8 +473,8 @@ export const useAttendance = (params?: AttendanceQueryParams, options?: Attendan
 
       let lastResponse: unknown = null;
 
-      if (input.checkIn) {
-        const checkInTimestamp = buildTimestampFromDateAndTime(attendanceDate, input.checkIn);
+      if (normalizedCheckIn) {
+        const checkInTimestamp = buildTimestampFromDateAndTime(attendanceDate, normalizedCheckIn);
         const payload: AttendancePayload = {
           employeeId: input.employeeId,
           timestamp: checkInTimestamp,
@@ -365,8 +492,8 @@ export const useAttendance = (params?: AttendanceQueryParams, options?: Attendan
         }
       }
 
-      if (input.checkOut) {
-        const checkOutTimestamp = buildTimestampFromDateAndTime(attendanceDate, input.checkOut);
+      if (normalizedCheckOut) {
+        const checkOutTimestamp = buildTimestampFromDateAndTime(attendanceDate, normalizedCheckOut);
         const payload: AttendancePayload = {
           employeeId: input.employeeId,
           timestamp: checkOutTimestamp,
@@ -390,12 +517,21 @@ export const useAttendance = (params?: AttendanceQueryParams, options?: Attendan
       return lastResponse;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["attendance"], exact: false });
       toast.success("تم تسجيل الحضور بنجاح");
     },
-    onError: (error: unknown) => {
-      const message = getApiErrorMessage(error, "فشل تسجيل الحضور");
+    onError: (error: unknown, _variables, context) => {
+      if (context?.previousEntries?.length) {
+        for (const [queryKey, previousData] of context.previousEntries) {
+          queryClient.setQueryData(queryKey, previousData);
+        }
+      }
+
+      const message = getErrorMessage(error, "فشل تسجيل الحضور");
       toast.error(message);
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["attendance"], exact: false });
+      await queryClient.refetchQueries({ queryKey: ["attendance"], exact: false });
     },
   });
 

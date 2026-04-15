@@ -49,7 +49,12 @@ export const verifyAuthSession = async (options?: { force?: boolean }) => {
 
   inFlightVerification = (async () => {
     try {
-      await apiClient.get("/auth/me");
+      await apiClient.get("/auth/me", {
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
       cachedResult = { authorized: true };
       cacheExpiresAt = now() + SUCCESS_TTL_MS;
       blockedUntil = 0;
