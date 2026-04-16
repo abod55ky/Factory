@@ -44,6 +44,21 @@ export type BiometricLoginFinishRequest = {
   challengeBase64: string;
   keyId: string;
   signatureBase64: string;
+  markAttendance?: boolean;
+  employeeId?: string;
+  attendanceType?: "IN" | "OUT";
+  attendanceDeviceId?: string;
+  attendanceLocation?: string;
+  attendanceNotes?: string;
+};
+
+export type BiometricAttendanceResult = {
+  recordId: string;
+  employeeId: string;
+  type: "IN" | "OUT";
+  timestamp: string;
+  date: string;
+  action: "created" | "updated";
 };
 
 export type BiometricLoginFinishResponse = {
@@ -56,6 +71,7 @@ export type BiometricLoginFinishResponse = {
   roles?: string[];
   permissions?: string[];
   token?: string;
+  attendance?: BiometricAttendanceResult | null;
 };
 
 export type BiometricRevokeRequest = {

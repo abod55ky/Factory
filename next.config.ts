@@ -12,9 +12,20 @@ const apiOrigin = (() => {
   }
 })();
 
-const connectSources = ["'self'", apiOrigin].filter(Boolean);
+const apiWsOrigin = (() => {
+  if (!apiOrigin) return "";
+  try {
+    const parsed = new URL(apiOrigin);
+    parsed.protocol = parsed.protocol === "https:" ? "wss:" : "ws:";
+    return parsed.origin;
+  } catch {
+    return "";
+  }
+})();
+
+const connectSources = ["'self'", apiOrigin, apiWsOrigin].filter(Boolean);
 if (isProduction) {
-  connectSources.push("https:");
+  connectSources.push("https:", "wss:");
 } else {
   connectSources.push("http:", "https:", "ws:", "wss:");
 }

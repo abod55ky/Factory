@@ -37,7 +37,7 @@ export default function SettingsPage() {
       <div className="flex flex-col lg:flex-row gap-8">
         
         {/* القائمة الجانبية للإعدادات */}
-        <div className="w-full lg:w-72 flex-shrink-0">
+        <div className="w-full lg:w-72 shrink-0">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 flex flex-col gap-1">
             {tabs.map((tab) => (
               <button

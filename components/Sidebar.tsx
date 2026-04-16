@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Users, ClipboardList,
-  Wallet, Box, FileInput, Settings,
+  Wallet, Box, FileInput, Settings, Fingerprint,
   ChevronDown, LogOut, Hexagon,
   ChevronsRight, UserMinus
 } from 'lucide-react';
@@ -28,6 +28,7 @@ const menuItems = [
       { name: 'مسير الرواتب', href: '/salaries/payroll' },
     ]
   },
+  { name: 'بصمتي وحضوري', icon: Fingerprint, href: '/biometric' },
   { name: 'مخزن الشغل', icon: Box, href: '/inventory', roles: ['admin', 'warehouse', 'manager'] },
   { name: 'استيراد البيانات', icon: FileInput, href: '/importData', roles: ['admin', 'manager'] },
   { name: 'الإعدادات', icon: Settings, href: '/settings', roles: ['admin'] },

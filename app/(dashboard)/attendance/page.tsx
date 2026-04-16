@@ -357,12 +357,18 @@
 // }
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Calendar as CalendarIcon, Fingerprint, PencilLine, Clock3, LogIn, LogOut, Loader2, X } from "lucide-react";
+import { toast } from "react-hot-toast";
 import { useAttendance } from "@/hooks/useAttendance";
 import { useEmployees } from "@/hooks/useEmployees";
 import { HH_MM_REGEX, normalizeHHmm } from "@/lib/attendance-time";
 import { timeNow, toLocalDateString } from "@/lib/date-time";
+import {
+  getAttendanceSocket,
+  type AttendanceRealtimeEventPayload,
+} from "@/lib/realtime/attendance-socket";
 
 type TableStatus = "present" | "late" | "absent";
 
@@ -432,7 +438,9 @@ interface AttendanceTableRow {
 
 export default function AttendancePage() {
   const today = getToday();
+  const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(today);
+  const [liveAttendanceEvent, setLiveAttendanceEvent] = useState<AttendanceRealtimeEventPayload | null>(null);
 
   // حالة النافذة المنبثقة (Modal) المخصصة للوقت
   const [timeModal, setTimeModal] = useState<{
@@ -520,6 +528,27 @@ export default function AttendancePage() {
     );
   }, [rows]);
 
+  useEffect(() => {
+    const socket = getAttendanceSocket();
+    if (!socket) return;
+
+    const onAttendanceUpdate = (payload: AttendanceRealtimeEventPayload) => {
+      if (!payload?.employeeId) return;
+
+      setLiveAttendanceEvent(payload);
+      toast.success(payload.message || "تم تسجيل حضور جديد");
+
+      void queryClient.invalidateQueries({ queryKey: ["attendance"], exact: false });
+      void queryClient.refetchQueries({ queryKey: ["attendance"], exact: false });
+    };
+
+    socket.on("attendanceUpdate", onAttendanceUpdate);
+
+    return () => {
+      socket.off("attendanceUpdate", onAttendanceUpdate);
+    };
+  }, [queryClient]);
+
   // فتح النافذة المنبثقة بدلاً من window.prompt
   const handleOpenTimeModal = (row: AttendanceTableRow, field: "checkIn" | "checkOut") => {
     if (!EMPLOYEE_ID_REGEX.test(row.employeeId)) {
@@ -579,6 +608,28 @@ export default function AttendancePage() {
       <header className="mb-10 text-right">
         <h1 className="text-3xl font-extrabold text-[#00bba7]">سجل الحضور والانصراف</h1>
         <p className="text-slate-500 text-sm mt-2 font-medium">جاهز للتكامل مع جهاز البصمة (BASSAMA) باستخدام employeeId</p>
+
+        {liveAttendanceEvent && (
+          <div className="mt-5 rounded-2xl border border-[#00bba7]/20 bg-[#00bba7]/10 p-4 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Fingerprint size={18} className="text-[#00bba7] mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-slate-800">{liveAttendanceEvent.message}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {liveAttendanceEvent.employeeName} - {liveAttendanceEvent.employeeId}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLiveAttendanceEvent(null)}
+              className="text-slate-400 hover:text-rose-500 transition-colors"
+              aria-label="إغلاق التنبيه الفوري"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         <div className="mt-8 flex flex-wrap items-end gap-6">
           <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm min-w-65 flex-1 md:flex-none hover:border-[#00bba7]/30 transition-colors">
