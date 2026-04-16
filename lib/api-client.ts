@@ -30,10 +30,16 @@ const getRequestPathname = (url?: string) => {
   }
 };
 
+const AUTH_ENDPOINT_PREFIXES = [
+  '/auth/login',
+  '/auth/logout',
+  '/auth/me',
+  '/auth/register',
+  '/auth/biometric/',
+] as const;
+
 const isAuthEndpoint = (pathname: string) => {
-  return pathname.startsWith('/auth/login')
-    || pathname.startsWith('/auth/logout')
-    || pathname.startsWith('/auth/me');
+  return AUTH_ENDPOINT_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 };
 
 const apiClient = axios.create({
