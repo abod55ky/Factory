@@ -9,7 +9,7 @@ import { useBonuses } from "@/hooks/useBonuses";
 import { useAttendance } from "@/hooks/useAttendance";
 import { usePayroll } from "@/hooks/usePayroll";
 import type { FinancialTabKey } from "@/components/salaries/FinancialHubTabs";
-import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2 } from "lucide-react";
+import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2, Wallet, HandCoins } from "lucide-react";
 import { toast } from "react-hot-toast";
 import type { Salary } from "@/types/salary";
 import type { Employee } from "@/types/employee";
@@ -60,9 +60,9 @@ type SalaryPayload = {
 };
 
 const SkeletonRows = () => (
-  <div className="space-y-3 p-6">
+  <div className="space-y-3 p-6 bg-white/50 rounded-3xl">
     {Array.from({ length: 5 }).map((_, i) => (
-      <div key={i} className="h-12 rounded-xl bg-slate-100/80 animate-pulse" />
+      <div key={i} className="h-12 rounded-xl bg-slate-200/50 animate-pulse" />
     ))}
   </div>
 );
@@ -110,7 +110,6 @@ export default function SalariesPage() {
     setIsModalOpen(true);
   };
 
-  // build maps and union of ids so we show employees without salary too
   const employeeMap = useMemo(() => {
     const m = new Map<string, Employee>();
     (activeEmployees || []).forEach((e) => { if (e?.employeeId) m.set(e.employeeId, e); });
@@ -157,12 +156,12 @@ export default function SalariesPage() {
       const baseSalary = salary ? toNumber(salary.baseSalary) : toNumber(employee?.hourlyRate);
       const proratedBase = (baseSalary / 26) * attendanceDays;
 
-const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === employeeId);
-       const totalBonus = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.bonusAmount), 0);
-       const totalDeductions = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.assistanceAmount), 0);
+      const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === employeeId);
+      const totalBonus = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.bonusAmount), 0);
+      const totalDeductions = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.assistanceAmount), 0);
        
-       const employeeAdvances = (advances || []).filter((a: Advance) => a.employeeId === employeeId);
-       const advancesInstallments = employeeAdvances.reduce((sum: number, a: Advance) => sum + toNumber(a.installmentAmount), 0);
+      const employeeAdvances = (advances || []).filter((a: Advance) => a.employeeId === employeeId);
+      const advancesInstallments = employeeAdvances.reduce((sum: number, a: Advance) => sum + toNumber(a.installmentAmount), 0);
 
       const net = proratedBase + totalBonus - totalDeductions - advancesInstallments;
 
@@ -223,7 +222,6 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
             toast.success(`تم إنشاء مسير الرواتب: ${runId}`);
             return;
           }
-
           toast.success("تم إنشاء مسير الرواتب بنجاح");
         },
       },
@@ -235,13 +233,11 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
       openFor(null);
       return;
     }
-
     if (activeTab === "advances") {
       setSelectedAdvance(null);
       setIsAdvanceModalOpen(true);
       return;
     }
-
     if (activeTab === "bonuses") {
       setSelectedBonus(null);
       setIsBonusModalOpen(true);
@@ -251,331 +247,366 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
   const isFloatingActionVisible = activeTab !== "final-payroll";
 
   return (
-    <div className="min-h-screen p-8 bg-[radial-gradient(circle_at_10%_20%,rgba(59,130,246,0.13),transparent_36%),radial-gradient(circle_at_90%_15%,rgba(16,185,129,0.12),transparent_35%),#f8fafc]" dir="rtl">
-      <div className="mb-6">
-        <div className="rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl shadow-[0_10px_40px_-25px_rgba(15,23,42,0.35)] p-6 md:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+    /* الخلفية المتدرجة الأساسية للموقع */
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-gradient-to-br from-[#00bba7] via-[#00bba7]/90 to-[#E7C873]" dir="rtl">
+      
+      {/* الحاوية الرئيسية (Wrapper) الزجاجية مع البوردر الذهبي والشادو */}
+      <div className="relative z-10 w-full max-w-7xl min-h-[90vh] bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden">
+        
+        {/* المحتوى الداخلي */}
+        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
+          
+          <header className="mb-10 flex flex-col xl:flex-row xl:items-end justify-between gap-6 border-b border-black/5 pb-8 relative">
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
-                <Sparkles className="text-blue-600" />
-                المركز المالي الذكي
-              </h1>
-              <p className="text-sm text-slate-500 mt-2">لوحة موحدة لإدارة الرواتب والسلف والمكافآت وحساب المسير النهائي بدقة مؤسسية.</p>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
+                  {/* أنيميشن قفز لأيقونة العنوان */}
+                  <Sparkles size={24} className="text-white animate-bounce" />
+                </div>
+                <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+                  المركز المالي الذكي
+                </h1>
+              </div>
+              <p className="text-slate-500 text-sm font-medium pr-14 mt-1">لوحة موحدة لإدارة الرواتب والسلف والمكافآت وحساب المسير النهائي بدقة مؤسسية.</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-right">
-                <p className="text-[11px] text-slate-500">إجمالي السلف المتبقية</p>
-                <p className="font-bold text-slate-900">{tabStats.totalAdvances.toLocaleString()}</p>
+            <div className="mt-4 xl:mt-0 flex flex-wrap items-center gap-4 w-full xl:w-auto">
+              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <HandCoins size={14} className="text-[#E7C873] group-hover:animate-pulse" />
+                  <p className="text-[11px] font-bold text-slate-500">إجمالي السلف المتبقية</p>
+                </div>
+                <p className="font-black text-xl text-slate-800">{tabStats.totalAdvances.toLocaleString()}</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-right">
-                <p className="text-[11px] text-slate-500">إجمالي المكافآت</p>
-                <p className="font-bold text-emerald-700">{tabStats.totalBonus.toLocaleString()}</p>
+              
+              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Gift size={14} className="text-[#00bba7] group-hover:animate-pulse" />
+                  <p className="text-[11px] font-bold text-slate-500">إجمالي المكافآت</p>
+                </div>
+                <p className="font-black text-xl text-[#00bba7]">{tabStats.totalBonus.toLocaleString()}</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-right">
-                <p className="text-[11px] text-slate-500">إجمالي الخصومات</p>
-                <p className="font-bold text-rose-700">{tabStats.totalDeductions.toLocaleString()}</p>
+
+              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Wallet size={14} className="text-rose-500 group-hover:animate-pulse" />
+                  <p className="text-[11px] font-bold text-slate-500">إجمالي الخصومات</p>
+                </div>
+                <p className="font-black text-xl text-rose-600">{tabStats.totalDeductions.toLocaleString()}</p>
               </div>
             </div>
-          </div>
+          </header>
 
-          <div className="mt-6">
+          <div className="mb-8">
             <FinancialHubTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
           </div>
+
+          {activeTab === "salary-config" && (
+            <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
+              {isLoading ? (
+                <SkeletonRows />
+              ) : isError ? (
+                <div className="p-8 text-center font-bold text-rose-600 bg-rose-50/50">خطأ: {error?.message ?? "فشل تحميل البيانات"}</div>
+              ) : (
+                <div className="w-full overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-right min-w-245">
+                    <thead className="bg-slate-50/50 border-b border-slate-100/80">
+                      <tr>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">كود الموظف</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">اسم الموظف</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المهنة</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الراتب الأساسي</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إجمالي البدلات</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الإجمالي الثابت الشهري</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {allIds.length === 0 ? (
+                        <tr><td colSpan={7} className="p-16 text-center text-slate-500 font-medium">لا توجد سجلات.</td></tr>
+                      ) : (
+                        allIds.map((id: string) => {
+                          const s = salaryMap.get(id) ?? null;
+                          const emp = employeeMap.get(id) ?? null;
+
+                          if (!s) {
+                            const baseFromEmployee = toNumber(emp?.hourlyRate);
+                            const monthlyFixedTotal = baseFromEmployee;
+
+                            return (
+                              <tr key={id} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                                <td className="p-4 font-mono text-center text-sm text-slate-500">{id}</td>
+                                <td className="p-4 text-center font-bold text-slate-800">{employeesLoading ? "جارٍ التحميل..." : (emp?.name ?? "موظف محذوف")}</td>
+                                <td className="p-4 text-center text-sm text-slate-600 font-medium">{emp?.profession ?? emp?.department ?? "—"}</td>
+                                <td className="p-4 text-center font-mono font-bold text-slate-700">{baseFromEmployee > 0 ? baseFromEmployee.toLocaleString() : "—"}</td>
+                                <td className="p-4 text-center text-slate-400">0</td>
+                                <td className="p-4 font-black text-center text-slate-800">{monthlyFixedTotal > 0 ? monthlyFixedTotal.toLocaleString() : <span className="text-rose-500 text-xs">لم يتم ضبط الراتب</span>}</td>
+                                <td className="p-4 text-center">
+                                  <div className="flex items-center gap-3 justify-center opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => openFor(null, id)} className="px-4 py-1.5 rounded-xl bg-[#00bba7]/10 text-[#00bba7] hover:bg-[#00bba7] hover:text-white font-bold text-xs transition-all shadow-sm">
+                                      ضبط الراتب
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          const base = Number(s.baseSalary || 0);
+                          const resp = Number(s.responsibilityAllowance || 0);
+                          const prod = Number(s.productionIncentive || 0);
+                          const trans = Number(s.transportAllowance || 0);
+                          const totalAllowances = resp + prod + trans;
+                          const monthlyFixedTotal = base + totalAllowances;
+                          const employeeName = employeeNameMap[s.employeeId];
+
+                          return (
+                            <tr key={s.employeeId} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                              <td className="p-4 font-mono text-center text-sm text-slate-500">{s.employeeId}</td>
+                              <td className="p-4 text-center font-bold text-slate-800">{employeesLoading ? "جارٍ التحميل..." : (employeeName ?? "موظف محذوف")}</td>
+                              <td className="p-4 text-center text-sm text-slate-600 font-medium">{s.profession}</td>
+                              <td className="p-4 text-center font-mono font-bold text-slate-700">{base.toLocaleString()}</td>
+                              <td className="p-4 text-center font-mono font-bold text-[#E7C873]">{totalAllowances.toLocaleString()}</td>
+                              <td className="p-4 font-black text-center text-[#00bba7]">{monthlyFixedTotal.toLocaleString()}</td>
+                              <td className="p-4 text-center">
+                                <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                  <button onClick={() => openFor(s)} className="text-[#E7C873] hover:bg-[#E7C873]/10 p-2.5 rounded-xl transition-all hover:scale-110" title="تعديل الراتب">
+                                    <Edit size={16} />
+                                  </button>
+                                  <button onClick={() => handleDelete(s.employeeId)} className="text-rose-500 hover:bg-rose-50 p-2.5 rounded-xl transition-all hover:scale-110" title="حذف">
+                                    {deleteSalary.isPending ? <Loader2 className="animate-spin" size={16} /> : <Trash size={16} />}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "advances" && (
+            <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
+              <div className="w-full overflow-x-auto custom-scrollbar">
+                <table className="w-full text-right min-w-245">
+                  <thead className="bg-slate-50/50 border-b border-slate-100/80">
+                    <tr>
+                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إجمالي السلفة</th>
+                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">القسط الشهري</th>
+                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المتبقي</th>
+                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">تاريخ الإصدار</th>
+                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">حالة الخصم</th>
+                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {(advances || []).length === 0 ? (
+                      <tr><td colSpan={7} className="p-16 text-center text-slate-500 font-medium">لا توجد سلف مسجلة حالياً.</td></tr>
+                    ) : (
+                      (advances || []).map((item: Advance) => {
+                        const remaining = toNumber(item.remainingAmount);
+                        return (
+                          <tr key={item.id} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                            <td className="p-4 text-center font-bold text-slate-800">{employeeNameMap[item.employeeId] || item.employeeId}</td>
+                            <td className="p-4 text-center font-mono font-bold text-slate-700">{toNumber(item.totalAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center font-mono font-bold text-[#E7C873]">{toNumber(item.installmentAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-[#00bba7]">{remaining.toLocaleString()}</td>
+                            <td className="p-4 text-center font-mono text-sm text-slate-500">{new Date(item.issueDate).toLocaleDateString("ar-EG")}</td>
+                            <td className="p-4 text-center">
+                              <span className={`px-4 py-1.5 rounded-xl text-[11px] font-bold border shadow-sm ${remaining > 0 ? "bg-orange-50 text-orange-600 border-orange-100" : "bg-[#00bba7]/10 text-[#00bba7] border-[#00bba7]/20"}`}>
+                                {remaining > 0 ? "جارٍ الخصم" : "مكتمل"}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => {
+                                    setSelectedAdvance(item);
+                                    setIsAdvanceModalOpen(true);
+                                  }}
+                                  className="text-[#E7C873] hover:bg-[#E7C873]/10 p-2.5 rounded-xl transition-all hover:scale-110"
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => deleteAdvance.mutate(item.id)}
+                                  className="text-rose-500 hover:bg-rose-50 p-2.5 rounded-xl transition-all hover:scale-110"
+                                >
+                                  {deleteAdvance.isPending ? <Loader2 className="animate-spin" size={16} /> : <Trash size={16} />}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "bonuses" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center rounded-2xl border border-white/80 bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
+                <h2 className="font-black text-slate-800 flex items-center gap-3 text-lg">
+                  <Gift size={20} className="text-[#00bba7] animate-pulse" /> إدارة المكافآت والخصومات
+                </h2>
+                <div className="relative">
+                  <input
+                    type="month"
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value)}
+                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#00bba7] focus:ring-2 focus:ring-[#00bba7]/20 transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
+                <div className="w-full overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-right min-w-245">
+                    <thead className="bg-slate-50/50 border-b border-slate-100/80">
+                      <tr>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الفترة</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المكافأة</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">السبب</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {(bonuses || []).length === 0 ? (
+                        <tr><td colSpan={6} className="p-16 text-center text-slate-500 font-medium">لا توجد سجلات في هذه الفترة.</td></tr>
+                      ) : (
+                        (bonuses || []).map((item: Bonus) => (
+                          <tr key={item.id} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                            <td className="p-4 text-center font-bold text-slate-800">{employeeNameMap[item.employeeId] || item.employeeId}</td>
+                            <td className="p-4 text-center font-mono text-sm text-slate-500">{item.period || "—"}</td>
+                            <td className="p-4 text-center text-[#00bba7] font-black">{toNumber(item.bonusAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center text-rose-600 font-black">{toNumber(item.assistanceAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center text-slate-600 text-sm font-medium">{item.bonusReason || "—"}</td>
+                            <td className="p-4 text-center">
+                              <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => {
+                                    setSelectedBonus(item);
+                                    setIsBonusModalOpen(true);
+                                  }}
+                                  className="text-[#E7C873] hover:bg-[#E7C873]/10 p-2.5 rounded-xl transition-all hover:scale-110"
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => deleteBonus.mutate(item.id)}
+                                  className="text-rose-500 hover:bg-rose-50 p-2.5 rounded-xl transition-all hover:scale-110"
+                                >
+                                  {deleteBonus.isPending ? <Loader2 className="animate-spin" size={16} /> : <Trash size={16} />}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "final-payroll" && (
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 rounded-2xl border border-white/80 bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
+                <h2 className="font-black text-slate-800 flex items-center gap-3 text-lg">
+                  <Calculator size={20} className="text-[#00bba7] animate-pulse" /> المسير النهائي للفترة
+                </h2>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="month"
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value)}
+                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#00bba7] focus:ring-2 focus:ring-[#00bba7]/20 transition-all shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRunPayroll}
+                    disabled={calculatePayroll.isPending}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] hover:from-[#00a392] hover:to-[#006e63] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_20px_rgba(0,187,167,0.3)] transition-all active:scale-95 border border-[#00bba7]/50 disabled:opacity-60 disabled:cursor-not-allowed group"
+                  >
+                    {calculatePayroll.isPending ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} className="group-hover:animate-bounce" />}
+                    تشغيل المسير
+                  </button>
+                </div>
+              </div>
+
+              {lastCalculatedRunId ? (
+                <div className="text-sm text-[#00bba7] bg-[#00bba7]/10 border border-[#00bba7]/20 rounded-xl px-4 py-3 font-bold flex items-center gap-2 shadow-sm">
+                  <Sparkles size={16} /> آخر تشغيل ناجح للمسير: <span className="font-mono">{lastCalculatedRunId}</span>
+                </div>
+              ) : null}
+
+              <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
+                <div className="w-full overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-right min-w-245">
+                    <thead className="bg-slate-50/50 border-b border-slate-100/80">
+                      <tr>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">أيام الحضور</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الراتب النسبي</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المكافآت</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">خصم السلف</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">صافي المستحق</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {finalPayrollRows.length === 0 ? (
+                        <tr><td colSpan={7} className="p-16 text-center text-slate-500 font-medium">لا توجد بيانات كافية لحساب المسير.</td></tr>
+                      ) : (
+                        finalPayrollRows.map((row) => (
+                          <tr key={row.employeeId} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                            <td className="p-4 text-center font-bold text-slate-800">{row.employeeName}</td>
+                            <td className="p-4 text-center font-mono font-bold text-slate-600">{row.attendanceDays}</td>
+                            <td className="p-4 text-center font-mono font-bold text-slate-700">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 text-center font-black text-[#00bba7]">{row.totalBonus.toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-rose-600">{row.totalDeductions.toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-[#E7C873]">{row.advancesInstallments.toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-xl text-slate-900 bg-slate-50/50">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 font-medium px-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#E7C873]"></span>
+                المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف.
+              </p>
+            </div>
+          )}
+
         </div>
       </div>
 
-      {activeTab === "salary-config" && (
-        <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-{isLoading ? (
-             <SkeletonRows />
-           ) : isError ? (
-             <div className="p-6 text-red-600">خطأ: {error?.message ?? "فشل تحميل البيانات"}</div>
-           ) : (
-            <div className="w-full overflow-x-auto">
-            <table className="w-full text-right min-w-245">
-            <thead className="bg-slate-50 text-slate-600">
-              <tr>
-                <th className="p-4 font-medium text-center">كود الموظف</th>
-                <th className="p-4 font-medium text-center">اسم الموظف</th>
-                <th className="p-4 font-medium text-center">المهنة</th>
-                <th className="p-4 font-medium text-center">الراتب الأساسي</th>
-                <th className="p-4 font-medium text-center">إجمالي البدلات</th>
-                <th className="p-4 font-medium text-center">الإجمالي الثابت الشهري</th>
-                <th className="p-4 font-medium text-center">إدارة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allIds.length === 0 ? (
-                <tr><td colSpan={7} className="p-6 text-center text-slate-500">لا توجد سجلات</td></tr>
-              ) : (
-                allIds.map((id: string) => {
-                  const s = salaryMap.get(id) ?? null;
-                  const emp = employeeMap.get(id) ?? null;
-
-                  if (!s) {
-                    // Employee exists but no salary record
-                    const baseFromEmployee = toNumber(emp?.hourlyRate);
-                    const monthlyFixedTotal = baseFromEmployee;
-
-                    return (
-                      <tr key={id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="p-4 font-mono text-center">{id}</td>
-                        <td className="p-4 text-center">{employeesLoading ? "جارٍ التحميل..." : (emp?.name ?? "موظف محذوف")}</td>
-                        <td className="p-4 text-center">{emp?.profession ?? emp?.department ?? "—"}</td>
-                        <td className="p-4 text-center">{baseFromEmployee > 0 ? baseFromEmployee.toLocaleString() : "—"}</td>
-                        <td className="p-4 text-center">0</td>
-                        <td className="p-4 font-bold text-center">{monthlyFixedTotal > 0 ? monthlyFixedTotal.toLocaleString() : "لم يتم ضبط الراتب"}</td>
-                        <td className="p-4 text-center">
-                          <div className="flex items-center gap-3 justify-center">
-                            <button onClick={() => openFor(null, id)} className="px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-95">تعديل</button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  }
-
-                  const base = Number(s.baseSalary || 0);
-                  const resp = Number(s.responsibilityAllowance || 0);
-                  const prod = Number(s.productionIncentive || 0);
-                  const trans = Number(s.transportAllowance || 0);
-                  const totalAllowances = resp + prod + trans;
-                  const monthlyFixedTotal = base + totalAllowances; // monthly fixed total
-                  const employeeName = employeeNameMap[s.employeeId];
-
-                  return (
-                    <tr key={s.employeeId} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                      <td className="p-4 font-mono text-center">{s.employeeId}</td>
-                      <td className="p-4 text-center">{employeesLoading ? "جارٍ التحميل..." : (employeeName ?? "موظف محذوف")}</td>
-                      <td className="p-4 text-center">{s.profession}</td>
-                      <td className="p-4 text-center">{base.toLocaleString()}</td>
-                      <td className="p-4 text-center">{totalAllowances.toLocaleString()}</td>
-                      <td className="p-4 font-bold text-center">{monthlyFixedTotal.toLocaleString()}</td>
-                      <td className="p-4 text-center">
-                        <div className="flex items-center gap-3 justify-center">
-                          <button onClick={() => openFor(s)} className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 active:scale-95">
-                            <Edit size={18} />
-                          </button>
-                          <button onClick={() => handleDelete(s.employeeId)} className="p-2 rounded-lg text-red-600 hover:bg-red-50 active:scale-95">
-                            {deleteSalary.isPending ? <Loader2 className="animate-spin" size={18} /> : <Trash size={18} />}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-          </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === "advances" && (
-        <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-          <div className="w-full overflow-x-auto">
-            <table className="w-full text-right min-w-245">
-              <thead className="bg-slate-50 text-slate-600">
-                <tr>
-                  <th className="p-4 text-center">الموظف</th>
-                  <th className="p-4 text-center">إجمالي السلفة</th>
-                  <th className="p-4 text-center">القسط الشهري</th>
-                  <th className="p-4 text-center">المتبقي</th>
-                  <th className="p-4 text-center">تاريخ الإصدار</th>
-                  <th className="p-4 text-center">حالة الخصم</th>
-                  <th className="p-4 text-center">إدارة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(advances || []).length === 0 ? (
-                  <tr><td colSpan={7} className="p-8 text-center text-slate-500">لا توجد سلف مسجلة حالياً.</td></tr>
-                ) : (
-                  (advances || []).map((item: Advance) => {
-                    const remaining = toNumber(item.remainingAmount);
-                    return (
-                      <tr key={item.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="p-4 text-center">{employeeNameMap[item.employeeId] || item.employeeId}</td>
-                        <td className="p-4 text-center">{toNumber(item.totalAmount).toLocaleString()}</td>
-                        <td className="p-4 text-center">{toNumber(item.installmentAmount).toLocaleString()}</td>
-                        <td className="p-4 text-center font-bold text-blue-700">{remaining.toLocaleString()}</td>
-                        <td className="p-4 text-center">{new Date(item.issueDate).toLocaleDateString("ar-EG")}</td>
-                        <td className="p-4 text-center">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${remaining > 0 ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}`}>
-                            {remaining > 0 ? "جارٍ الخصم" : "مكتمل"}
-                          </span>
-                        </td>
-                        <td className="p-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => {
-                                setSelectedAdvance(item);
-                                setIsAdvanceModalOpen(true);
-                              }}
-                              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 active:scale-95"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => deleteAdvance.mutate(item.id)}
-                              className="p-2 rounded-lg text-red-600 hover:bg-red-50 active:scale-95"
-                            >
-                              {deleteAdvance.isPending ? <Loader2 className="animate-spin" size={18} /> : <Trash size={18} />}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "bonuses" && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center rounded-2xl border border-white/50 bg-white/75 backdrop-blur p-4">
-            <h2 className="font-bold text-slate-800 flex items-center gap-2"><Gift size={18} /> إدارة المكافآت والخصومات</h2>
-            <input
-              type="month"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="p-2 rounded-lg border border-slate-200 bg-white"
-            />
-          </div>
-
-          <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-right min-w-245">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th className="p-4 text-center">الموظف</th>
-                    <th className="p-4 text-center">الفترة</th>
-                    <th className="p-4 text-center">المكافأة</th>
-                    <th className="p-4 text-center">الخصومات</th>
-                    <th className="p-4 text-center">السبب</th>
-                    <th className="p-4 text-center">إدارة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(bonuses || []).length === 0 ? (
-                    <tr><td colSpan={6} className="p-8 text-center text-slate-500">لا توجد سجلات في هذه الفترة.</td></tr>
-                  ) : (
-                    (bonuses || []).map((item: Bonus) => (
-                      <tr key={item.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="p-4 text-center">{employeeNameMap[item.employeeId] || item.employeeId}</td>
-                        <td className="p-4 text-center">{item.period || "—"}</td>
-                        <td className="p-4 text-center text-emerald-700 font-bold">{toNumber(item.bonusAmount).toLocaleString()}</td>
-                        <td className="p-4 text-center text-rose-700 font-bold">{toNumber(item.assistanceAmount).toLocaleString()}</td>
-                        <td className="p-4 text-center">{item.bonusReason || "—"}</td>
-                        <td className="p-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => {
-                                setSelectedBonus(item);
-                                setIsBonusModalOpen(true);
-                              }}
-                              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 active:scale-95"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => deleteBonus.mutate(item.id)}
-                              className="p-2 rounded-lg text-red-600 hover:bg-red-50 active:scale-95"
-                            >
-                              {deleteBonus.isPending ? <Loader2 className="animate-spin" size={18} /> : <Trash size={18} />}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "final-payroll" && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center rounded-2xl border border-white/50 bg-white/75 backdrop-blur p-4">
-            <h2 className="font-bold text-slate-800 flex items-center gap-2"><Calculator size={18} /> المسير النهائي للفترة</h2>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleRunPayroll}
-                disabled={calculatePayroll.isPending}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {calculatePayroll.isPending ? <Loader2 size={14} className="animate-spin" /> : <Calculator size={14} />}
-                تشغيل المسير على الخادم
-              </button>
-              <input
-                type="month"
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-                className="p-2 rounded-lg border border-slate-200 bg-white"
-              />
-            </div>
-          </div>
-
-          {lastCalculatedRunId ? (
-            <p className="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-              آخر تشغيل ناجح للمسير: {lastCalculatedRunId}
-            </p>
-          ) : null}
-
-          <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-right min-w-245">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th className="p-4 text-center">الموظف</th>
-                    <th className="p-4 text-center">أيام الحضور</th>
-                    <th className="p-4 text-center">الراتب النسبي</th>
-                    <th className="p-4 text-center">المكافآت</th>
-                    <th className="p-4 text-center">الخصومات</th>
-                    <th className="p-4 text-center">خصم السلف</th>
-                    <th className="p-4 text-center">صافي المستحق</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {finalPayrollRows.length === 0 ? (
-                    <tr><td colSpan={7} className="p-8 text-center text-slate-500">لا توجد بيانات كافية لحساب المسير.</td></tr>
-                  ) : (
-                    finalPayrollRows.map((row) => (
-                      <tr key={row.employeeId} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="p-4 text-center">{row.employeeName}</td>
-                        <td className="p-4 text-center">{row.attendanceDays}</td>
-                        <td className="p-4 text-center">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                        <td className="p-4 text-center text-emerald-700">{row.totalBonus.toLocaleString()}</td>
-                        <td className="p-4 text-center text-rose-700">{row.totalDeductions.toLocaleString()}</td>
-                        <td className="p-4 text-center text-orange-700">{row.advancesInstallments.toLocaleString()}</td>
-                        <td className="p-4 text-center font-extrabold text-blue-700">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <p className="text-xs text-slate-500 px-2">المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف.</p>
-        </div>
-      )}
-
+      {/* زر الإضافة العائم */}
       {isFloatingActionVisible && (
         <button
           onClick={openFloatingAction}
-          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-blue-600 text-white shadow-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center"
+          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-gradient-to-br from-[#00bba7] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#00bba7]/50 group"
           title="إضافة سجل جديد"
         >
-          <Plus size={24} />
+          <Plus size={26} className="group-hover:animate-spin" />
         </button>
       )}
 
+      {/* النوافذ المنبثقة */}
       {isModalOpen ? (
         <ManageSalaryModal
           key={`${isModalOpen}-${selected?.employeeId ?? preselectedEmployeeId ?? "new"}`}
@@ -672,10 +703,11 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
         />
       ) : null}
 
+      {/* تنبيه الحفظ (Loading Toaster) */}
       {isSaving && (
-        <div className="fixed bottom-6 right-6 z-40 rounded-2xl border border-white/60 bg-white/85 backdrop-blur px-4 py-3 shadow-lg">
-          <p className="text-sm font-bold text-slate-700 flex items-center gap-2">
-            <Loader2 className="animate-spin" size={16} />
+        <div className="fixed bottom-6 right-6 z-40 rounded-2xl border border-white/60 bg-white/85 backdrop-blur-md px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.1)] flex items-center gap-3">
+          <Loader2 className="animate-spin text-[#00bba7]" size={18} />
+          <p className="text-sm font-bold text-slate-700">
             جارٍ حفظ التعديلات المالية...
           </p>
         </div>
