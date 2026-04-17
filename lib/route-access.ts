@@ -24,6 +24,7 @@ export const PROTECTED_ROUTE_PREFIXES = [
   "/inventory",
   "/importData",
   "/settings",
+  "/biometric",
   "/payroll",
   "/advances",
   "/bonuses",

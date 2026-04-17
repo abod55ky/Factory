@@ -2,10 +2,10 @@
 
 import { useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard, Users, ClipboardList,
-  Wallet, Box, FileInput, Settings,
+  Wallet, Box, FileInput, Settings, Fingerprint,
   ChevronDown, LogOut, Hexagon,
   ChevronsRight, UserMinus
 } from 'lucide-react';
@@ -22,12 +22,13 @@ const menuItems = [
   {
     name: 'الرواتب', icon: Wallet, roles: ['admin', 'finance', 'manager'],
     subItems: [
-      { name: 'إعدادات الرواتب', href: '/salaries' },
-      { name: 'السلف', href: '/salaries/advances' },
-      { name: 'المكافآت والخصومات', href: '/salaries/bonuses' },
-      { name: 'مسير الرواتب', href: '/salaries/payroll' },
+      { name: 'إعدادات الرواتب', href: '/salaries?tab=salary-config' },
+      { name: 'السلف', href: '/salaries?tab=advances' },
+      { name: 'المكافآت والخصومات', href: '/salaries?tab=bonuses' },
+      { name: 'مسير الرواتب', href: '/payroll' },
     ]
   },
+  { name: 'بصمتي وحضوري', icon: Fingerprint, href: '/biometric' },
   { name: 'مخزن الشغل', icon: Box, href: '/inventory', roles: ['admin', 'warehouse', 'manager'] },
   { name: 'استيراد البيانات', icon: FileInput, href: '/importData', roles: ['admin', 'manager'] },
   { name: 'الإعدادات', icon: Settings, href: '/settings', roles: ['admin'] },
@@ -44,6 +45,7 @@ function useIsHydrated() {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isHydrated = useIsHydrated();
 
   const currentUser = useAuthStore((state) => state.user);
@@ -62,8 +64,33 @@ export default function Sidebar() {
     return hasAnyRole(item.roles);
   });
 
+  const isHrefActive = (href: string) => {
+    const [targetPath, queryString] = href.split('?');
+    if (!pathname.startsWith(targetPath)) return false;
+
+    if (!queryString) {
+      return true;
+    }
+
+    const targetParams = new URLSearchParams(queryString);
+    for (const [key, expectedValue] of targetParams.entries()) {
+      const currentValue = searchParams.get(key);
+
+      // Missing tab param means default salary-config tab on salaries page.
+      if (key === 'tab' && expectedValue === 'salary-config' && (currentValue === null || currentValue === 'salary-config')) {
+        continue;
+      }
+
+      if (currentValue !== expectedValue) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const activeSubMenu = menuItems.find(item =>
-    item.subItems?.some(sub => pathname.startsWith(sub.href))
+    item.subItems?.some(sub => isHrefActive(sub.href))
   )?.name;
 
   const toggleSubMenu = (menuName: string) => {
@@ -120,8 +147,8 @@ export default function Sidebar() {
         <nav className="flex-1 space-y-2 px-4 pb-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {visibleMenuItems.map((item) => {
             const hasSubItems = !!item.subItems;
-            const isMainActive = (item.href && pathname.startsWith(item.href)) || 
-                                 (hasSubItems && item.subItems?.some(sub => pathname.startsWith(sub.href)));
+            const isMainActive = (item.href && isHrefActive(item.href)) ||
+                                 (hasSubItems && item.subItems?.some(sub => isHrefActive(sub.href)));
             const isOpen = openMenu === item.name || activeSubMenu === item.name;
 
             return (
@@ -200,7 +227,7 @@ export default function Sidebar() {
                       <div className="absolute right-6 top-2 bottom-2 w-[2px] bg-linear-to-b from-transparent via-slate-200 to-transparent rounded-full" />
                       
                       {item.subItems?.map((sub) => {
-                        const isSubActive = pathname.startsWith(sub.href);
+                        const isSubActive = isHrefActive(sub.href);
                         return (
                           <Link
                             key={sub.name}

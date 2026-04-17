@@ -246,8 +246,8 @@ export const useAttendance = (params?: AttendanceQueryParams) => {
         let records: AttendanceRecord[] = Array.isArray(res.data?.records) ? res.data.records : [];
         const pagination = res.data?.pagination;
 
-        // عند عرض يوم محدد: حمّل جميع الصفحات لتجنب اختفاء سجل الموظف بسبب pagination
-        if (requestDate && !params?.page && pagination?.pages && pagination.pages > 1) {
+        // عند عدم تحديد صفحة: حمّل جميع الصفحات لتجنب نقصان السجلات بسبب pagination.
+        if (!params?.page && pagination?.pages && pagination.pages > 1) {
           for (let page = 2; page <= pagination.pages; page += 1) {
             const pageRes = await requestList({ ...requestParams, page });
             const pageRecords: AttendanceRecord[] = Array.isArray(pageRes.data?.records) ? pageRes.data.records : [];
@@ -275,7 +275,7 @@ export const useAttendance = (params?: AttendanceQueryParams) => {
           let retryRecords: AttendanceRecord[] = Array.isArray(retryRes.data?.records) ? retryRes.data.records : [];
           const retryPagination = retryRes.data?.pagination;
 
-          if (requestDate && !params?.page && retryPagination?.pages && retryPagination.pages > 1) {
+          if (!params?.page && retryPagination?.pages && retryPagination.pages > 1) {
             for (let page = 2; page <= retryPagination.pages; page += 1) {
               const pageRes = await requestList({ ...fallbackParams, page });
               const pageRecords: AttendanceRecord[] = Array.isArray(pageRes.data?.records) ? pageRes.data.records : [];

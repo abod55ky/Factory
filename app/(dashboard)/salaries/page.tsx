@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import useSalaries from "@/hooks/useSalaries";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAdvances } from "@/hooks/useAdvances";
@@ -9,7 +10,7 @@ import { useBonuses } from "@/hooks/useBonuses";
 import { useAttendance } from "@/hooks/useAttendance";
 import { usePayroll } from "@/hooks/usePayroll";
 import type { FinancialTabKey } from "@/components/salaries/FinancialHubTabs";
-import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2, Wallet, HandCoins } from "lucide-react";
+import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2, HandCoins, Wallet } from "lucide-react";
 import { toast } from "react-hot-toast";
 import type { Salary } from "@/types/salary";
 import type { Employee } from "@/types/employee";
@@ -51,6 +52,40 @@ const getMonthBounds = (period: string) => {
   return { start, end };
 };
 
+const getTabFromQuery = (tabParam: string | null): FinancialTabKey => {
+  if (tabParam === "advances") return "advances";
+  if (tabParam === "bonuses") return "bonuses";
+  if (tabParam === "final-payroll" || tabParam === "payroll") return "final-payroll";
+  return "salary-config";
+};
+
+const getQueryFromTab = (tab: FinancialTabKey) => {
+  if (tab === "final-payroll") return "payroll";
+  return tab;
+};
+
+const WORKING_DAYS_PER_MONTH = 26;
+const DEFAULT_DAILY_WORK_MINUTES = 8 * 60;
+
+const toMinutes = (time?: string) => {
+  if (!time) return null;
+  const normalized = time.slice(0, 5);
+  const [h, m] = normalized.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
+};
+
+const getDailyWorkMinutes = (scheduledStart?: string, scheduledEnd?: string) => {
+  const startMinutes = toMinutes(scheduledStart || "08:00");
+  const endMinutes = toMinutes(scheduledEnd || "16:00");
+
+  if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+    return DEFAULT_DAILY_WORK_MINUTES;
+  }
+
+  return endMinutes - startMinutes;
+};
+
 type SalaryPayload = {
   profession: string;
   baseSalary: number;
@@ -68,6 +103,11 @@ const SkeletonRows = () => (
 );
 
 export default function SalariesPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const tabFromQuery = useMemo(() => getTabFromQuery(searchParams.get("tab")), [searchParams]);
   const { data: salaries = [], isLoading, isError, error, updateSalary, deleteSalary } = useSalaries();
   const { data: employees = [], isLoading: employeesLoading } = useEmployees();
   const { data: advances = [], createAdvance, updateAdvance, deleteAdvance } = useAdvances();
@@ -78,7 +118,20 @@ export default function SalariesPage() {
   const { data: bonuses = [], createBonus, updateBonus, deleteBonus } = useBonuses({ period });
   const { data: attendanceData } = useAttendance({ startDate: monthStart, endDate: monthEnd, limit: 2000 });
 
-  const [activeTab, setActiveTab] = useState<FinancialTabKey>("salary-config");
+  const [activeTab, setActiveTab] = useState<FinancialTabKey>(tabFromQuery);
+
+  useEffect(() => {
+    setActiveTab(tabFromQuery);
+  }, [tabFromQuery]);
+
+  const handleTabChange = (nextTab: FinancialTabKey) => {
+    setActiveTab(nextTab);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", getQueryFromTab(nextTab));
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const activeEmployees = useMemo(
     () => (employees || []).filter((employee) => employee.status !== "terminated"),
@@ -140,6 +193,20 @@ export default function SalariesPage() {
     return map;
   }, [attendanceData?.dailyRecords]);
 
+  const dailyRecordsByEmployee = useMemo(() => {
+    const map = new Map<string, { checkIn?: string }[]>();
+    const daily = attendanceData?.dailyRecords || [];
+
+    for (const rec of daily) {
+      if (!rec?.employeeId) continue;
+      const current = map.get(rec.employeeId) || [];
+      current.push({ checkIn: rec.checkIn });
+      map.set(rec.employeeId, current);
+    }
+
+    return map;
+  }, [attendanceData?.dailyRecords]);
+
   const tabStats = useMemo(() => {
     const totalAdvances = (advances || []).reduce((sum: number, item: Advance) => sum + toNumber(item.remainingAmount), 0);
     const totalBonus = (bonuses || []).reduce((sum: number, item: Bonus) => sum + toNumber(item.bonusAmount), 0);
@@ -152,23 +219,44 @@ export default function SalariesPage() {
       const salary = salaryMap.get(employeeId);
       const employee = employeeMap.get(employeeId);
       const attendanceDays = attendanceDaysMap.get(employeeId) || 0;
+      const employeeDailyRecords = dailyRecordsByEmployee.get(employeeId) || [];
 
       const baseSalary = salary ? toNumber(salary.baseSalary) : toNumber(employee?.hourlyRate);
-      const proratedBase = (baseSalary / 26) * attendanceDays;
+      const proratedBase = (baseSalary / WORKING_DAYS_PER_MONTH) * attendanceDays;
 
       const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === employeeId);
       const totalBonus = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.bonusAmount), 0);
       const totalDeductions = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.assistanceAmount), 0);
-       
+      
       const employeeAdvances = (advances || []).filter((a: Advance) => a.employeeId === employeeId);
       const advancesInstallments = employeeAdvances.reduce((sum: number, a: Advance) => sum + toNumber(a.installmentAmount), 0);
 
-      const net = proratedBase + totalBonus - totalDeductions - advancesInstallments;
+      const scheduledStartMinutes = toMinutes(employee?.scheduledStart || "08:00");
+      let lateMinutes = 0;
+
+      for (const record of employeeDailyRecords) {
+        const checkInMinutes = toMinutes(record.checkIn);
+        if (checkInMinutes === null || scheduledStartMinutes === null) continue;
+        if (checkInMinutes <= scheduledStartMinutes) continue;
+        lateMinutes += checkInMinutes - scheduledStartMinutes;
+      }
+
+      const dailyWorkMinutes = getDailyWorkMinutes(employee?.scheduledStart, employee?.scheduledEnd);
+      const minuteRate = dailyWorkMinutes > 0
+        ? baseSalary / (WORKING_DAYS_PER_MONTH * dailyWorkMinutes)
+        : 0;
+      const lateDeduction = lateMinutes * minuteRate;
+
+      const net = proratedBase + totalBonus - totalDeductions - advancesInstallments - lateDeduction;
 
       return {
         employeeId,
         employeeName: employeeNameMap[employeeId] || employeeId,
         attendanceDays,
+        minuteRate,
+        lateMinutes,
+        lateDeduction,
+        hasLateDeduction: lateDeduction > 0,
         proratedBase,
         totalBonus,
         totalDeductions,
@@ -176,7 +264,23 @@ export default function SalariesPage() {
         net,
       };
     });
-  }, [allIds, salaryMap, employeeMap, attendanceDaysMap, bonuses, advances, employeeNameMap]);
+  }, [allIds, salaryMap, employeeMap, attendanceDaysMap, bonuses, advances, employeeNameMap, dailyRecordsByEmployee]);
+
+  const payrollTotals = useMemo(() => {
+    return finalPayrollRows.reduce(
+      (acc, row) => {
+        acc.totalLateMinutes += row.lateMinutes;
+        acc.totalLateDeduction += row.lateDeduction;
+        acc.employeesWithLateDeduction += row.hasLateDeduction ? 1 : 0;
+        return acc;
+      },
+      {
+        totalLateMinutes: 0,
+        totalLateDeduction: 0,
+        employeesWithLateDeduction: 0,
+      },
+    );
+  }, [finalPayrollRows]);
 
   const handleSave = (employeeId: string, payload: SalaryPayload) => {
     if (!employeeId) return toast.error("يرجى إدخال كود الموظف");
@@ -226,6 +330,73 @@ export default function SalariesPage() {
         },
       },
     );
+  };
+
+  const handleExportPayrollExcel = async () => {
+    if (finalPayrollRows.length === 0) {
+      toast.error("لا توجد بيانات لتصديرها");
+      return;
+    }
+
+    try {
+      const XLSX = await import("xlsx");
+      const rows: Array<Record<string, string | number>> = finalPayrollRows.map((row, index) => ({
+        "#": index + 1,
+        "كود الموظف": row.employeeId,
+        "اسم الموظف": row.employeeName,
+        "أيام الحضور": row.attendanceDays,
+        "أجر الدقيقة": Number(row.minuteRate.toFixed(4)),
+        "دقائق التأخير": row.lateMinutes,
+        "خصم التأخير": Number(row.lateDeduction.toFixed(2)),
+        "في خصم": row.hasLateDeduction ? "نعم" : "لا",
+        "الراتب النسبي": Number(row.proratedBase.toFixed(2)),
+        "المكافآت": Number(row.totalBonus.toFixed(2)),
+        "الخصومات": Number(row.totalDeductions.toFixed(2)),
+        "خصم السلف": Number(row.advancesInstallments.toFixed(2)),
+        "صافي المستحق": Number(row.net.toFixed(2)),
+      }));
+
+      rows.push({
+        "#": "",
+        "كود الموظف": "",
+        "اسم الموظف": "الإجمالي",
+        "أيام الحضور": "",
+        "أجر الدقيقة": "",
+        "دقائق التأخير": payrollTotals.totalLateMinutes,
+        "خصم التأخير": Number(payrollTotals.totalLateDeduction.toFixed(2)),
+        "في خصم": payrollTotals.employeesWithLateDeduction.toString(),
+        "الراتب النسبي": "",
+        "المكافآت": "",
+        "الخصومات": "",
+        "خصم السلف": "",
+        "صافي المستحق": Number(finalPayrollRows.reduce((sum, row) => sum + row.net, 0).toFixed(2)),
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      worksheet["!cols"] = [
+        { wch: 5 },
+        { wch: 14 },
+        { wch: 24 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 10 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 14 },
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll");
+      XLSX.writeFile(workbook, `payroll-${period}.xlsx`);
+
+      toast.success("تم تنزيل جدول الرواتب Excel بنجاح");
+    } catch {
+      toast.error("تعذر تنزيل ملف Excel حالياً");
+    }
   };
 
   const openFloatingAction = () => {
@@ -297,9 +468,11 @@ export default function SalariesPage() {
             </div>
           </header>
 
-          <div className="mb-8">
+          <div className="mt-6">
             <FinancialHubTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
           </div>
+        </div>
+      </div>
 
           {activeTab === "salary-config" && (
             <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
@@ -520,77 +693,72 @@ export default function SalariesPage() {
             </div>
           )}
 
-          {activeTab === "final-payroll" && (
-            <div className="space-y-6">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-4 rounded-2xl border border-white/80 bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
-                <h2 className="font-black text-slate-800 flex items-center gap-3 text-lg">
-                  <Calculator size={20} className="text-[#00bba7] animate-pulse" /> المسير النهائي للفترة
-                </h2>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="month"
-                    value={period}
-                    onChange={(e) => setPeriod(e.target.value)}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#00bba7] focus:ring-2 focus:ring-[#00bba7]/20 transition-all shadow-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRunPayroll}
-                    disabled={calculatePayroll.isPending}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] hover:from-[#00a392] hover:to-[#006e63] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_20px_rgba(0,187,167,0.3)] transition-all active:scale-95 border border-[#00bba7]/50 disabled:opacity-60 disabled:cursor-not-allowed group"
-                  >
-                    {calculatePayroll.isPending ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} className="group-hover:animate-bounce" />}
-                    تشغيل المسير
-                  </button>
-                </div>
-              </div>
-
-              {lastCalculatedRunId ? (
-                <div className="text-sm text-[#00bba7] bg-[#00bba7]/10 border border-[#00bba7]/20 rounded-xl px-4 py-3 font-bold flex items-center gap-2 shadow-sm">
-                  <Sparkles size={16} /> آخر تشغيل ناجح للمسير: <span className="font-mono">{lastCalculatedRunId}</span>
-                </div>
-              ) : null}
-
-              <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
-                <div className="w-full overflow-x-auto custom-scrollbar">
-                  <table className="w-full text-right min-w-245">
-                    <thead className="bg-slate-50/50 border-b border-slate-100/80">
-                      <tr>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">أيام الحضور</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الراتب النسبي</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المكافآت</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">خصم السلف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">صافي المستحق</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {finalPayrollRows.length === 0 ? (
-                        <tr><td colSpan={7} className="p-16 text-center text-slate-500 font-medium">لا توجد بيانات كافية لحساب المسير.</td></tr>
-                      ) : (
-                        finalPayrollRows.map((row) => (
-                          <tr key={row.employeeId} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
-                            <td className="p-4 text-center font-bold text-slate-800">{row.employeeName}</td>
-                            <td className="p-4 text-center font-mono font-bold text-slate-600">{row.attendanceDays}</td>
-                            <td className="p-4 text-center font-mono font-bold text-slate-700">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                            <td className="p-4 text-center font-black text-[#00bba7]">{row.totalBonus.toLocaleString()}</td>
-                            <td className="p-4 text-center font-black text-rose-600">{row.totalDeductions.toLocaleString()}</td>
-                            <td className="p-4 text-center font-black text-[#E7C873]">{row.advancesInstallments.toLocaleString()}</td>
-                            <td className="p-4 text-center font-black text-xl text-slate-900 bg-slate-50/50">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <p className="text-xs text-slate-500 font-medium px-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#E7C873]"></span>
-                المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف.
-              </p>
+      {activeTab === "final-payroll" && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center rounded-2xl border border-white/50 bg-white/75 backdrop-blur p-4">
+            <h2 className="font-bold text-slate-800 flex items-center gap-2"><Calculator size={18} /> المسير النهائي للفترة</h2>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRunPayroll}
+                disabled={calculatePayroll.isPending}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {calculatePayroll.isPending ? <Loader2 size={14} className="animate-spin" /> : <Calculator size={14} />}
+                تشغيل المسير على الخادم
+              </button>
+              <input
+                type="month"
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                className="p-2 rounded-lg border border-slate-200 bg-white"
+              />
             </div>
-          )}
+          </div>
+
+          {lastCalculatedRunId ? (
+            <p className="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              آخر تشغيل ناجح للمسير: {lastCalculatedRunId}
+            </p>
+          ) : null}
+
+          <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-right min-w-245">
+                <thead className="bg-slate-50 text-slate-600">
+                  <tr>
+                    <th className="p-4 text-center">الموظف</th>
+                    <th className="p-4 text-center">أيام الحضور</th>
+                    <th className="p-4 text-center">الراتب النسبي</th>
+                    <th className="p-4 text-center">المكافآت</th>
+                    <th className="p-4 text-center">الخصومات</th>
+                    <th className="p-4 text-center">خصم السلف</th>
+                    <th className="p-4 text-center">صافي المستحق</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {finalPayrollRows.length === 0 ? (
+                    <tr><td colSpan={7} className="p-8 text-center text-slate-500">لا توجد بيانات كافية لحساب المسير.</td></tr>
+                  ) : (
+                    finalPayrollRows.map((row) => (
+                      <tr key={row.employeeId} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td className="p-4 text-center">{row.employeeName}</td>
+                        <td className="p-4 text-center">{row.attendanceDays}</td>
+                        <td className="p-4 text-center">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                        <td className="p-4 text-center text-emerald-700">{row.totalBonus.toLocaleString()}</td>
+                        <td className="p-4 text-center text-rose-700">{row.totalDeductions.toLocaleString()}</td>
+                        <td className="p-4 text-center text-orange-700">{row.advancesInstallments.toLocaleString()}</td>
+                        <td className="p-4 text-center font-extrabold text-blue-700">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 px-2">المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف.</p>
+        </div>
+      )}
 
         </div>
       </div>
@@ -599,7 +767,7 @@ export default function SalariesPage() {
       {isFloatingActionVisible && (
         <button
           onClick={openFloatingAction}
-          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-gradient-to-br from-[#00bba7] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#00bba7]/50 group"
+          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-linear-to-br from-[#00bba7] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#00bba7]/50 group"
           title="إضافة سجل جديد"
         >
           <Plus size={26} className="group-hover:animate-spin" />
@@ -714,4 +882,4 @@ export default function SalariesPage() {
       )}
     </div>
   );
-}
+}")
