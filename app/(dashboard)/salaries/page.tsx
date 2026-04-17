@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import useSalaries from "@/hooks/useSalaries";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAdvances } from "@/hooks/useAdvances";
@@ -9,7 +10,7 @@ import { useBonuses } from "@/hooks/useBonuses";
 import { useAttendance } from "@/hooks/useAttendance";
 import { usePayroll } from "@/hooks/usePayroll";
 import type { FinancialTabKey } from "@/components/salaries/FinancialHubTabs";
-import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2 } from "lucide-react";
+import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2, Download } from "lucide-react";
 import { toast } from "react-hot-toast";
 import type { Salary } from "@/types/salary";
 import type { Employee } from "@/types/employee";
@@ -51,6 +52,40 @@ const getMonthBounds = (period: string) => {
   return { start, end };
 };
 
+const getTabFromQuery = (tabParam: string | null): FinancialTabKey => {
+  if (tabParam === "advances") return "advances";
+  if (tabParam === "bonuses") return "bonuses";
+  if (tabParam === "final-payroll" || tabParam === "payroll") return "final-payroll";
+  return "salary-config";
+};
+
+const getQueryFromTab = (tab: FinancialTabKey) => {
+  if (tab === "final-payroll") return "payroll";
+  return tab;
+};
+
+const WORKING_DAYS_PER_MONTH = 26;
+const DEFAULT_DAILY_WORK_MINUTES = 8 * 60;
+
+const toMinutes = (time?: string) => {
+  if (!time) return null;
+  const normalized = time.slice(0, 5);
+  const [h, m] = normalized.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
+};
+
+const getDailyWorkMinutes = (scheduledStart?: string, scheduledEnd?: string) => {
+  const startMinutes = toMinutes(scheduledStart || "08:00");
+  const endMinutes = toMinutes(scheduledEnd || "16:00");
+
+  if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+    return DEFAULT_DAILY_WORK_MINUTES;
+  }
+
+  return endMinutes - startMinutes;
+};
+
 type SalaryPayload = {
   profession: string;
   baseSalary: number;
@@ -68,6 +103,11 @@ const SkeletonRows = () => (
 );
 
 export default function SalariesPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const tabFromQuery = useMemo(() => getTabFromQuery(searchParams.get("tab")), [searchParams]);
   const { data: salaries = [], isLoading, isError, error, updateSalary, deleteSalary } = useSalaries();
   const { data: employees = [], isLoading: employeesLoading } = useEmployees();
   const { data: advances = [], createAdvance, updateAdvance, deleteAdvance } = useAdvances();
@@ -78,7 +118,20 @@ export default function SalariesPage() {
   const { data: bonuses = [], createBonus, updateBonus, deleteBonus } = useBonuses({ period });
   const { data: attendanceData } = useAttendance({ startDate: monthStart, endDate: monthEnd, limit: 2000 });
 
-  const [activeTab, setActiveTab] = useState<FinancialTabKey>("salary-config");
+  const [activeTab, setActiveTab] = useState<FinancialTabKey>(tabFromQuery);
+
+  useEffect(() => {
+    setActiveTab(tabFromQuery);
+  }, [tabFromQuery]);
+
+  const handleTabChange = (nextTab: FinancialTabKey) => {
+    setActiveTab(nextTab);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", getQueryFromTab(nextTab));
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const activeEmployees = useMemo(
     () => (employees || []).filter((employee) => employee.status !== "terminated"),
@@ -141,6 +194,20 @@ export default function SalariesPage() {
     return map;
   }, [attendanceData?.dailyRecords]);
 
+  const dailyRecordsByEmployee = useMemo(() => {
+    const map = new Map<string, { checkIn?: string }[]>();
+    const daily = attendanceData?.dailyRecords || [];
+
+    for (const rec of daily) {
+      if (!rec?.employeeId) continue;
+      const current = map.get(rec.employeeId) || [];
+      current.push({ checkIn: rec.checkIn });
+      map.set(rec.employeeId, current);
+    }
+
+    return map;
+  }, [attendanceData?.dailyRecords]);
+
   const tabStats = useMemo(() => {
     const totalAdvances = (advances || []).reduce((sum: number, item: Advance) => sum + toNumber(item.remainingAmount), 0);
     const totalBonus = (bonuses || []).reduce((sum: number, item: Bonus) => sum + toNumber(item.bonusAmount), 0);
@@ -153,23 +220,44 @@ export default function SalariesPage() {
       const salary = salaryMap.get(employeeId);
       const employee = employeeMap.get(employeeId);
       const attendanceDays = attendanceDaysMap.get(employeeId) || 0;
+      const employeeDailyRecords = dailyRecordsByEmployee.get(employeeId) || [];
 
       const baseSalary = salary ? toNumber(salary.baseSalary) : toNumber(employee?.hourlyRate);
-      const proratedBase = (baseSalary / 26) * attendanceDays;
+      const proratedBase = (baseSalary / WORKING_DAYS_PER_MONTH) * attendanceDays;
 
-const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === employeeId);
-       const totalBonus = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.bonusAmount), 0);
-       const totalDeductions = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.assistanceAmount), 0);
-       
-       const employeeAdvances = (advances || []).filter((a: Advance) => a.employeeId === employeeId);
-       const advancesInstallments = employeeAdvances.reduce((sum: number, a: Advance) => sum + toNumber(a.installmentAmount), 0);
+      const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === employeeId);
+      const totalBonus = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.bonusAmount), 0);
+      const totalDeductions = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.assistanceAmount), 0);
 
-      const net = proratedBase + totalBonus - totalDeductions - advancesInstallments;
+      const employeeAdvances = (advances || []).filter((a: Advance) => a.employeeId === employeeId);
+      const advancesInstallments = employeeAdvances.reduce((sum: number, a: Advance) => sum + toNumber(a.installmentAmount), 0);
+
+      const scheduledStartMinutes = toMinutes(employee?.scheduledStart || "08:00");
+      let lateMinutes = 0;
+
+      for (const record of employeeDailyRecords) {
+        const checkInMinutes = toMinutes(record.checkIn);
+        if (checkInMinutes === null || scheduledStartMinutes === null) continue;
+        if (checkInMinutes <= scheduledStartMinutes) continue;
+        lateMinutes += checkInMinutes - scheduledStartMinutes;
+      }
+
+      const dailyWorkMinutes = getDailyWorkMinutes(employee?.scheduledStart, employee?.scheduledEnd);
+      const minuteRate = dailyWorkMinutes > 0
+        ? baseSalary / (WORKING_DAYS_PER_MONTH * dailyWorkMinutes)
+        : 0;
+      const lateDeduction = lateMinutes * minuteRate;
+
+      const net = proratedBase + totalBonus - totalDeductions - advancesInstallments - lateDeduction;
 
       return {
         employeeId,
         employeeName: employeeNameMap[employeeId] || employeeId,
         attendanceDays,
+        minuteRate,
+        lateMinutes,
+        lateDeduction,
+        hasLateDeduction: lateDeduction > 0,
         proratedBase,
         totalBonus,
         totalDeductions,
@@ -177,7 +265,23 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
         net,
       };
     });
-  }, [allIds, salaryMap, employeeMap, attendanceDaysMap, bonuses, advances, employeeNameMap]);
+  }, [allIds, salaryMap, employeeMap, attendanceDaysMap, bonuses, advances, employeeNameMap, dailyRecordsByEmployee]);
+
+  const payrollTotals = useMemo(() => {
+    return finalPayrollRows.reduce(
+      (acc, row) => {
+        acc.totalLateMinutes += row.lateMinutes;
+        acc.totalLateDeduction += row.lateDeduction;
+        acc.employeesWithLateDeduction += row.hasLateDeduction ? 1 : 0;
+        return acc;
+      },
+      {
+        totalLateMinutes: 0,
+        totalLateDeduction: 0,
+        employeesWithLateDeduction: 0,
+      },
+    );
+  }, [finalPayrollRows]);
 
   const handleSave = (employeeId: string, payload: SalaryPayload) => {
     if (!employeeId) return toast.error("يرجى إدخال كود الموظف");
@@ -230,6 +334,73 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
     );
   };
 
+  const handleExportPayrollExcel = async () => {
+    if (finalPayrollRows.length === 0) {
+      toast.error("لا توجد بيانات لتصديرها");
+      return;
+    }
+
+    try {
+      const XLSX = await import("xlsx");
+      const rows: Array<Record<string, string | number>> = finalPayrollRows.map((row, index) => ({
+        "#": index + 1,
+        "كود الموظف": row.employeeId,
+        "اسم الموظف": row.employeeName,
+        "أيام الحضور": row.attendanceDays,
+        "أجر الدقيقة": Number(row.minuteRate.toFixed(4)),
+        "دقائق التأخير": row.lateMinutes,
+        "خصم التأخير": Number(row.lateDeduction.toFixed(2)),
+        "في خصم": row.hasLateDeduction ? "نعم" : "لا",
+        "الراتب النسبي": Number(row.proratedBase.toFixed(2)),
+        "المكافآت": Number(row.totalBonus.toFixed(2)),
+        "الخصومات": Number(row.totalDeductions.toFixed(2)),
+        "خصم السلف": Number(row.advancesInstallments.toFixed(2)),
+        "صافي المستحق": Number(row.net.toFixed(2)),
+      }));
+
+      rows.push({
+        "#": "",
+        "كود الموظف": "",
+        "اسم الموظف": "الإجمالي",
+        "أيام الحضور": "",
+        "أجر الدقيقة": "",
+        "دقائق التأخير": payrollTotals.totalLateMinutes,
+        "خصم التأخير": Number(payrollTotals.totalLateDeduction.toFixed(2)),
+        "في خصم": payrollTotals.employeesWithLateDeduction.toString(),
+        "الراتب النسبي": "",
+        "المكافآت": "",
+        "الخصومات": "",
+        "خصم السلف": "",
+        "صافي المستحق": Number(finalPayrollRows.reduce((sum, row) => sum + row.net, 0).toFixed(2)),
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      worksheet["!cols"] = [
+        { wch: 5 },
+        { wch: 14 },
+        { wch: 24 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 10 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 14 },
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll");
+      XLSX.writeFile(workbook, `payroll-${period}.xlsx`);
+
+      toast.success("تم تنزيل جدول الرواتب Excel بنجاح");
+    } catch {
+      toast.error("تعذر تنزيل ملف Excel حالياً");
+    }
+  };
+
   const openFloatingAction = () => {
     if (activeTab === "salary-config") {
       openFor(null);
@@ -280,7 +451,7 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
           </div>
 
           <div className="mt-6">
-            <FinancialHubTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+            <FinancialHubTabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
           </div>
         </div>
       </div>
@@ -506,6 +677,15 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={handleExportPayrollExcel}
+                disabled={finalPayrollRows.length === 0}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Download size={14} />
+                تنزيل Excel
+              </button>
+              <button
+                type="button"
                 onClick={handleRunPayroll}
                 disabled={calculatePayroll.isPending}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -528,6 +708,21 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
             </p>
           ) : null}
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-xs text-slate-500">إجمالي دقائق التأخير</p>
+              <p className="text-lg font-bold text-slate-900">{payrollTotals.totalLateMinutes.toLocaleString()}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-xs text-slate-500">إجمالي خصم التأخير</p>
+              <p className="text-lg font-bold text-rose-700">{payrollTotals.totalLateDeduction.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <p className="text-xs text-slate-500">موظفون عليهم خصم</p>
+              <p className="text-lg font-bold text-orange-700">{payrollTotals.employeesWithLateDeduction.toLocaleString()}</p>
+            </div>
+          </div>
+
           <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
             <div className="w-full overflow-x-auto">
               <table className="w-full text-right min-w-245">
@@ -535,6 +730,10 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
                   <tr>
                     <th className="p-4 text-center">الموظف</th>
                     <th className="p-4 text-center">أيام الحضور</th>
+                    <th className="p-4 text-center">أجر الدقيقة</th>
+                    <th className="p-4 text-center">دقائق التأخير</th>
+                    <th className="p-4 text-center">خصم التأخير</th>
+                    <th className="p-4 text-center">حالة الخصم</th>
                     <th className="p-4 text-center">الراتب النسبي</th>
                     <th className="p-4 text-center">المكافآت</th>
                     <th className="p-4 text-center">الخصومات</th>
@@ -544,12 +743,20 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
                 </thead>
                 <tbody>
                   {finalPayrollRows.length === 0 ? (
-                    <tr><td colSpan={7} className="p-8 text-center text-slate-500">لا توجد بيانات كافية لحساب المسير.</td></tr>
+                    <tr><td colSpan={11} className="p-8 text-center text-slate-500">لا توجد بيانات كافية لحساب المسير.</td></tr>
                   ) : (
                     finalPayrollRows.map((row) => (
                       <tr key={row.employeeId} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
                         <td className="p-4 text-center">{row.employeeName}</td>
                         <td className="p-4 text-center">{row.attendanceDays}</td>
+                        <td className="p-4 text-center font-medium">{row.minuteRate.toLocaleString(undefined, { maximumFractionDigits: 4 })}</td>
+                        <td className="p-4 text-center">{row.lateMinutes.toLocaleString()}</td>
+                        <td className="p-4 text-center text-rose-700 font-bold">{row.lateDeduction.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                        <td className="p-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${row.hasLateDeduction ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}>
+                            {row.hasLateDeduction ? "في خصم" : "ما في خصم"}
+                          </span>
+                        </td>
                         <td className="p-4 text-center">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                         <td className="p-4 text-center text-emerald-700">{row.totalBonus.toLocaleString()}</td>
                         <td className="p-4 text-center text-rose-700">{row.totalDeductions.toLocaleString()}</td>
@@ -562,7 +769,7 @@ const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === em
               </table>
             </div>
           </div>
-          <p className="text-xs text-slate-500 px-2">المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف.</p>
+          <p className="text-xs text-slate-500 px-2">المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف - خصم التأخير، حيث خصم التأخير = أجر الدقيقة × دقائق التأخير.</p>
         </div>
       )}
 

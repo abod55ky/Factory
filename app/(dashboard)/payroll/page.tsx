@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import usePayrollReport from "@/hooks/usePayrollReport";
+import { toast } from "react-hot-toast";
 
 const toNumber = (value: unknown) => {
   if (value && typeof value === "object" && "$numberDecimal" in (value as Record<string, unknown>)) {
@@ -23,6 +24,52 @@ export default function PayrollPage() {
   const [month, setMonth] = useState(getLocalMonth());
   const { data, isLoading, isError, error } = usePayrollReport(month);
 
+  const handleExportExcel = async () => {
+    if (!data?.items?.length) {
+      toast.error("لا توجد بيانات رواتب للتنزيل");
+      return;
+    }
+
+    try {
+      const XLSX = await import("xlsx");
+      const rows: Array<Record<string, string | number>> = data.items.map((item, index) => ({
+        "#": index + 1,
+        "كود الموظف": item.employeeId,
+        "اسم الموظف": item.employeeName,
+        "إجمالي الراتب": Number(toNumber(item.grossPay).toFixed(2)),
+        "إجمالي الخصومات": Number(toNumber(item.totalDeductions).toFixed(2)),
+        "صافي الراتب": Number(toNumber(item.netPay).toFixed(2)),
+      }));
+
+      rows.push({
+        "#": "",
+        "كود الموظف": "",
+        "اسم الموظف": "الإجمالي",
+        "إجمالي الراتب": Number(toNumber(data.totals.totalGrossPay).toFixed(2)),
+        "إجمالي الخصومات": Number(toNumber(data.totals.totalDeductions).toFixed(2)),
+        "صافي الراتب": Number(toNumber(data.totals.totalNetPay).toFixed(2)),
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      worksheet["!cols"] = [
+        { wch: 5 },
+        { wch: 14 },
+        { wch: 24 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 16 },
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll");
+      XLSX.writeFile(workbook, `payroll-report-${month}.xlsx`);
+
+      toast.success("تم تنزيل ملف Excel بنجاح");
+    } catch {
+      toast.error("تعذر تنزيل ملف Excel حالياً");
+    }
+  };
+
   return (
     <div className="min-h-screen p-8 bg-slate-50" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -38,6 +85,14 @@ export default function PayrollPage() {
             onChange={(event) => setMonth(event.target.value)}
             className="rounded-lg border border-slate-300 px-3 py-2"
           />
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+          >
+            <Download size={16} />
+            تنزيل Excel
+          </button>
           <Link href={`/payroll/${month}`} className="px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800">
             تفاصيل الشهر
           </Link>

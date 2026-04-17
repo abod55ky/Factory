@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { Bell, AlertTriangle, X } from "lucide-react";
+import { Bell, AlertTriangle, X, Menu } from "lucide-react";
 
-export default function Navbar() {
+export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'الموظف أحمد تأخر 15 دقيقة', type: 'warning', time: '10 د' },
@@ -28,10 +28,17 @@ export default function Navbar() {
   };
 
   return (
-    // تم استخدام absolute لضمان عدم حجز مساحة عمودية تزيح محتوى الصفحة لأسفل
-    <div className="absolute top-5 left-8 z-100" dir="rtl" ref={dropdownRef}>
-      <div className="relative">
-        {/* زر الجرس مع Hover وتأثير عند النقر */}
+    <div className="relative" dir="rtl" ref={dropdownRef}>
+      <div className="flex items-center gap-3">
+        {/* Mobile menu button */}
+        <button 
+          onClick={onMenuClick}
+          className="md:hidden p-2.5 bg-white rounded-xl text-slate-500 hover:text-[#00bba7] hover:border-[#00bba7] hover:shadow-md transition-all active:scale-95"
+        >
+          <Menu size={22} />
+        </button>
+
+        {/* Bell button */}
         <button 
           onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
           className="p-2.5 bg-white  rounded-xl text-slate-500 hover:text-[#00bba7] hover:border-[#00bba7] hover:shadow-md transition-all active:scale-95"

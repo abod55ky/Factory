@@ -1,6 +1,6 @@
 
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
@@ -15,6 +15,13 @@ const tajawal = Tajawal({
 export const metadata: Metadata = {
   title: "نظام إدارة المصنع",
   description: "نظام متكامل لإدارة الموظفين والرواتب والمخزون", // الوصف الجديد
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

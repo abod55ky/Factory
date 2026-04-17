@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard, Users, ClipboardList,
   Wallet, Box, FileInput, Settings, Fingerprint,
@@ -22,10 +22,10 @@ const menuItems = [
   {
     name: 'الرواتب', icon: Wallet, roles: ['admin', 'finance', 'manager'],
     subItems: [
-      { name: 'إعدادات الرواتب', href: '/salaries' },
-      { name: 'السلف', href: '/salaries/advances' },
-      { name: 'المكافآت والخصومات', href: '/salaries/bonuses' },
-      { name: 'مسير الرواتب', href: '/salaries/payroll' },
+      { name: 'إعدادات الرواتب', href: '/salaries?tab=salary-config' },
+      { name: 'السلف', href: '/salaries?tab=advances' },
+      { name: 'المكافآت والخصومات', href: '/salaries?tab=bonuses' },
+      { name: 'مسير الرواتب', href: '/payroll' },
     ]
   },
   { name: 'بصمتي وحضوري', icon: Fingerprint, href: '/biometric' },
@@ -45,6 +45,7 @@ function useIsHydrated() {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isHydrated = useIsHydrated();
 
   const currentUser = useAuthStore((state) => state.user);
@@ -63,8 +64,33 @@ export default function Sidebar() {
     return hasAnyRole(item.roles);
   });
 
+  const isHrefActive = (href: string) => {
+    const [targetPath, queryString] = href.split('?');
+    if (!pathname.startsWith(targetPath)) return false;
+
+    if (!queryString) {
+      return true;
+    }
+
+    const targetParams = new URLSearchParams(queryString);
+    for (const [key, expectedValue] of targetParams.entries()) {
+      const currentValue = searchParams.get(key);
+
+      // Missing tab param means default salary-config tab on salaries page.
+      if (key === 'tab' && expectedValue === 'salary-config' && (currentValue === null || currentValue === 'salary-config')) {
+        continue;
+      }
+
+      if (currentValue !== expectedValue) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const activeSubMenu = menuItems.find(item =>
-    item.subItems?.some(sub => pathname.startsWith(sub.href))
+    item.subItems?.some(sub => isHrefActive(sub.href))
   )?.name;
 
   const toggleSubMenu = (menuName: string) => {
@@ -110,8 +136,8 @@ export default function Sidebar() {
         <nav className="flex-1 space-y-2 px-4 pb-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {visibleMenuItems.map((item) => {
             const hasSubItems = !!item.subItems;
-            const isMainActive = (item.href && pathname.startsWith(item.href)) || 
-                                 (hasSubItems && item.subItems?.some(sub => pathname.startsWith(sub.href)));
+            const isMainActive = (item.href && isHrefActive(item.href)) ||
+                                 (hasSubItems && item.subItems?.some(sub => isHrefActive(sub.href)));
             const isOpen = openMenu === item.name || activeSubMenu === item.name;
 
             return (
@@ -178,7 +204,7 @@ export default function Sidebar() {
                   <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-60 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col gap-1 pr-14 pl-2 relative before:absolute before:right-8 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100 before:rounded-full">
                       {item.subItems?.map((sub) => {
-                        const isSubActive = pathname.startsWith(sub.href);
+                        const isSubActive = isHrefActive(sub.href);
                         return (
                           <Link
                             key={sub.name}
