@@ -236,6 +236,8 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
   return (
     <div className="p-6 md:p-8 font-sans bg-slate-50 min-h-screen" dir="rtl">
       <nav className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-8">
+
+        
         <Link href="/employees" className="hover:text-[#00bba7] transition-colors">إدارة الموارد البشرية</Link>
         <ChevronLeft size={14} />
         <Link href="/employees" className="hover:text-[#00bba7] transition-colors">قائمة الموظفين</Link>

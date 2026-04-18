@@ -47,11 +47,7 @@ export default function DashboardPage() {
   }
 
   return (
-    /* الخلفية المتدرجة الأساسية للموقع */
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-gradient-to-br from-[#00bba7] via-[#00bba7]/90 to-[#E7C873]" dir="rtl">
-      
-      {/* 1. الحاوية الرئيسية (Wrapper) التي تفصل الصفحة عن الخلفية مع إضافة البوردر الذهبي */}
-      <div className="relative z-10 w-full max-w-7xl min-h-[90vh] bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden">
+    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden" dir="rtl">
         
         {/* محتوى الصفحة الداخلي */}
         <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
@@ -165,7 +161,6 @@ export default function DashboardPage() {
 
           </div>
         </div>
-      </div>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useImports } from "@/hooks/useImports";
 import { useFiles } from "@/hooks/useFiles";
-import { Upload, Users, Clock, Package, CheckCircle2, Download, Eye, Save, XCircle, Loader2, FileText } from "lucide-react";
+import { Upload, Users, Clock, Package, CheckCircle2, Download, Eye, Save, XCircle, Loader2, FileText, Sparkles } from "lucide-react";
 
 type ImportErrorShape = {
   message?: string;
@@ -282,15 +282,15 @@ const formatDateTime = (value?: string) => {
   return parsed.toLocaleString("ar-EG");
 };
 
-// 1. البيانات الثابتة للبطاقات (بدون أي دوال أو imports هنا!)
+// 1. البيانات الثابتة للبطاقات بتصميم يتوافق مع الألوان الجديدة
 const importSections = [
   {
     title: "بيانات الموظفين",
     description: "ملف Excel يحتوي الاسم، المنصب، الأجر، أوقات الدوام",
     icon: Users,
-    iconColor: "text-slate-700",
-    bgColor: "bg-slate-100",
-    entity: "employees", // أضفنا هذا لنعرف أي نوع نرفع
+    iconColor: "text-[#00bba7]",
+    bgColor: "bg-[#00bba7]/10 border border-[#00bba7]/20",
+    entity: "employees",
     enabled: true,
     templateEntity: "employees",
   },
@@ -298,8 +298,8 @@ const importSections = [
     title: "سجلات الحضور",
     description: "ملف CSV/Excel بتوقيتات الدخول والخروج من جهاز البصمة",
     icon: Clock,
-    iconColor: "text-red-500",
-    bgColor: "bg-red-50",
+    iconColor: "text-rose-500",
+    bgColor: "bg-rose-50 border border-rose-100",
     entity: "attendance",
     enabled: true,
     templateEntity: null,
@@ -308,8 +308,8 @@ const importSections = [
     title: "جرد المخزون",
     description: "ملف Excel بأسماء المنتجات والكميات والأسعار",
     icon: Package,
-    iconColor: "text-orange-600",
-    bgColor: "bg-orange-50",
+    iconColor: "text-[#E7C873]",
+    bgColor: "bg-[#E7C873]/20 border border-[#E7C873]/30",
     entity: "inventory",
     enabled: true,
     templateEntity: "products",
@@ -590,282 +590,311 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="p-8 bg-[#f9fafb] min-h-screen font-sans" dir="rtl">
+    /* الخلفية المتدرجة الأساسية للموقع */
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-gradient-to-br from-[#00bba7] via-[#00bba7]/90 to-[#E7C873]" dir="rtl">
       
-      {/* الهيدر */}
-      <header className="mb-10 text-center">
-        <h1 className="text-2xl font-bold text-slate-800">استيراد البيانات</h1>
-        <p className="text-slate-500 text-sm mt-2">رفع ملفات جداول متعددة (Excel/CSV/TSV/TXT/JSON) لتحديث البيانات</p>
-      </header>
-
-      {/* منطقة عرض حالة الرفع إن وجدت */}
-      {status && (
-        <div className="mb-6 text-center p-4 bg-blue-50 text-blue-700 rounded-xl font-bold border border-blue-100">
-          <p>{status}</p>
-          {generalFilePath ? <p className="mt-2 text-xs font-medium text-blue-800">المسار المخزن: {generalFilePath}</p> : null}
-          {preview ? (
-            <button
-              type="button"
-              onClick={openPreview}
-              className="mt-3 ml-2 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700"
-            >
-              عرض المعاينة
-            </button>
-          ) : null}
-          {reviewPath ? (
-            <button
-              type="button"
-              onClick={() => router.push(reviewPath)}
-              className="mt-3 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700"
-            >
-              فتح صفحة البيانات بعد الاستيراد
-            </button>
-          ) : null}
-        </div>
-      )}
-
-      {/* البطاقات */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-        {importSections.map((section, index) => (
-          <div key={index} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
-            
-            <div className={`w-12 h-12 ${section.bgColor} rounded-xl flex items-center justify-center mb-4`}>
-              <section.icon size={24} className={section.iconColor} />
+      {/* الحاوية الرئيسية (Wrapper) الزجاجية مع البوردر الذهبي والشادو */}
+      <div className="relative z-10 w-full max-w-7xl min-h-[90vh] bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden">
+        
+        {/* المحتوى الداخلي */}
+        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
+          
+          {/* الهيدر */}
+          <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-black/5 pb-8 relative">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
+                  <Upload size={24} className="text-white animate-bounce" />
+                </div>
+                <h1 className="text-3xl font-black text-slate-800 tracking-tight">استيراد البيانات</h1>
+              </div>
+              <p className="text-slate-500 text-sm font-medium pr-14 mt-1">رفع ملفات جداول متعددة (Excel/CSV/TSV/TXT/JSON) لتحديث البيانات بضغطة زر.</p>
             </div>
-            
-            <h3 className="font-bold text-slate-800 mb-1">{section.title}</h3>
-            <p className="text-[11px] text-slate-400 mb-6 leading-relaxed px-4">
-              {section.description}
-            </p>
+          </header>
 
-            {section.templateEntity ? (
-              <button
-                onClick={() => downloadTemplate(section.templateEntity)}
-                className="mb-3 inline-flex items-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                <Download size={14} />
-                تحميل قالب مطابق
-              </button>
-            ) : null}
+          {/* منطقة عرض حالة الرفع إن وجدت */}
+          {status && (
+            <div className="mb-8 text-center p-5 bg-white/80 backdrop-blur-md rounded-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-in slide-in-from-top-4 duration-300">
+              <p className="text-sm font-bold text-[#00bba7] flex items-center justify-center gap-2">
+                <Sparkles size={16} className="animate-pulse" /> {status}
+              </p>
+              {generalFilePath ? <p className="mt-2 text-[11px] font-mono text-slate-500">المسار المخزن: {generalFilePath}</p> : null}
+              
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                {preview ? (
+                  <button
+                    type="button"
+                    onClick={openPreview}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] px-5 py-2.5 text-xs font-bold text-white hover:from-[#00a392] hover:to-[#006e63] shadow-md active:scale-95 transition-all"
+                  >
+                    <Eye size={16} /> عرض المعاينة
+                  </button>
+                ) : null}
+                {reviewPath ? (
+                  <button
+                    type="button"
+                    onClick={() => router.push(reviewPath)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-white border border-[#00bba7]/30 text-[#00bba7] px-5 py-2.5 text-xs font-bold hover:bg-[#00bba7]/10 shadow-sm active:scale-95 transition-all"
+                  >
+                    فتح صفحة البيانات بعد الاستيراد
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          )}
 
-            {/* منطقة السحب والإفلات */}
-            <label
-              onDragOver={(event) => handleDragOver(event, section.entity)}
-              onDragLeave={(event) => handleDragLeave(event, section.entity)}
-              onDrop={(event) => handleDrop(event, section.entity)}
-              className={`w-full border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer ${
-                dragEntity === section.entity
-                  ? "border-blue-500 bg-blue-100"
-                  : "border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50"
-              }`}
-            >
+          {/* البطاقات */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            {importSections.map((section, index) => (
+              <div key={index} className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:shadow-lg transition-all p-6 md:p-8 flex flex-col items-center text-center group">
+                
+                <div className={`w-14 h-14 ${section.bgColor} rounded-2xl flex items-center justify-center mb-5 group-hover:animate-pulse transition-all`}>
+                  <section.icon size={26} className={section.iconColor} />
+                </div>
+                
+                <h3 className="font-extrabold text-slate-800 mb-2">{section.title}</h3>
+                <p className="text-xs font-medium text-slate-500 mb-6 leading-relaxed px-2">
+                  {section.description}
+                </p>
+
+                {section.templateEntity ? (
+                  <button
+                    onClick={() => downloadTemplate(section.templateEntity)}
+                    className="mb-4 inline-flex items-center gap-2 text-xs font-bold text-[#00bba7] bg-[#00bba7]/10 border border-[#00bba7]/20 px-4 py-2 rounded-xl hover:bg-[#00bba7]/20 transition-colors shadow-sm w-full justify-center active:scale-95"
+                  >
+                    <Download size={14} className="group-hover:-translate-y-1 transition-transform" />
+                    تحميل قالب مطابق
+                  </button>
+                ) : null}
+
+                {/* منطقة السحب والإفلات */}
+                <label
+                  onDragOver={(event) => handleDragOver(event, section.entity)}
+                  onDragLeave={(event) => handleDragLeave(event, section.entity)}
+                  onDrop={(event) => handleDrop(event, section.entity)}
+                  className={`w-full border-2 border-dashed rounded-2xl p-6 transition-all cursor-pointer group/drop flex-1 flex flex-col justify-center ${
+                    dragEntity === section.entity
+                      ? "border-[#00bba7] bg-[#00bba7]/5"
+                      : "border-slate-200 bg-white/50 hover:border-[#00bba7]/50 hover:bg-[#00bba7]/[0.02]"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    accept={SUPPORTED_IMPORT_ACCEPT}
+                    className="hidden"
+                    disabled={!section.enabled || isPreparingPreview || isSubmittingImport}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) onFile(f, section.entity);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload size={24} className={`text-slate-400 transition-colors ${dragEntity === section.entity ? 'text-[#00bba7]' : 'group-hover/drop:text-[#00bba7]'}`} />
+                    <p className="text-xs font-bold text-slate-500 mt-2">
+                      {section.enabled
+                        ? dragEntity === section.entity
+                          ? "أفلت الملف هنا الآن"
+                          : "اسحب الملف هنا أو انقر للرفع"
+                        : "غير مدعوم حالياً"}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-mono mt-1">.xlsx, .csv, .json</p>
+                  </div>
+                </label>
+
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] p-8 mb-10">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-[#00bba7]/10 flex items-center justify-center border border-[#00bba7]/20">
+                <FileText size={22} className="text-[#00bba7]" />
+              </div>
+              <div className="text-right">
+                <h3 className="font-extrabold text-slate-800 text-lg">رفع ملفات عامة</h3>
+                <p className="text-xs font-medium text-slate-500 mt-1">
+                  لرفع ملفات PDF/Word/صور/نص بشكل آمن. هذا القسم لا يستورد بيانات جداول.
+                </p>
+              </div>
+            </div>
+
+            <label className="w-full block border-2 border-dashed border-slate-200 bg-white/50 hover:border-[#00bba7]/50 hover:bg-[#00bba7]/[0.02] rounded-3xl p-10 cursor-pointer transition-all group/drop">
               <input
                 type="file"
-                accept={SUPPORTED_IMPORT_ACCEPT}
-                className="hidden" // نخفي الزر القبيح الافتراضي
-                disabled={!section.enabled || isPreparingPreview || isSubmittingImport}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) onFile(f, section.entity);
-                  e.currentTarget.value = "";
+                accept={SUPPORTED_GENERAL_ACCEPT}
+                className="hidden"
+                disabled={isPreparingPreview || isSubmittingImport || isUploadingGeneralFile}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) {
+                    onGeneralFile(file);
+                  }
+                  event.currentTarget.value = "";
                 }}
               />
-              <div className="flex flex-col items-center gap-2">
-                <Upload size={24} className="text-slate-400" />
-                <p className="text-xs font-bold text-slate-500">
-                  {section.enabled
-                    ? dragEntity === section.entity
-                      ? "أفلت الملف هنا الآن"
-                      : "اسحب الملف هنا أو انقر للرفع"
-                    : "غير مدعوم حالياً"}
+
+              <div className="flex flex-col items-center gap-3 text-center">
+                {isUploadingGeneralFile ? (
+                  <Loader2 size={32} className="text-[#00bba7] animate-spin" />
+                ) : (
+                  <Upload size={32} className="text-slate-400 group-hover/drop:text-[#00bba7] transition-colors group-hover/drop:-translate-y-2 duration-300" />
+                )}
+
+                <p className="text-sm font-bold text-slate-600 mt-2">
+                  {isUploadingGeneralFile ? "جاري رفع الملف..." : "اسحب الملف هنا أو انقر للرفع"}
                 </p>
-                <p className="text-[10px] text-slate-400">.xlsx, .csv, .tsv, .txt, .json</p>
+                <p className="text-[11px] text-slate-400 font-mono">.pdf, .doc, .docx, .png, .jpg ...</p>
               </div>
             </label>
 
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-10">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-            <FileText size={20} className="text-indigo-600" />
-          </div>
-          <div className="text-right">
-            <h3 className="font-bold text-slate-800">رفع ملفات عامة</h3>
-            <p className="text-xs text-slate-500">
-              لرفع ملفات PDF/Word/صور/نص بشكل آمن. هذا القسم لا يستورد بيانات جداول.
-            </p>
-          </div>
-        </div>
-
-        <label className="w-full block border-2 border-dashed border-slate-200 bg-slate-50 hover:border-indigo-400 hover:bg-indigo-50 rounded-2xl p-8 cursor-pointer transition-all">
-          <input
-            type="file"
-            accept={SUPPORTED_GENERAL_ACCEPT}
-            className="hidden"
-            disabled={isPreparingPreview || isSubmittingImport || isUploadingGeneralFile}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) {
-                onGeneralFile(file);
-              }
-              event.currentTarget.value = "";
-            }}
-          />
-
-          <div className="flex flex-col items-center gap-2 text-center">
-            {isUploadingGeneralFile ? (
-              <Loader2 size={24} className="text-indigo-500 animate-spin" />
-            ) : (
-              <Upload size={24} className="text-slate-400" />
-            )}
-
-            <p className="text-xs font-bold text-slate-600">
-              {isUploadingGeneralFile ? "جاري رفع الملف..." : "اسحب الملف هنا أو انقر للرفع"}
-            </p>
-            <p className="text-[10px] text-slate-400">.pdf, .doc, .docx, .odt, .rtf, .txt, .md, .png, .jpg, .jpeg, .webp</p>
-          </div>
-        </label>
-
-        <div className="mt-5 border border-slate-200 rounded-xl p-4 bg-slate-50/50">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-bold text-slate-700">آخر الملفات المرفوعة</h4>
-            <button
-              type="button"
-              onClick={() => generalFilesList.refetch()}
-              className="text-[11px] font-bold text-indigo-700 hover:text-indigo-800"
-            >
-              تحديث القائمة
-            </button>
-          </div>
-
-          {generalFilesList.isLoading ? (
-            <div className="text-xs text-slate-500 inline-flex items-center gap-2">
-              <Loader2 size={14} className="animate-spin" />
-              جاري تحميل قائمة الملفات...
-            </div>
-          ) : generalFilesList.isError ? (
-            <p className="text-xs text-rose-600">فشل تحميل قائمة الملفات المرفوعة</p>
-          ) : recentGeneralFiles.length === 0 ? (
-            <p className="text-xs text-slate-500">لا توجد ملفات مرفوعة حتى الآن</p>
-          ) : (
-            <div className="space-y-2">
-              {recentGeneralFiles.map((item, index) => (
-                <div
-                  key={`${item.path || item.storedName || "file"}-${index}`}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2"
+            <div className="mt-8 border border-slate-100 rounded-2xl p-5 bg-slate-50/50 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-extrabold text-slate-700">آخر الملفات المرفوعة</h4>
+                <button
+                  type="button"
+                  onClick={() => generalFilesList.refetch()}
+                  className="text-xs font-bold text-[#00bba7] hover:text-[#008275] bg-white px-3 py-1.5 rounded-lg border border-[#00bba7]/20 shadow-sm active:scale-95 transition-all"
                 >
-                  <p className="text-xs font-bold text-slate-700 break-all">{item.originalName || item.storedName || "-"}</p>
-                  <p className="text-[11px] text-slate-500 mt-1">{item.path || "-"}</p>
-                  <div className="mt-1 text-[11px] text-slate-500 flex flex-wrap gap-3">
-                    <span>الحجم: {formatBytes(item.size)}</span>
-                    <span>النوع: {item.extension || "-"}</span>
-                    <span>تاريخ الرفع: {formatDateTime(item.uploadedAt)}</span>
+                  تحديث القائمة
+                </button>
+              </div>
+
+              {generalFilesList.isLoading ? (
+                <div className="text-xs font-bold text-[#00bba7] inline-flex items-center gap-2">
+                  <Loader2 size={16} className="animate-spin" />
+                  جاري تحميل قائمة الملفات...
+                </div>
+              ) : generalFilesList.isError ? (
+                <p className="text-xs font-bold text-rose-600 bg-rose-50 p-3 rounded-xl">فشل تحميل قائمة الملفات المرفوعة</p>
+              ) : recentGeneralFiles.length === 0 ? (
+                <p className="text-xs font-medium text-slate-400 text-center py-4">لا توجد ملفات مرفوعة حتى الآن</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {recentGeneralFiles.map((item, index) => (
+                    <div
+                      key={`${item.path || item.storedName || "file"}-${index}`}
+                      className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm hover:shadow-md hover:border-[#00bba7]/30 transition-all"
+                    >
+                      <p className="text-xs font-black text-slate-800 break-all mb-1">{item.originalName || item.storedName || "-"}</p>
+                      <p className="text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded truncate">{item.path || "-"}</p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-bold text-[#00bba7] bg-[#00bba7]/10 px-2 py-1 rounded-md">{formatBytes(item.size)}</span>
+                        <span className="text-[10px] font-bold text-[#E7C873] bg-[#E7C873]/10 px-2 py-1 rounded-md uppercase">{item.extension || "-"}</span>
+                        <span className="text-[10px] font-medium text-slate-500 mr-auto">{formatDateTime(item.uploadedAt)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {preview ? (
+            <div ref={previewSectionRef} className="bg-white/90 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.05)] mb-10 animate-in slide-in-from-bottom-8 duration-500">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 border-b border-slate-100 pb-6">
+                <div>
+                  <h2 className="text-xl font-black text-slate-800 inline-flex items-center gap-3">
+                    <div className="p-2 bg-[#00bba7]/10 rounded-lg"><Eye size={20} className="text-[#00bba7]" /></div>
+                    معاينة الملف قبل الاستيراد
+                  </h2>
+                  <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-2">
+                    <span className="bg-slate-100 px-2 py-1 rounded font-mono">{preview.fileName}</span>
+                    <span className="bg-slate-100 px-2 py-1 rounded">{preview.rows.length} صف</span>
+                    <span className="bg-[#E7C873]/20 text-[#b88710] px-2 py-1 rounded">{editedCellsCount} تعديل</span>
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={cancelPreview}
+                    disabled={isSubmittingImport}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60 shadow-sm active:scale-95 transition-all"
+                  >
+                    <XCircle size={16} />
+                    إلغاء المعاينة
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={confirmImport}
+                    disabled={isPreparingPreview || isSubmittingImport}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] px-5 py-2.5 text-xs font-bold text-white hover:from-[#00a392] hover:to-[#006e63] shadow-md disabled:opacity-60 active:scale-95 transition-all border border-[#00bba7]/50"
+                  >
+                    {isSubmittingImport ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                    تأكيد الاستيراد
+                  </button>
+                </div>
+              </div>
+
+              {isPreparingPreview ? (
+                <div className="text-sm font-bold text-[#00bba7] mb-6 p-4 bg-[#00bba7]/5 rounded-xl border border-[#00bba7]/10 inline-flex items-center gap-3">
+                  <Loader2 size={18} className="animate-spin" />
+                  جاري فحص الملف والتحقق من البيانات...
+                </div>
+              ) : null}
+
+              <div className="overflow-hidden border border-slate-100 rounded-3xl shadow-sm">
+                <div className="w-full overflow-x-auto custom-scrollbar">
+                  <table className="min-w-full text-right border-collapse">
+                    <thead className="bg-slate-50/80">
+                      <tr>
+                        <th className="p-4 border-b border-slate-100 text-[#00bba7] font-black text-xs sticky right-0 bg-slate-50/90 backdrop-blur-sm z-10 w-12 text-center shadow-[1px_0_5px_rgba(0,0,0,0.02)]">#</th>
+                        {preview.headers.map((header) => (
+                          <th key={header} className="p-4 border-b border-slate-100 text-slate-600 font-extrabold text-xs whitespace-nowrap bg-slate-50/50">
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 bg-white">
+                      {visiblePreviewRows.map((row) => (
+                        <tr key={row.rowNumber} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                          <td className="p-3 border-b border-slate-50 text-slate-400 font-mono text-xs sticky right-0 bg-white group-hover:bg-slate-50/50 transition-colors text-center shadow-[1px_0_5px_rgba(0,0,0,0.02)]">{row.rowNumber}</td>
+                          {preview.headers.map((header) => (
+                            <td key={`${row.rowNumber}-${header}`} className="p-2 border-b border-slate-50 min-w-40">
+                              <input
+                                value={getEditedCellValue(row, header)}
+                                onChange={(e) => onEditCell(row.rowNumber, header, e.target.value)}
+                                className="w-full rounded-lg border border-transparent bg-slate-50/50 hover:bg-slate-100/80 px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] transition-all"
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {hiddenPreviewRows > 0 ? (
+                <p className="mt-5 text-xs font-bold text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                  يتم عرض أول <span className="text-[#00bba7]">{PREVIEW_ROWS_LIMIT}</span> صف فقط لتسريع الشاشة. سيتم إرسال جميع الصفوف عند التأكيد.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* قسم التعليمات */}
+          <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)]">
+            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+              <CheckCircle2 className="text-[#E7C873]" /> تعليمات الاستيراد
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              {instructions.map((text, index) => (
+                <div key={index} className="flex items-start gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:border-[#00bba7]/30 transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-[#00bba7]/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-xs font-black text-[#00bba7]">{index + 1}</span>
                   </div>
+                  <span className="text-sm text-slate-700 font-bold leading-relaxed">{text}</span>
                 </div>
               ))}
             </div>
-          )}
-        </div>
-      </div>
-
-      {preview ? (
-        <div ref={previewSectionRef} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-slate-800 inline-flex items-center gap-2">
-                <Eye size={18} className="text-blue-600" />
-                معاينة الملف قبل الاستيراد
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                الملف: {preview.fileName} | عدد الصفوف: {preview.rows.length} | التعديلات: {editedCellsCount}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={confirmImport}
-                disabled={isPreparingPreview || isSubmittingImport}
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {isSubmittingImport ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                تأكيد الاستيراد
-              </button>
-
-              <button
-                type="button"
-                onClick={cancelPreview}
-                disabled={isSubmittingImport}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <XCircle size={14} />
-                إلغاء المعاينة
-              </button>
-            </div>
           </div>
 
-          {isPreparingPreview ? (
-            <div className="text-xs text-slate-500 mb-4 inline-flex items-center gap-2">
-              <Loader2 size={14} className="animate-spin" />
-              جاري فحص الملف والتحقق من البيانات...
-            </div>
-          ) : null}
-
-          <div className="overflow-auto border border-slate-200 rounded-xl">
-            <table className="min-w-full text-xs">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="p-2 border-b border-slate-200 text-slate-600 text-right sticky right-0 bg-slate-50">#</th>
-                  {preview.headers.map((header) => (
-                    <th key={header} className="p-2 border-b border-slate-200 text-slate-600 text-right whitespace-nowrap">
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {visiblePreviewRows.map((row) => (
-                  <tr key={row.rowNumber} className="odd:bg-white even:bg-slate-50/50">
-                    <td className="p-2 border-b border-slate-100 text-slate-500 sticky right-0 bg-inherit">{row.rowNumber}</td>
-                    {preview.headers.map((header) => (
-                      <td key={`${row.rowNumber}-${header}`} className="p-1 border-b border-slate-100 min-w-35">
-                        <input
-                          value={getEditedCellValue(row, header)}
-                          onChange={(e) => onEditCell(row.rowNumber, header, e.target.value)}
-                          className="w-full rounded-md border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {hiddenPreviewRows > 0 ? (
-            <p className="mt-3 text-xs text-slate-500">
-              يتم عرض أول {PREVIEW_ROWS_LIMIT} صف فقط لتسريع الشاشة. سيتم إرسال جميع الصفوف عند التأكيد.
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* قسم التعليمات */}
-      <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm">
-        <h2 className="text-lg font-bold text-slate-800 mb-6 text-right">تعليمات الاستيراد</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {instructions.map((text, index) => (
-            <div key={index} className="flex items-center gap-3 justify-start">
-              <CheckCircle2 size={18} className="text-emerald-500" />
-              <span className="text-sm text-slate-600 font-medium">{text}</span>
-            </div>
-          ))}
         </div>
       </div>
-
     </div>
   );
 }

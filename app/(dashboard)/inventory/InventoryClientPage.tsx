@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Plus, Search, Edit, ArrowRightLeft, Package2, AlertTriangle, Boxes, Sparkles, Upload, Download, History } from "lucide-react";
+import { Plus, Search, Edit, ArrowRightLeft, Package2, AlertTriangle, Boxes, Sparkles, Upload, Download, History, Loader2 } from "lucide-react";
 import { useInventory } from "@/hooks/useInventory";
 import { InventoryItem, InventoryItemInput, AdjustStockInput } from "@/types/inventory";
 import { toast } from "react-hot-toast";
@@ -116,19 +116,19 @@ export default function InventoryPage() {
   );
 
   const SkeletonTable = () => (
-    <div className="space-y-3 p-6">
+    <div className="space-y-3 p-6 bg-white/50 rounded-3xl">
       {Array.from({ length: 7 }).map((_, idx) => (
-        <div key={idx} className="h-12 rounded-xl bg-slate-100 animate-pulse" />
+        <div key={idx} className="h-12 rounded-xl bg-slate-200/50 animate-pulse" />
       ))}
     </div>
   );
 
   const statusBadge = (item: InventoryItem) => {
     if (item.quantity <= item.minStockLevel) {
-      return <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">كمية منخفضة</span>;
+      return <span className="px-4 py-1.5 rounded-xl text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-100 shadow-sm flex items-center gap-1.5 w-fit mx-auto"><AlertTriangle size={12}/> كمية منخفضة</span>;
     }
 
-    return <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">مخزون جيد</span>;
+    return <span className="px-4 py-1.5 rounded-xl text-[11px] font-bold bg-[#00bba7]/10 text-[#00bba7] border border-[#00bba7]/20 shadow-sm flex items-center gap-1.5 w-fit mx-auto"><Package2 size={12}/> مخزون جيد</span>;
   };
 
   const pending = isBulkPending || createItem.isPending || updateItem.isPending || adjustStock.isPending;
@@ -357,281 +357,320 @@ export default function InventoryPage() {
   };
 
   return (
-    <div className="min-h-screen p-8 bg-[radial-gradient(circle_at_10%_20%,rgba(59,130,246,0.13),transparent_36%),radial-gradient(circle_at_90%_15%,rgba(16,185,129,0.12),transparent_35%),#f8fafc]" dir="rtl">
-      <header className="mb-6 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl shadow-[0_10px_40px_-25px_rgba(15,23,42,0.35)] p-6 md:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
-              <Sparkles className="text-blue-600" />
-              مركز إدارة المخزون
-            </h1>
-            <p className="text-sm text-slate-500 mt-2">إدارة الأصناف وحالة المخزون وتنبيهات النقص عبر لوحة تشغيل احترافية.</p>
+    /* الخلفية المتدرجة الأساسية للموقع */
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-gradient-to-br from-[#00bba7] via-[#00bba7]/90 to-[#E7C873]" dir="rtl">
+      
+      {/* الحاوية الرئيسية (Wrapper) الزجاجية مع البوردر الذهبي */}
+      <div className="relative z-10 w-full max-w-7xl min-h-[90vh] bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden">
+        
+        {/* المحتوى الداخلي */}
+        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
+          
+          <header className="mb-10 flex flex-col xl:flex-row xl:items-end justify-between gap-6 border-b border-black/5 pb-8 relative">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
+                  <Sparkles size={24} className="text-white animate-bounce" />
+                </div>
+                <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+                  مركز إدارة المخزون
+                </h1>
+              </div>
+              <p className="text-slate-500 text-sm font-medium pr-14 mt-1">إدارة الأصناف وحالة المخزون وتنبيهات النقص عبر لوحة تشغيل احترافية.</p>
+            </div>
+
+            <div className="mt-4 xl:mt-0 flex flex-wrap items-center gap-3 w-full xl:w-auto">
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleImportCsv}
+                className="hidden"
+              />
+
+              <button
+                onClick={() => importInputRef.current?.click()}
+                disabled={pending}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 disabled:opacity-60 transition-all shadow-sm group"
+              >
+                <Upload size={16} className="group-hover:-translate-y-1 transition-transform" />
+                استيراد CSV
+              </button>
+
+              <button
+                onClick={handleExportCsv}
+                disabled={isLoading || items.length === 0}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 disabled:opacity-60 transition-all shadow-sm group"
+              >
+                <Download size={16} className="group-hover:-translate-y-1 transition-transform" />
+                تصدير CSV
+              </button>
+
+              <button
+                onClick={handleDownloadCsvTemplate}
+                disabled={pending}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#00bba7]/30 bg-[#00bba7]/10 text-[#00bba7] font-bold text-sm hover:bg-[#00bba7]/20 disabled:opacity-60 transition-all shadow-sm group"
+              >
+                <Download size={16} className="group-hover:-translate-y-1 transition-transform" />
+                تحميل قالب CSV
+              </button>
+            </div>
+          </header>
+
+          {/* كروت الإحصائيات */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-[2rem] p-7 shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-[#00bba7]/10 rounded-xl border border-[#00bba7]/20">
+                  <Boxes className="text-[#00bba7] group-hover:animate-pulse" size={22}/>
+                </div>
+                <p className="font-extrabold text-slate-600 text-sm">إجمالي الأصناف</p>
+              </div>
+              <p className="text-4xl font-black text-[#00bba7]">{items.length}</p>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-[2rem] p-7 shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-[#E7C873]/10 rounded-xl border border-[#E7C873]/20">
+                  <Package2 className="text-[#E7C873] group-hover:animate-pulse" size={22}/>
+                </div>
+                <p className="font-extrabold text-slate-600 text-sm">إجمالي الكمية المتاحة</p>
+              </div>
+              <p className="text-4xl font-black text-slate-800">{totalQuantity.toLocaleString()}</p>
+            </div>
+
+            <div className="bg-rose-50/80 backdrop-blur-md border border-rose-100 rounded-[2rem] p-7 shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-rose-100 rounded-xl border border-rose-200">
+                  <AlertTriangle className="text-rose-600 group-hover:animate-pulse" size={22}/>
+                </div>
+                <p className="font-extrabold text-rose-600 text-sm">تنبيهات المخزون المنخفض</p>
+              </div>
+              <p className="text-4xl font-black text-rose-600">{lowStockCount}</p>
+            </div>
           </div>
 
+          {/* شريط البحث والفلترة الزجاجي */}
+          <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="relative group">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#E7C873] group-hover:animate-pulse" size={18} />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="ابحث باسم الصنف أو SKU..."
+                  className="w-full pr-12 pl-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] transition-all shadow-sm"
+                />
+              </div>
+
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full py-3.5 px-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] transition-all shadow-sm cursor-pointer appearance-none"
+              >
+                <option value="all">كل الفئات</option>
+                {categories.filter((c) => c !== "all").map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* جدول الأصناف */}
+          <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden mb-10">
+            {isLoading ? (
+              <SkeletonTable />
+            ) : (
+            <div className="w-full overflow-x-auto custom-scrollbar">
+              <table className="w-full text-right border-collapse min-w-245">
+                <thead className="bg-slate-50/80 border-b border-slate-100/80">
+                  <tr>
+                    <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">اسم الصنف</th>
+                    <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">SKU / الباركود</th>
+                    <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الفئة</th>
+                    <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الكمية في المخزون</th>
+                    <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الوحدة</th>
+                    <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الحالة</th>
+                    <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-16 text-center text-slate-500 font-medium">لا توجد بيانات مطابقة لنتائج البحث الحالية</td>
+                    </tr>
+                  ) : (
+                    items.map((item) => (
+                    <tr
+                      key={item.id}
+                      className={`group transition-colors ${
+                        item.quantity <= item.minStockLevel ? "bg-rose-50/40 hover:bg-rose-50/80" : "hover:bg-[#00bba7]/[0.02]"
+                      }`}
+                    >
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-inner border ${item.quantity <= item.minStockLevel ? 'bg-rose-100 border-rose-200' : 'bg-slate-50 border-slate-100'}`}>
+                            <Package2 size={16} className={item.quantity <= item.minStockLevel ? 'text-rose-500' : 'text-[#00bba7]'} />
+                          </div>
+                          <span className="font-bold text-slate-800 text-sm whitespace-nowrap group-hover:text-[#00bba7] transition-colors">{item.name}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-center text-xs text-slate-500 font-mono tracking-wider">{item.sku}</td>
+                      <td className="p-4 text-xs font-bold text-slate-500 text-center">{item.category}</td>
+                      <td className="p-4 text-base font-black text-slate-800 text-center">{Number(item.quantity || 0).toLocaleString()}</td>
+                      <td className="p-4 text-center text-xs font-bold text-slate-600">{item.unit}</td>
+                      <td className="p-4 text-center">
+                        {statusBadge(item)}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setIsItemModalOpen(true);
+                            }}
+                            className="p-2.5 text-[#E7C873] hover:bg-[#E7C873]/10 rounded-xl transition-all hover:scale-110"
+                            title="تعديل الصنف"
+                          >
+                            <Edit size={16} />
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setIsStockModalOpen(true);
+                            }}
+                            className="p-2.5 text-[#00bba7] hover:bg-[#00bba7]/10 rounded-xl transition-all hover:scale-110"
+                            title="حركة مخزون"
+                          >
+                            <ArrowRightLeft size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))) }
+                </tbody>
+              </table>
+            </div>
+            )}
+          </div>
+
+          {/* جدول آخر حركات المخزون */}
+          <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_15px_30px_rgba(0,0,0,0.04)] border border-white/80 overflow-hidden mt-10">
+            <div className="p-6 border-b border-slate-100/80 flex items-center justify-between">
+              <h2 className="text-lg font-black text-slate-800 flex items-center gap-3">
+                <History size={20} className="text-[#E7C873] animate-pulse" />
+                آخر حركات المخزون
+              </h2>
+              <span className="text-xs font-bold text-[#00bba7] bg-[#00bba7]/10 px-3 py-1 rounded-lg">{movementHistory.length} حركة</span>
+            </div>
+
+            {movementHistory.length === 0 ? (
+              <p className="p-12 text-center text-sm font-bold text-slate-400">لا توجد حركات حتى الآن. ستظهر الحركات اليدوية والاستيراد الجماعي هنا.</p>
+            ) : (
+              <div className="w-full overflow-x-auto custom-scrollbar">
+                <table className="w-full text-right min-w-245">
+                  <thead className="bg-slate-50/50">
+                    <tr>
+                      <th className="p-4 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">الصنف</th>
+                      <th className="p-4 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">SKU</th>
+                      <th className="p-4 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">النوع</th>
+                      <th className="p-4 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">الكمية</th>
+                      <th className="p-4 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">الموقع</th>
+                      <th className="p-4 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">المصدر</th>
+                      <th className="p-4 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">التاريخ</th>
+                      <th className="p-4 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">ملاحظة</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {movementHistory.map((entry) => (
+                      <tr key={entry.id} className="hover:bg-white transition-colors">
+                        <td className="p-4 text-sm font-bold text-slate-700 text-center whitespace-nowrap">{entry.itemName}</td>
+                        <td className="p-4 text-xs text-slate-500 text-center font-mono">{entry.sku}</td>
+                        <td className="p-4 text-center">
+                          <span className={`px-3 py-1 rounded-xl text-[10px] font-bold border shadow-sm ${entry.type === "IN" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-orange-50 text-orange-600 border-orange-100"}`}>
+                            {entry.type === "IN" ? "إضافة" : "صرف"}
+                          </span>
+                        </td>
+                        <td className="p-4 text-sm text-center font-black text-slate-800">{entry.quantity}</td>
+                        <td className="p-4 text-xs text-center font-bold text-slate-600">{entry.location}</td>
+                        <td className="p-4 text-xs text-center font-bold text-slate-600">{entry.source === "MANUAL" ? "يدوي" : "استيراد"}</td>
+                        <td className="p-4 text-xs text-center font-mono text-slate-500">{new Date(entry.createdAt).toLocaleString("ar-EG")}</td>
+                        <td className="p-4 text-xs text-center text-slate-600">{entry.note}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* الأزرار العائمة والمودال */}
           <button
             onClick={() => {
               setSelectedItem(null);
               setIsItemModalOpen(true);
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm font-medium transition-all shadow-md active:scale-95"
+            className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-gradient-to-br from-[#00bba7] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#00bba7]/50 group"
+            title="إضافة صنف جديد"
           >
-            <Plus size={20} />
-            إضافة صنف جديد
-          </button>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".csv,text/csv"
-            onChange={handleImportCsv}
-            className="hidden"
-          />
-
-          <button
-            onClick={() => importInputRef.current?.click()}
-            disabled={pending}
-            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium transition-all shadow-sm active:scale-95"
-          >
-            <Upload size={16} />
-            استيراد CSV
+            <Plus size={26} className="group-hover:animate-spin" />
           </button>
 
-          <button
-            onClick={handleExportCsv}
-            disabled={isLoading || items.length === 0}
-            className="bg-white hover:bg-slate-50 border border-slate-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-700 px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium transition-all active:scale-95"
-          >
-            <Download size={16} />
-            تصدير CSV
-          </button>
-
-          <button
-            onClick={handleDownloadCsvTemplate}
-            disabled={pending}
-            className="bg-white hover:bg-slate-50 border border-slate-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-700 px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium transition-all active:scale-95"
-          >
-            <Download size={16} />
-            تحميل قالب CSV
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-xs text-slate-500">إجمالي الأصناف</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900 flex items-center gap-2"><Boxes size={20} /> {items.length}</p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-xs text-slate-500">إجمالي الكمية المتاحة</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{totalQuantity.toLocaleString()}</p>
-          </div>
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-            <p className="text-xs text-red-600">تنبيهات المخزون المنخفض</p>
-            <p className="mt-1 text-2xl font-bold text-red-700 flex items-center gap-2"><AlertTriangle size={20} /> {lowStockCount}</p>
-          </div>
-        </div>
-      </header>
-
-      <div className="rounded-2xl border border-white/50 bg-white/80 backdrop-blur-sm p-4 shadow-sm mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="ابحث باسم الصنف أو SKU..."
-              className="w-full pr-10 pl-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-700"
+          {isItemModalOpen ? (
+            <AddEditItemModal
+              key={`${isItemModalOpen}-${selectedItem?.id ?? "new"}`}
+              isOpen={isItemModalOpen}
+              onClose={() => {
+                setIsItemModalOpen(false);
+                setSelectedItem(null);
+              }}
+              isPending={createItem.isPending || updateItem.isPending}
+              initialData={
+                selectedItem
+                  ? {
+                      id: selectedItem.id,
+                      sku: selectedItem.sku,
+                      name: selectedItem.name,
+                      category: selectedItem.category,
+                      reorderLevel: selectedItem.minStockLevel,
+                      unit: selectedItem.unit,
+                      unitPrice: 0,
+                      costPrice: 0,
+                    }
+                  : null
+              }
+              onSave={handleSaveItem}
             />
-          </div>
+          ) : null}
 
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full py-2.5 px-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700"
-          >
-            <option value="all">كل الفئات</option>
-            {categories.filter((c) => c !== "all").map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
+          {isStockModalOpen ? (
+            <AdjustStockModal
+              key={`${isStockModalOpen}-${selectedItem?.id ?? "new"}`}
+              isOpen={isStockModalOpen}
+              onClose={() => {
+                setIsStockModalOpen(false);
+                setSelectedItem(null);
+              }}
+              item={selectedItem}
+              isPending={adjustStock.isPending}
+              onSave={handleAdjustStock}
+            />
+          ) : null}
+
+          {/* تنبيه الحفظ (Loading Toaster) */}
+          {pending && (
+            <div className="fixed bottom-6 right-6 z-40 rounded-2xl border border-white/60 bg-white/85 backdrop-blur-md px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.1)] flex items-center gap-3">
+              <Loader2 className="animate-spin text-[#00bba7]" size={18} />
+              <p className="text-sm font-bold text-slate-700">
+                جارٍ تنفيذ العملية...
+              </p>
+            </div>
+          )}
+
         </div>
       </div>
-
-      <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-        {isLoading ? (
-          <SkeletonTable />
-        ) : (
-        <div className="w-full overflow-x-auto">
-        <table className="w-full text-right border-collapse min-w-245">
-          <thead>
-            <tr className="bg-slate-50/50 border-b border-slate-100">
-              <th className="p-4 text-xs font-bold text-slate-500 text-center">اسم الصنف</th>
-              <th className="p-4 text-xs font-bold text-slate-500 text-center">SKU / الباركود</th>
-              <th className="p-4 text-xs font-bold text-slate-500 text-center">الفئة</th>
-              <th className="p-4 text-xs font-bold text-slate-500 text-center">الكمية في المخزون</th>
-              <th className="p-4 text-xs font-bold text-slate-500 text-center">الوحدة</th>
-              <th className="p-4 text-xs font-bold text-slate-500 text-center">الحالة</th>
-              <th className="p-4 text-xs font-bold text-slate-500 text-center">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {items.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-slate-500">لا توجد بيانات مطابقة لنتائج البحث الحالية</td>
-              </tr>
-            ) : (
-              items.map((item) => (
-              <tr
-                key={item.id}
-                className={`transition-colors ${
-                  item.quantity <= item.minStockLevel ? "bg-red-50/60 hover:bg-red-50" : "hover:bg-slate-50"
-                }`}
-              >
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center">
-                      <Package2 size={16} className="text-blue-600" />
-                    </div>
-                    <span className="font-bold text-slate-700 text-sm whitespace-nowrap">{item.name}</span>
-                  </div>
-                </td>
-                <td className="p-4 text-center text-xs text-slate-400 font-mono tracking-tight">{item.sku}</td>
-                <td className="p-4 text-xs text-slate-500 text-center">{item.category}</td>
-                <td className="p-4 text-sm font-bold text-slate-800 text-center">{Number(item.quantity || 0).toLocaleString()}</td>
-                <td className="p-4 text-center text-sm text-slate-600">{item.unit}</td>
-                <td className="p-4 text-center">
-                  {statusBadge(item)}
-                </td>
-                <td className="p-4">
-                  <div className="flex justify-center gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedItem(item);
-                        setIsItemModalOpen(true);
-                      }}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
-                      title="تعديل"
-                    >
-                      <Edit size={16} />
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setSelectedItem(item);
-                        setIsStockModalOpen(true);
-                      }}
-                      className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
-                      title="حركة مخزون"
-                    >
-                      <ArrowRightLeft size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))) }
-          </tbody>
-        </table>
-        </div>
-        )}
-      </div>
-
-      <div className="mt-6 bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-sm md:text-base font-extrabold text-slate-800 flex items-center gap-2">
-            <History size={18} className="text-indigo-600" />
-            آخر حركات المخزون
-          </h2>
-          <span className="text-xs text-slate-500">{movementHistory.length} حركة</span>
-        </div>
-
-        {movementHistory.length === 0 ? (
-          <p className="p-6 text-sm text-slate-500">لا توجد حركات حتى الآن. ستظهر الحركات اليدوية والاستيراد الجماعي هنا.</p>
-        ) : (
-          <div className="w-full overflow-x-auto">
-            <table className="w-full text-right min-w-245">
-              <thead>
-                <tr className="bg-slate-50/60 border-b border-slate-100">
-                  <th className="p-3 text-xs font-bold text-slate-500 text-center">الصنف</th>
-                  <th className="p-3 text-xs font-bold text-slate-500 text-center">SKU</th>
-                  <th className="p-3 text-xs font-bold text-slate-500 text-center">النوع</th>
-                  <th className="p-3 text-xs font-bold text-slate-500 text-center">الكمية</th>
-                  <th className="p-3 text-xs font-bold text-slate-500 text-center">الموقع</th>
-                  <th className="p-3 text-xs font-bold text-slate-500 text-center">المصدر</th>
-                  <th className="p-3 text-xs font-bold text-slate-500 text-center">التاريخ</th>
-                  <th className="p-3 text-xs font-bold text-slate-500 text-center">ملاحظة</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {movementHistory.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-sm font-semibold text-slate-700 text-center whitespace-nowrap">{entry.itemName}</td>
-                    <td className="p-3 text-xs text-slate-500 text-center font-mono">{entry.sku}</td>
-                    <td className="p-3 text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${entry.type === "IN" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                        {entry.type === "IN" ? "إضافة" : "صرف"}
-                      </span>
-                    </td>
-                    <td className="p-3 text-sm text-center font-bold text-slate-800">{entry.quantity}</td>
-                    <td className="p-3 text-xs text-center text-slate-600">{entry.location}</td>
-                    <td className="p-3 text-xs text-center text-slate-600">{entry.source === "MANUAL" ? "يدوي" : "استيراد"}</td>
-                    <td className="p-3 text-xs text-center text-slate-500">{new Date(entry.createdAt).toLocaleString("ar-EG")}</td>
-                    <td className="p-3 text-xs text-center text-slate-600">{entry.note}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {isItemModalOpen ? (
-        <AddEditItemModal
-          key={`${isItemModalOpen}-${selectedItem?.id ?? "new"}`}
-          isOpen={isItemModalOpen}
-          onClose={() => {
-            setIsItemModalOpen(false);
-            setSelectedItem(null);
-          }}
-          isPending={createItem.isPending || updateItem.isPending}
-          initialData={
-            selectedItem
-              ? {
-                  id: selectedItem.id,
-                  sku: selectedItem.sku,
-                  name: selectedItem.name,
-                  category: selectedItem.category,
-                  reorderLevel: selectedItem.minStockLevel,
-                  unit: selectedItem.unit,
-                  unitPrice: 0,
-                  costPrice: 0,
-                }
-              : null
-          }
-          onSave={handleSaveItem}
-        />
-      ) : null}
-
-      {isStockModalOpen ? (
-        <AdjustStockModal
-          key={`${isStockModalOpen}-${selectedItem?.id ?? "new"}`}
-          isOpen={isStockModalOpen}
-          onClose={() => {
-            setIsStockModalOpen(false);
-            setSelectedItem(null);
-          }}
-          item={selectedItem}
-          isPending={adjustStock.isPending}
-          onSave={handleAdjustStock}
-        />
-      ) : null}
-
-      {pending && (
-        <div className="fixed bottom-6 left-6 z-40 rounded-2xl border border-white/60 bg-white/85 backdrop-blur px-4 py-3 shadow-lg">
-          <p className="text-sm font-bold text-slate-700">جارٍ تنفيذ العملية...</p>
-        </div>
-      )}
     </div>
   );
 }

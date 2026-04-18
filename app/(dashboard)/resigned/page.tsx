@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
-import { ChevronLeft, Loader2, UserMinus, Phone, BadgeInfo } from "lucide-react";
+import { Loader2, UserMinus, Phone, BadgeInfo, ChevronLeft } from "lucide-react";
 import { useResignedEmployees } from "@/hooks/useEmployees";
 import type { Employee } from "@/types/employee";
 
@@ -22,15 +21,18 @@ export default function ResignedEmployeesPage() {
   );
 
   return (
-    /* الخلفية المتدرجة الأساسية */
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-gradient-to-br from-[#00bba7] via-[#00bba7]/90 to-[#E7C873]" dir="rtl">
-      
-      {/* الحاوية الرئيسية (Wrapper) الزجاجية مع البوردر الذهبي والشادو */}
-      <div className="relative z-10 w-full max-w-7xl min-h-[90vh] bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden">
-        
+    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden" dir="rtl">
+
+
         {/* المحتوى الداخلي */}
         <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
-          
+                          
+        {/* مسار التنقل (Breadcrumbs) - تم نقله وتنسيقه ليكون داخل الحاوية الزجاجية */}
+        <nav className="mb-6 flex items-center gap-2 text-xs font-extrabold text-slate-500 bg-white/60 backdrop-blur-md w-fit px-4 py-2.5 rounded-2xl border border-white/80 shadow-sm">
+          <span className="hover:text-[#00bba7] cursor-pointer transition-colors">إدارة الموارد البشرية</span>
+          <ChevronLeft size={14} className="text-[#E7C873]" />
+          <span className="text-[#00bba7]">المستقيلون</span>
+        </nav>
           {/* الهيدر مدمج بأسلوب لوحة التحكم */}
           <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-black/5 pb-6 relative">
             <div>
@@ -43,13 +45,6 @@ export default function ResignedEmployeesPage() {
                   المستقيلون
                 </h1>
               </div>
-              {/* مسار التنقل (Breadcrumbs) */}
-              <nav className="flex items-center gap-2 text-sm font-bold text-slate-500 pr-14">
-                <Link href="/employees" className="hover:text-[#00bba7] transition-colors">إدارة الموارد البشرية</Link>
-                {/* أنيميشن نبض لمؤشر الاتجاه */}
-                <ChevronLeft size={14} className="animate-pulse text-[#E7C873]" />
-                <span className="text-[#00bba7]">المستقيلون</span>
-              </nav>
             </div>
             
             <div className="flex w-full md:w-auto justify-end">
@@ -126,7 +121,6 @@ export default function ResignedEmployeesPage() {
           </div>
 
         </div>
-      </div>
     </div>
   );
 }

@@ -19,15 +19,16 @@ const menuItems = [
   { name: 'إدارة الموظفين', icon: Users, href: '/employees', roles: ['admin', 'hr', 'manager'] },
   { name: 'المستقيلون', icon: UserMinus, href: '/resigned', roles: ['admin', 'hr', 'manager'] },
   { name: 'سجل الحضور', icon: ClipboardList, href: '/attendance', roles: ['admin', 'hr', 'manager'] },
-  {
-    name: 'الرواتب', icon: Wallet, roles: ['admin', 'finance', 'manager'],
-    subItems: [
-      { name: 'إعدادات الرواتب', href: '/salaries?tab=salary-config' },
-      { name: 'السلف', href: '/salaries?tab=advances' },
-      { name: 'المكافآت والخصومات', href: '/salaries?tab=bonuses' },
-      { name: 'مسير الرواتب', href: '/payroll' },
-    ]
-  },
+ {
+  name: 'الرواتب', icon: Wallet, roles: ['admin', 'finance', 'manager'],
+  subItems: [
+    { name: 'إعدادات الرواتب', href: '/salaries?tab=salary-config' },
+    { name: 'السلف', href: '/salaries?tab=advances' },
+    { name: 'المكافآت والخصومات', href: '/salaries?tab=bonuses' },
+    { name: 'إدارة المسير', href: '/salaries?tab=final-payroll' },
+    { name: 'تقارير الرواتب', href: '/payroll' }, // صفحة التقارير المنفصلة
+  ]
+},
   { name: 'بصمتي وحضوري', icon: Fingerprint, href: '/biometric' },
   { name: 'مخزن الشغل', icon: Box, href: '/inventory', roles: ['admin', 'warehouse', 'manager'] },
   { name: 'استيراد البيانات', icon: FileInput, href: '/importData', roles: ['admin', 'manager'] },

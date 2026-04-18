@@ -1,25 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import useSalaries from "@/hooks/useSalaries";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAdvances } from "@/hooks/useAdvances";
 import { useBonuses } from "@/hooks/useBonuses";
 import { useAttendance } from "@/hooks/useAttendance";
 import { usePayroll } from "@/hooks/usePayroll";
-import type { FinancialTabKey } from "@/components/salaries/FinancialHubTabs";
-import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2, HandCoins, Wallet } from "lucide-react";
+import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2, HandCoins, Wallet, FileSpreadsheet, ChevronLeft } from "lucide-react";
 import { toast } from "react-hot-toast";
 import type { Salary } from "@/types/salary";
 import type { Employee } from "@/types/employee";
 import type { Advance } from "@/types/advance";
 import type { Bonus } from "@/types/bonus";
 
-const FinancialHubTabs = dynamic(() => import("@/components/salaries/FinancialHubTabs"), {
-  loading: () => null,
-});
+export type FinancialTabKey = "salary-config" | "advances" | "bonuses" | "final-payroll";
+
 const ManageSalaryModal = dynamic(() => import("@/components/ManageSalaryModal"), {
   loading: () => null,
 });
@@ -57,11 +55,6 @@ const getTabFromQuery = (tabParam: string | null): FinancialTabKey => {
   if (tabParam === "bonuses") return "bonuses";
   if (tabParam === "final-payroll" || tabParam === "payroll") return "final-payroll";
   return "salary-config";
-};
-
-const getQueryFromTab = (tab: FinancialTabKey) => {
-  if (tab === "final-payroll") return "payroll";
-  return tab;
 };
 
 const WORKING_DAYS_PER_MONTH = 26;
@@ -102,51 +95,43 @@ const SkeletonRows = () => (
   </div>
 );
 
-export default function SalariesPage() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+// أسماء الأقسام لاستخدامها في مسار التنقل
+const tabLabels: Record<FinancialTabKey, string> = {
+  "salary-config": "إعداد الرواتب",
+  "advances": "السلف",
+  "bonuses": "المكافآت والخصومات",
+  "final-payroll": "المسير النهائي",
+};
 
-  const tabFromQuery = useMemo(() => getTabFromQuery(searchParams.get("tab")), [searchParams]);
+export default function SalariesPage() {
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = getTabFromQuery(requestedTab);
+
   const { data: salaries = [], isLoading, isError, error, updateSalary, deleteSalary } = useSalaries();
-  const { data: employees = [], isLoading: employeesLoading } = useEmployees();
+  const { data: employees = [], isLoading: employeesLoading } = useEmployees({
+    limit: 200,
+    status: "active",
+  });
   const { data: advances = [], createAdvance, updateAdvance, deleteAdvance } = useAdvances();
   const { calculatePayroll } = usePayroll();
 
   const [period, setPeriod] = useState(getLocalMonth());
   const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBounds(period), [period]);
   const { data: bonuses = [], createBonus, updateBonus, deleteBonus } = useBonuses({ period });
-  const { data: attendanceData } = useAttendance({ startDate: monthStart, endDate: monthEnd, limit: 2000 });
-
-  const [activeTab, setActiveTab] = useState<FinancialTabKey>(tabFromQuery);
-
-  useEffect(() => {
-    setActiveTab(tabFromQuery);
-  }, [tabFromQuery]);
-
-  const handleTabChange = (nextTab: FinancialTabKey) => {
-    setActiveTab(nextTab);
-
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", getQueryFromTab(nextTab));
-
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
-
-  const activeEmployees = useMemo(
-    () => (employees || []).filter((employee) => employee.status !== "terminated"),
-    [employees],
+  const { data: attendanceData } = useAttendance(
+    { startDate: monthStart, endDate: monthEnd, limit: 2000 }
   );
 
   const employeeNameMap = useMemo(() => {
     const map: Record<string, string> = {};
-    if (Array.isArray(activeEmployees)) {
-      for (const emp of activeEmployees) {
+    if (Array.isArray(employees)) {
+      for (const emp of employees) {
         if (emp?.employeeId) map[emp.employeeId] = emp.name || emp.employeeId;
       }
     }
     return map;
-  }, [activeEmployees]);
+  }, [employees]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selected, setSelected] = useState<Salary | null>(null);
@@ -165,9 +150,9 @@ export default function SalariesPage() {
 
   const employeeMap = useMemo(() => {
     const m = new Map<string, Employee>();
-    (activeEmployees || []).forEach((e) => { if (e?.employeeId) m.set(e.employeeId, e); });
+    (employees || []).forEach((e) => { if (e?.employeeId) m.set(e.employeeId, e); });
     return m;
-  }, [activeEmployees]);
+  }, [employees]);
 
   const salaryMap = useMemo(() => {
     const m = new Map<string, Salary>();
@@ -176,34 +161,31 @@ export default function SalariesPage() {
   }, [salaries]);
 
   const allIds = useMemo(() => {
-    return activeEmployees
-      .map((employee) => employee.employeeId)
-      .filter((employeeId): employeeId is string => Boolean(employeeId));
-  }, [activeEmployees]);
+    const set = new Set<string>();
+    (employees || []).forEach((e) => e?.employeeId && set.add(e.employeeId));
+    (salaries || []).forEach((s) => s?.employeeId && set.add(s.employeeId));
+    return Array.from(set);
+  }, [employees, salaries]);
 
   const attendanceDaysMap = useMemo(() => {
     const map = new Map<string, number>();
     const daily = attendanceData?.dailyRecords || [];
-
     for (const rec of daily) {
       if (!rec?.employeeId || !rec?.checkIn) continue;
       map.set(rec.employeeId, (map.get(rec.employeeId) || 0) + 1);
     }
-
     return map;
   }, [attendanceData?.dailyRecords]);
 
   const dailyRecordsByEmployee = useMemo(() => {
     const map = new Map<string, { checkIn?: string }[]>();
     const daily = attendanceData?.dailyRecords || [];
-
     for (const rec of daily) {
       if (!rec?.employeeId) continue;
       const current = map.get(rec.employeeId) || [];
       current.push({ checkIn: rec.checkIn });
       map.set(rec.employeeId, current);
     }
-
     return map;
   }, [attendanceData?.dailyRecords]);
 
@@ -293,13 +275,6 @@ export default function SalariesPage() {
     deleteSalary.mutate(employeeId);
   };
 
-  const tabs = [
-    { key: "salary-config" as const, label: "إعداد الرواتب", subtitle: "تعريف الراتب الثابت والبدلات" },
-    { key: "advances" as const, label: "السلف", subtitle: "متابعة الاستحقاقات والخصومات" },
-    { key: "bonuses" as const, label: "المكافآت والخصومات", subtitle: "ضبط الحوافز والاقتطاعات" },
-    { key: "final-payroll" as const, label: "المسير النهائي", subtitle: "حساب صافي الراتب الشهري" },
-  ];
-
   const isSaving =
     updateSalary.isPending ||
     deleteSalary.isPending ||
@@ -374,19 +349,9 @@ export default function SalariesPage() {
 
       const worksheet = XLSX.utils.json_to_sheet(rows);
       worksheet["!cols"] = [
-        { wch: 5 },
-        { wch: 14 },
-        { wch: 24 },
-        { wch: 12 },
-        { wch: 12 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 10 },
-        { wch: 14 },
-        { wch: 12 },
-        { wch: 12 },
-        { wch: 12 },
-        { wch: 14 },
+        { wch: 5 }, { wch: 14 }, { wch: 24 }, { wch: 12 }, { wch: 12 }, 
+        { wch: 14 }, { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 12 }, 
+        { wch: 12 }, { wch: 12 }, { wch: 14 },
       ];
 
       const workbook = XLSX.utils.book_new();
@@ -418,20 +383,23 @@ export default function SalariesPage() {
   const isFloatingActionVisible = activeTab !== "final-payroll";
 
   return (
-    /* الخلفية المتدرجة الأساسية للموقع */
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-gradient-to-br from-[#00bba7] via-[#00bba7]/90 to-[#E7C873]" dir="rtl">
-      
-      {/* الحاوية الرئيسية (Wrapper) الزجاجية مع البوردر الذهبي والشادو */}
-      <div className="relative z-10 w-full max-w-7xl min-h-[90vh] bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden">
+    <>
+      <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden" dir="rtl">
         
         {/* المحتوى الداخلي */}
         <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
           
+          {/* مسار التنقل (Breadcrumbs) الديناميكي */}
+          <nav className="mb-6 flex items-center gap-2 text-xs font-extrabold text-slate-500 bg-white/60 backdrop-blur-md w-fit px-4 py-2.5 rounded-2xl border border-white/80 shadow-sm">
+            <span className="hover:text-[#00bba7] cursor-pointer transition-colors">المركز المالي</span>
+            <ChevronLeft size={14} className="text-[#E7C873]" />
+            <span className="text-[#00bba7]">{tabLabels[activeTab]}</span>
+          </nav>
+
           <header className="mb-10 flex flex-col xl:flex-row xl:items-end justify-between gap-6 border-b border-black/5 pb-8 relative">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
-                  {/* أنيميشن قفز لأيقونة العنوان */}
                   <Sparkles size={24} className="text-white animate-bounce" />
                 </div>
                 <h1 className="text-3xl font-black text-slate-800 tracking-tight">
@@ -468,14 +436,9 @@ export default function SalariesPage() {
             </div>
           </header>
 
-          <div className="mt-6">
-            <FinancialHubTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
-          </div>
-        </div>
-      </div>
-
+          {/* محتوى القسم حسب التبويب (بدون شريط التبويبات) */}
           {activeTab === "salary-config" && (
-            <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
+            <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden mt-6">
               {isLoading ? (
                 <SkeletonRows />
               ) : isError ? (
@@ -563,7 +526,7 @@ export default function SalariesPage() {
           )}
 
           {activeTab === "advances" && (
-            <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
+            <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden mt-6">
               <div className="w-full overflow-x-auto custom-scrollbar">
                 <table className="w-full text-right min-w-245">
                   <thead className="bg-slate-50/50 border-b border-slate-100/80">
@@ -625,7 +588,7 @@ export default function SalariesPage() {
           )}
 
           {activeTab === "bonuses" && (
-            <div className="space-y-6">
+            <div className="space-y-6 mt-6">
               <div className="flex justify-between items-center rounded-2xl border border-white/80 bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
                 <h2 className="font-black text-slate-800 flex items-center gap-3 text-lg">
                   <Gift size={20} className="text-[#00bba7] animate-pulse" /> إدارة المكافآت والخصومات
@@ -640,7 +603,7 @@ export default function SalariesPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
+              <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
                 <div className="w-full overflow-x-auto custom-scrollbar">
                   <table className="w-full text-right min-w-245">
                     <thead className="bg-slate-50/50 border-b border-slate-100/80">
@@ -693,72 +656,87 @@ export default function SalariesPage() {
             </div>
           )}
 
-      {activeTab === "final-payroll" && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center rounded-2xl border border-white/50 bg-white/75 backdrop-blur p-4">
-            <h2 className="font-bold text-slate-800 flex items-center gap-2"><Calculator size={18} /> المسير النهائي للفترة</h2>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleRunPayroll}
-                disabled={calculatePayroll.isPending}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {calculatePayroll.isPending ? <Loader2 size={14} className="animate-spin" /> : <Calculator size={14} />}
-                تشغيل المسير على الخادم
-              </button>
-              <input
-                type="month"
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-                className="p-2 rounded-lg border border-slate-200 bg-white"
-              />
-            </div>
-          </div>
+          {activeTab === "final-payroll" && (
+            <div className="space-y-6 mt-6">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 rounded-2xl border border-white/80 bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
+                <h2 className="font-black text-slate-800 flex items-center gap-3 text-lg">
+                  <Calculator size={20} className="text-[#00bba7] animate-pulse" /> المسير النهائي للفترة
+                </h2>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <input
+                    type="month"
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value)}
+                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#00bba7] focus:ring-2 focus:ring-[#00bba7]/20 transition-all shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleExportPayrollExcel}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition-all shadow-sm hover:shadow-md active:scale-95"
+                  >
+                    <FileSpreadsheet size={16} />
+                    تصدير Excel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRunPayroll}
+                    disabled={calculatePayroll.isPending}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] hover:from-[#00a392] hover:to-[#006e63] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_20px_rgba(0,187,167,0.3)] transition-all active:scale-95 border border-[#00bba7]/50 disabled:opacity-60 disabled:cursor-not-allowed group"
+                  >
+                    {calculatePayroll.isPending ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} className="group-hover:animate-bounce" />}
+                    تشغيل المسير
+                  </button>
+                </div>
+              </div>
 
-          {lastCalculatedRunId ? (
-            <p className="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-              آخر تشغيل ناجح للمسير: {lastCalculatedRunId}
-            </p>
-          ) : null}
+              {lastCalculatedRunId ? (
+                <div className="text-sm text-[#00bba7] bg-[#00bba7]/10 border border-[#00bba7]/20 rounded-xl px-4 py-3 font-bold flex items-center gap-2 shadow-sm">
+                  <Sparkles size={16} /> آخر تشغيل ناجح للمسير: <span className="font-mono">{lastCalculatedRunId}</span>
+                </div>
+              ) : null}
 
-          <div className="bg-white/85 backdrop-blur border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-right min-w-245">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th className="p-4 text-center">الموظف</th>
-                    <th className="p-4 text-center">أيام الحضور</th>
-                    <th className="p-4 text-center">الراتب النسبي</th>
-                    <th className="p-4 text-center">المكافآت</th>
-                    <th className="p-4 text-center">الخصومات</th>
-                    <th className="p-4 text-center">خصم السلف</th>
-                    <th className="p-4 text-center">صافي المستحق</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {finalPayrollRows.length === 0 ? (
-                    <tr><td colSpan={7} className="p-8 text-center text-slate-500">لا توجد بيانات كافية لحساب المسير.</td></tr>
-                  ) : (
-                    finalPayrollRows.map((row) => (
-                      <tr key={row.employeeId} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="p-4 text-center">{row.employeeName}</td>
-                        <td className="p-4 text-center">{row.attendanceDays}</td>
-                        <td className="p-4 text-center">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                        <td className="p-4 text-center text-emerald-700">{row.totalBonus.toLocaleString()}</td>
-                        <td className="p-4 text-center text-rose-700">{row.totalDeductions.toLocaleString()}</td>
-                        <td className="p-4 text-center text-orange-700">{row.advancesInstallments.toLocaleString()}</td>
-                        <td className="p-4 text-center font-extrabold text-blue-700">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+              <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
+                <div className="w-full overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-right min-w-245">
+                    <thead className="bg-slate-50/50 border-b border-slate-100/80">
+                      <tr>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">أيام الحضور</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الراتب النسبي</th>
+                        <th className="p-5 text-rose-500 font-black text-xs uppercase tracking-wider text-center">خصم التأخير</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المكافآت</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">خصم السلف</th>
+                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">صافي المستحق</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {finalPayrollRows.length === 0 ? (
+                        <tr><td colSpan={8} className="p-16 text-center text-slate-500 font-medium">لا توجد بيانات كافية لحساب المسير.</td></tr>
+                      ) : (
+                        finalPayrollRows.map((row) => (
+                          <tr key={row.employeeId} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                            <td className="p-4 text-center font-bold text-slate-800">{row.employeeName}</td>
+                            <td className="p-4 text-center font-mono font-bold text-slate-600">{row.attendanceDays}</td>
+                            <td className="p-4 text-center font-mono font-bold text-slate-700">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 text-center font-mono font-bold text-rose-600 bg-rose-50/30">{row.lateDeduction.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 text-center font-black text-[#00bba7]">{row.totalBonus.toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-rose-600">{row.totalDeductions.toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-[#E7C873]">{row.advancesInstallments.toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-xl text-slate-900 bg-[#00bba7]/5">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 font-medium px-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#E7C873]"></span>
+                المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف - خصم التأخير.
+              </p>
             </div>
-          </div>
-          <p className="text-xs text-slate-500 px-2">المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف.</p>
-        </div>
-      )}
+          )}
 
         </div>
       </div>
@@ -767,7 +745,7 @@ export default function SalariesPage() {
       {isFloatingActionVisible && (
         <button
           onClick={openFloatingAction}
-          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-linear-to-br from-[#00bba7] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#00bba7]/50 group"
+          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-gradient-to-br from-[#00bba7] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#00bba7]/50 group"
           title="إضافة سجل جديد"
         >
           <Plus size={26} className="group-hover:animate-spin" />
@@ -782,7 +760,7 @@ export default function SalariesPage() {
           onClose={() => setIsModalOpen(false)}
           initialData={selected}
           preselectedEmployeeId={preselectedEmployeeId}
-          employees={activeEmployees}
+          employees={employees}
           isPending={updateSalary.isPending}
           onSave={handleSave}
         />
@@ -796,7 +774,7 @@ export default function SalariesPage() {
             setIsAdvanceModalOpen(false);
             setSelectedAdvance(null);
           }}
-          employees={Array.isArray(activeEmployees) ? activeEmployees : []}
+          employees={Array.isArray(employees) ? employees : []}
           initialData={selectedAdvance}
           isPending={createAdvance.isPending || updateAdvance.isPending}
           onSave={(form) => {
@@ -837,7 +815,7 @@ export default function SalariesPage() {
             setIsBonusModalOpen(false);
             setSelectedBonus(null);
           }}
-          employees={Array.isArray(activeEmployees) ? activeEmployees : []}
+          employees={Array.isArray(employees) ? employees : []}
           initialData={selectedBonus}
           isPending={createBonus.isPending || updateBonus.isPending}
           onSave={(form) => {
@@ -880,6 +858,6 @@ export default function SalariesPage() {
           </p>
         </div>
       )}
-    </div>
+    </>
   );
-}")
+}
