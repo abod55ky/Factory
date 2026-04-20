@@ -8,3 +8,4 @@ export const QUERY_GC_TIME = {
   STANDARD: 15 * 60 * 1000,
   RELAXED: 30 * 60 * 1000,
 } as const;
+

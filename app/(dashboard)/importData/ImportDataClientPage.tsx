@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useImports } from "@/hooks/useImports";
 import { useFiles } from "@/hooks/useFiles";
-import { Upload, Users, Clock, Package, CheckCircle2, Download, Eye, Save, XCircle, Loader2, FileText, Sparkles } from "lucide-react";
+import { Upload, Users, Clock, Package, CheckCircle2, Download, Eye, Save, XCircle, Loader2, FileText, Sparkles, ChevronLeft } from "lucide-react";
 
 type ImportErrorShape = {
   message?: string;
@@ -282,14 +282,14 @@ const formatDateTime = (value?: string) => {
   return parsed.toLocaleString("ar-EG");
 };
 
-// 1. البيانات الثابتة للبطاقات بتصميم يتوافق مع الألوان الجديدة
+// 1. البيانات الثابتة للبطاقات بتصميم يتوافق مع الهوية الفاخرة
 const importSections = [
   {
     title: "بيانات الموظفين",
     description: "ملف Excel يحتوي الاسم، المنصب، الأجر، أوقات الدوام",
     icon: Users,
-    iconColor: "text-[#00bba7]",
-    bgColor: "bg-[#00bba7]/10 border border-[#00bba7]/20",
+    iconColor: "text-[#C89355]",
+    bgColor: "bg-[#1a2530] border border-[#C89355]/30 shadow-inner",
     entity: "employees",
     enabled: true,
     templateEntity: "employees",
@@ -298,8 +298,8 @@ const importSections = [
     title: "سجلات الحضور",
     description: "ملف CSV/Excel بتوقيتات الدخول والخروج من جهاز البصمة",
     icon: Clock,
-    iconColor: "text-rose-500",
-    bgColor: "bg-rose-50 border border-rose-100",
+    iconColor: "text-rose-600",
+    bgColor: "bg-rose-500/10 border border-rose-500/20 shadow-inner",
     entity: "attendance",
     enabled: true,
     templateEntity: null,
@@ -308,8 +308,8 @@ const importSections = [
     title: "جرد المخزون",
     description: "ملف Excel بأسماء المنتجات والكميات والأسعار",
     icon: Package,
-    iconColor: "text-[#E7C873]",
-    bgColor: "bg-[#E7C873]/20 border border-[#E7C873]/30",
+    iconColor: "text-[#263544]",
+    bgColor: "bg-white/80 border border-white shadow-inner",
     entity: "inventory",
     enabled: true,
     templateEntity: "products",
@@ -590,53 +590,72 @@ export default function ImportPage() {
   };
 
   return (
-    /* الخلفية المتدرجة الأساسية للموقع */
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-gradient-to-br from-[#00bba7] via-[#00bba7]/90 to-[#E7C873]" dir="rtl">
-      
-      {/* الحاوية الرئيسية (Wrapper) الزجاجية مع البوردر الذهبي والشادو */}
-      <div className="relative z-10 w-full max-w-7xl min-h-[90vh] bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden">
+    /* الحاوية الرئيسية: تأثير زجاجي مع درازة خارجية متطابقة مع باقي النظام */
+    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/50 backdrop-blur-[40px] rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(38,53,68,0.2)] border-2 border-dashed border-[#C89355]/60 flex flex-col overflow-hidden" dir="rtl">
         
+        {/* نقشة الفايبر (القماش) الثابتة والشفافة */}
+        <div 
+          className="absolute inset-0 opacity-[0.04] pointer-events-none z-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 12h24M12 0v24' stroke='%23263544' stroke-width='1' stroke-dasharray='4 4' fill='none'/%3E%3C/svg%3E")`,
+            backgroundSize: '24px 24px'
+          }}
+        />
+
         {/* المحتوى الداخلي */}
-        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
+        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar relative z-10">
           
+          {/* مسار التنقل (Breadcrumbs) - زجاجي مع درازة */}
+          <nav className="mb-6 relative overflow-hidden flex items-center gap-2 text-xs font-black text-slate-500 bg-white/60 backdrop-blur-xl w-fit px-4 py-2.5 rounded-2xl border border-white/80 shadow-[0_5px_15px_rgba(38,53,68,0.05)] group">
+            <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+            <span className="hover:text-[#263544] cursor-pointer transition-colors relative z-10">لوحة التحكم</span>
+            <ChevronLeft size={14} className="text-[#C89355] relative z-10" />
+            <span className="text-[#263544] relative z-10">استيراد البيانات</span>
+          </nav>
+
           {/* الهيدر */}
-          <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-black/5 pb-8 relative">
+          <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#263544]/10 pb-8 relative">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
-                  <Upload size={24} className="text-white animate-bounce" />
+                {/* أيقونة العنوان بهوية الماركة الكحلية والنحاسية مع الدرزة */}
+                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px]">
+                  <Upload size={22} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
                 </div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight">استيراد البيانات</h1>
+                <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">استيراد البيانات</h1>
               </div>
-              <p className="text-slate-500 text-sm font-medium pr-14 mt-1">رفع ملفات جداول متعددة (Excel/CSV/TSV/TXT/JSON) لتحديث البيانات بضغطة زر.</p>
+              <p className="text-slate-600 text-sm font-bold pr-14 mt-1">رفع ملفات جداول متعددة (Excel/CSV/TSV/TXT/JSON) لتحديث البيانات بضغطة زر.</p>
             </div>
           </header>
 
           {/* منطقة عرض حالة الرفع إن وجدت */}
           {status && (
-            <div className="mb-8 text-center p-5 bg-white/80 backdrop-blur-md rounded-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-in slide-in-from-top-4 duration-300">
-              <p className="text-sm font-bold text-[#00bba7] flex items-center justify-center gap-2">
-                <Sparkles size={16} className="animate-pulse" /> {status}
+            <div className="mb-8 text-center p-5 relative overflow-hidden bg-white/80 backdrop-blur-xl rounded-[2rem] border-2 border-white/90 shadow-[0_15px_30px_rgba(38,53,68,0.06)] animate-in slide-in-from-top-4 duration-300 group/status">
+              <div className="absolute inset-1.5 rounded-[1.7rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/status:border-[#C89355]/50 z-0" />
+              <p className="text-sm font-black text-[#263544] flex items-center justify-center gap-2 relative z-10">
+                <Sparkles size={16} className="animate-pulse text-[#C89355]" /> {status}
               </p>
-              {generalFilePath ? <p className="mt-2 text-[11px] font-mono text-slate-500">المسار المخزن: {generalFilePath}</p> : null}
+              {generalFilePath ? <p className="mt-2 text-[11px] font-mono font-bold text-slate-500 relative z-10">المسار المخزن: {generalFilePath}</p> : null}
               
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3 relative z-10">
                 {preview ? (
                   <button
                     type="button"
                     onClick={openPreview}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] px-5 py-2.5 text-xs font-bold text-white hover:from-[#00a392] hover:to-[#006e63] shadow-md active:scale-95 transition-all"
+                    className="relative overflow-hidden inline-flex items-center gap-2 rounded-xl bg-[#1a2530] hover:bg-[#263544] px-5 py-2.5 text-xs font-black text-[#C89355] shadow-[0_10px_20px_rgba(38,53,68,0.3)] active:scale-95 transition-all border border-[#C89355]/40 group/btn"
                   >
-                    <Eye size={16} /> عرض المعاينة
+                    <div className="absolute inset-1 rounded-lg border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/50" />
+                    <Eye size={16} className="relative z-10 group-hover/btn:animate-pulse" /> 
+                    <span className="relative z-10">عرض المعاينة</span>
                   </button>
                 ) : null}
                 {reviewPath ? (
                   <button
                     type="button"
                     onClick={() => router.push(reviewPath)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-white border border-[#00bba7]/30 text-[#00bba7] px-5 py-2.5 text-xs font-bold hover:bg-[#00bba7]/10 shadow-sm active:scale-95 transition-all"
+                    className="relative overflow-hidden inline-flex items-center gap-2 rounded-xl bg-white/80 backdrop-blur-md border-2 border-white hover:border-[#C89355]/30 text-[#263544] px-5 py-2.5 text-xs font-black shadow-sm active:scale-95 transition-all group/btn"
                   >
-                    فتح صفحة البيانات بعد الاستيراد
+                    <div className="absolute inset-1 rounded-lg border border-dashed border-[#263544]/10 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/30" />
+                    <span className="relative z-10">فتح صفحة البيانات بعد الاستيراد</span>
                   </button>
                 ) : null}
               </div>
@@ -646,23 +665,24 @@ export default function ImportPage() {
           {/* البطاقات */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
             {importSections.map((section, index) => (
-              <div key={index} className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:shadow-lg transition-all p-6 md:p-8 flex flex-col items-center text-center group">
+              <div key={index} className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] hover:shadow-[0_20px_50px_rgba(38,53,68,0.12)] transition-all p-6 md:p-8 flex flex-col items-center text-center group overflow-hidden">
+                <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50 z-0" />
                 
-                <div className={`w-14 h-14 ${section.bgColor} rounded-2xl flex items-center justify-center mb-5 group-hover:animate-pulse transition-all`}>
-                  <section.icon size={26} className={section.iconColor} />
+                <div className={`w-16 h-16 ${section.bgColor} shadow-inner rounded-2xl flex items-center justify-center mb-5 group-hover:animate-pulse transition-all relative z-10`}>
+                  <section.icon size={28} className={section.iconColor} />
                 </div>
                 
-                <h3 className="font-extrabold text-slate-800 mb-2">{section.title}</h3>
-                <p className="text-xs font-medium text-slate-500 mb-6 leading-relaxed px-2">
+                <h3 className="font-black text-[#263544] text-lg mb-2 relative z-10">{section.title}</h3>
+                <p className="text-xs font-bold text-slate-500 mb-6 leading-relaxed px-2 relative z-10">
                   {section.description}
                 </p>
 
                 {section.templateEntity ? (
                   <button
                     onClick={() => downloadTemplate(section.templateEntity)}
-                    className="mb-4 inline-flex items-center gap-2 text-xs font-bold text-[#00bba7] bg-[#00bba7]/10 border border-[#00bba7]/20 px-4 py-2 rounded-xl hover:bg-[#00bba7]/20 transition-colors shadow-sm w-full justify-center active:scale-95"
+                    className="mb-4 inline-flex items-center gap-2 text-xs font-black text-[#263544] bg-white/80 backdrop-blur-md border border-white hover:bg-white hover:border-[#C89355]/30 px-4 py-2.5 rounded-xl transition-all shadow-sm w-full justify-center active:scale-95 relative z-10 group/dl"
                   >
-                    <Download size={14} className="group-hover:-translate-y-1 transition-transform" />
+                    <Download size={14} className="text-[#C89355] group-hover/dl:-translate-y-1 transition-transform" />
                     تحميل قالب مطابق
                   </button>
                 ) : null}
@@ -672,10 +692,10 @@ export default function ImportPage() {
                   onDragOver={(event) => handleDragOver(event, section.entity)}
                   onDragLeave={(event) => handleDragLeave(event, section.entity)}
                   onDrop={(event) => handleDrop(event, section.entity)}
-                  className={`w-full border-2 border-dashed rounded-2xl p-6 transition-all cursor-pointer group/drop flex-1 flex flex-col justify-center ${
+                  className={`w-full border-2 border-dashed rounded-2xl p-6 transition-all cursor-pointer group/drop flex-1 flex flex-col justify-center relative z-10 ${
                     dragEntity === section.entity
-                      ? "border-[#00bba7] bg-[#00bba7]/5"
-                      : "border-slate-200 bg-white/50 hover:border-[#00bba7]/50 hover:bg-[#00bba7]/[0.02]"
+                      ? "border-[#C89355] bg-[#C89355]/10 shadow-inner"
+                      : "border-slate-300/50 bg-white/50 hover:border-[#C89355]/60 hover:bg-white/80"
                   }`}
                 >
                   <input
@@ -690,15 +710,15 @@ export default function ImportPage() {
                     }}
                   />
                   <div className="flex flex-col items-center gap-2">
-                    <Upload size={24} className={`text-slate-400 transition-colors ${dragEntity === section.entity ? 'text-[#00bba7]' : 'group-hover/drop:text-[#00bba7]'}`} />
-                    <p className="text-xs font-bold text-slate-500 mt-2">
+                    <Upload size={24} className={`transition-colors ${dragEntity === section.entity ? 'text-[#C89355] animate-bounce' : 'text-slate-400 group-hover/drop:text-[#C89355]'}`} />
+                    <p className="text-xs font-black text-[#263544] mt-2">
                       {section.enabled
                         ? dragEntity === section.entity
                           ? "أفلت الملف هنا الآن"
-                          : "اسحب الملف هنا أو انقر للرفع"
+                          : "اسحب الملف أو انقر للرفع"
                         : "غير مدعوم حالياً"}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-mono mt-1">.xlsx, .csv, .json</p>
+                    <p className="text-[10px] text-slate-400 font-mono font-bold mt-1">.xlsx, .csv, .json</p>
                   </div>
                 </label>
 
@@ -706,20 +726,23 @@ export default function ImportPage() {
             ))}
           </div>
 
-          <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] p-8 mb-10">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-[#00bba7]/10 flex items-center justify-center border border-[#00bba7]/20">
-                <FileText size={22} className="text-[#00bba7]" />
+          {/* رفع الملفات العامة */}
+          <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] hover:shadow-[0_20px_50px_rgba(38,53,68,0.12)] p-8 mb-10 overflow-hidden group/gen">
+            <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/gen:border-[#C89355]/50 z-0" />
+            
+            <div className="flex items-center gap-4 mb-6 relative z-10">
+              <div className="w-14 h-14 rounded-2xl bg-white/80 border border-white shadow-sm flex items-center justify-center">
+                <FileText size={24} className="text-[#263544]" />
               </div>
               <div className="text-right">
-                <h3 className="font-extrabold text-slate-800 text-lg">رفع ملفات عامة</h3>
-                <p className="text-xs font-medium text-slate-500 mt-1">
-                  لرفع ملفات PDF/Word/صور/نص بشكل آمن. هذا القسم لا يستورد بيانات جداول.
+                <h3 className="font-black text-[#263544] text-xl">رفع ملفات عامة</h3>
+                <p className="text-xs font-bold text-slate-500 mt-1">
+                  لرفع ملفات PDF/Word/صور بشكل آمن. (هذا القسم لا يستورد بيانات إلى الجداول).
                 </p>
               </div>
             </div>
 
-            <label className="w-full block border-2 border-dashed border-slate-200 bg-white/50 hover:border-[#00bba7]/50 hover:bg-[#00bba7]/[0.02] rounded-3xl p-10 cursor-pointer transition-all group/drop">
+            <label className="w-full block relative z-10 border-2 border-dashed border-slate-300/50 bg-white/40 hover:border-[#C89355]/60 hover:bg-white/80 rounded-[2rem] p-10 cursor-pointer transition-all group/drop">
               <input
                 type="file"
                 accept={SUPPORTED_GENERAL_ACCEPT}
@@ -736,52 +759,52 @@ export default function ImportPage() {
 
               <div className="flex flex-col items-center gap-3 text-center">
                 {isUploadingGeneralFile ? (
-                  <Loader2 size={32} className="text-[#00bba7] animate-spin" />
+                  <Loader2 size={36} className="text-[#C89355] animate-spin" />
                 ) : (
-                  <Upload size={32} className="text-slate-400 group-hover/drop:text-[#00bba7] transition-colors group-hover/drop:-translate-y-2 duration-300" />
+                  <Upload size={36} className="text-slate-400 group-hover/drop:text-[#C89355] transition-colors group-hover/drop:-translate-y-2 duration-300" />
                 )}
 
-                <p className="text-sm font-bold text-slate-600 mt-2">
-                  {isUploadingGeneralFile ? "جاري رفع الملف..." : "اسحب الملف هنا أو انقر للرفع"}
+                <p className="text-sm font-black text-[#263544] mt-2">
+                  {isUploadingGeneralFile ? "جاري رفع الملف..." : "اسحب الملف العام هنا أو انقر للرفع"}
                 </p>
-                <p className="text-[11px] text-slate-400 font-mono">.pdf, .doc, .docx, .png, .jpg ...</p>
+                <p className="text-[11px] text-slate-400 font-mono font-bold">.pdf, .docx, .png, .jpg ...</p>
               </div>
             </label>
 
-            <div className="mt-8 border border-slate-100 rounded-2xl p-5 bg-slate-50/50 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-extrabold text-slate-700">آخر الملفات المرفوعة</h4>
+            <div className="mt-8 border-2 border-white/80 rounded-3xl p-6 bg-white/40 backdrop-blur-md shadow-sm relative z-10">
+              <div className="flex items-center justify-between mb-5">
+                <h4 className="text-sm font-black text-[#263544]">آخر الملفات المرفوعة</h4>
                 <button
                   type="button"
                   onClick={() => generalFilesList.refetch()}
-                  className="text-xs font-bold text-[#00bba7] hover:text-[#008275] bg-white px-3 py-1.5 rounded-lg border border-[#00bba7]/20 shadow-sm active:scale-95 transition-all"
+                  className="text-xs font-black text-[#263544] hover:text-[#C89355] bg-white px-4 py-2 rounded-xl border border-white hover:border-[#C89355]/30 shadow-sm active:scale-95 transition-all"
                 >
                   تحديث القائمة
                 </button>
               </div>
 
               {generalFilesList.isLoading ? (
-                <div className="text-xs font-bold text-[#00bba7] inline-flex items-center gap-2">
-                  <Loader2 size={16} className="animate-spin" />
+                <div className="text-xs font-black text-[#263544] inline-flex items-center gap-2">
+                  <Loader2 size={16} className="animate-spin text-[#C89355]" />
                   جاري تحميل قائمة الملفات...
                 </div>
               ) : generalFilesList.isError ? (
-                <p className="text-xs font-bold text-rose-600 bg-rose-50 p-3 rounded-xl">فشل تحميل قائمة الملفات المرفوعة</p>
+                <p className="text-xs font-black text-rose-600 bg-rose-50/80 p-3 rounded-xl border border-rose-100">فشل تحميل قائمة الملفات المرفوعة</p>
               ) : recentGeneralFiles.length === 0 ? (
-                <p className="text-xs font-medium text-slate-400 text-center py-4">لا توجد ملفات مرفوعة حتى الآن</p>
+                <p className="text-xs font-bold text-slate-400 text-center py-6">لا توجد ملفات مرفوعة حتى الآن</p>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {recentGeneralFiles.map((item, index) => (
                     <div
                       key={`${item.path || item.storedName || "file"}-${index}`}
-                      className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm hover:shadow-md hover:border-[#00bba7]/30 transition-all"
+                      className="rounded-2xl border border-white/80 bg-white/70 backdrop-blur-sm p-4 shadow-sm hover:shadow-md hover:border-[#C89355]/40 transition-all group/file"
                     >
-                      <p className="text-xs font-black text-slate-800 break-all mb-1">{item.originalName || item.storedName || "-"}</p>
-                      <p className="text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded truncate">{item.path || "-"}</p>
+                      <p className="text-xs font-black text-[#263544] break-all mb-1 group-hover/file:text-[#C89355] transition-colors">{item.originalName || item.storedName || "-"}</p>
+                      <p className="text-[10px] font-mono text-slate-500 bg-white/80 px-2 py-1 rounded truncate border border-slate-100 shadow-inner">{item.path || "-"}</p>
                       <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-bold text-[#00bba7] bg-[#00bba7]/10 px-2 py-1 rounded-md">{formatBytes(item.size)}</span>
-                        <span className="text-[10px] font-bold text-[#E7C873] bg-[#E7C873]/10 px-2 py-1 rounded-md uppercase">{item.extension || "-"}</span>
-                        <span className="text-[10px] font-medium text-slate-500 mr-auto">{formatDateTime(item.uploadedAt)}</span>
+                        <span className="text-[10px] font-black text-[#263544] bg-[#263544]/10 px-2 py-1 rounded-md">{formatBytes(item.size)}</span>
+                        <span className="text-[10px] font-black text-[#C89355] bg-[#C89355]/10 px-2 py-1 rounded-md uppercase border border-[#C89355]/20">{item.extension || "-"}</span>
+                        <span className="text-[10px] font-bold text-slate-400 mr-auto">{formatDateTime(item.uploadedAt)}</span>
                       </div>
                     </div>
                   ))}
@@ -790,18 +813,21 @@ export default function ImportPage() {
             </div>
           </div>
 
+          {/* قسم المعاينة */}
           {preview ? (
-            <div ref={previewSectionRef} className="bg-white/90 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.05)] mb-10 animate-in slide-in-from-bottom-8 duration-500">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 border-b border-slate-100 pb-6">
+            <div ref={previewSectionRef} className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-8 border-2 border-white/90 shadow-[0_20px_50px_rgba(38,53,68,0.08)] mb-10 animate-in slide-in-from-bottom-8 duration-500 group/prev">
+              <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/prev:border-[#C89355]/50 z-0" />
+              
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 border-b border-white/80 pb-6 relative z-10">
                 <div>
-                  <h2 className="text-xl font-black text-slate-800 inline-flex items-center gap-3">
-                    <div className="p-2 bg-[#00bba7]/10 rounded-lg"><Eye size={20} className="text-[#00bba7]" /></div>
-                    معاينة الملف قبل الاستيراد
+                  <h2 className="text-xl font-black text-[#263544] inline-flex items-center gap-3">
+                    <div className="p-2 bg-[#1a2530] rounded-xl shadow-inner border border-[#C89355]/30"><Eye size={20} className="text-[#C89355]" /></div>
+                    معاينة الملف وتعديله قبل الاستيراد
                   </h2>
-                  <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-2">
-                    <span className="bg-slate-100 px-2 py-1 rounded font-mono">{preview.fileName}</span>
-                    <span className="bg-slate-100 px-2 py-1 rounded">{preview.rows.length} صف</span>
-                    <span className="bg-[#E7C873]/20 text-[#b88710] px-2 py-1 rounded">{editedCellsCount} تعديل</span>
+                  <p className="text-xs font-bold text-slate-500 mt-3 flex items-center gap-2">
+                    <span className="bg-white/80 px-3 py-1.5 rounded-lg border border-white shadow-sm font-mono text-[#263544]">{preview.fileName}</span>
+                    <span className="bg-white/80 px-3 py-1.5 rounded-lg border border-white shadow-sm text-[#263544]">{preview.rows.length} صف</span>
+                    <span className="bg-[#C89355]/10 text-[#C89355] px-3 py-1.5 rounded-lg border border-[#C89355]/20 font-black">{editedCellsCount} تعديل</span>
                   </p>
                 </div>
 
@@ -810,54 +836,56 @@ export default function ImportPage() {
                     type="button"
                     onClick={cancelPreview}
                     disabled={isSubmittingImport}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60 shadow-sm active:scale-95 transition-all"
+                    className="relative overflow-hidden inline-flex items-center gap-2 rounded-2xl border-2 border-white bg-white/80 backdrop-blur-md px-5 py-3 text-xs font-black text-[#263544] hover:bg-white hover:border-[#C89355]/30 disabled:opacity-60 shadow-sm active:scale-95 transition-all group/btn"
                   >
-                    <XCircle size={16} />
-                    إلغاء المعاينة
+                    <div className="absolute inset-1 rounded-xl border border-dashed border-[#263544]/10 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/30" />
+                    <XCircle size={16} className="text-rose-500 relative z-10" />
+                    <span className="relative z-10">إلغاء المعاينة</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={confirmImport}
                     disabled={isPreparingPreview || isSubmittingImport}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] px-5 py-2.5 text-xs font-bold text-white hover:from-[#00a392] hover:to-[#006e63] shadow-md disabled:opacity-60 active:scale-95 transition-all border border-[#00bba7]/50"
+                    className="relative overflow-hidden inline-flex items-center gap-2 rounded-2xl bg-[#1a2530] hover:bg-[#263544] px-6 py-3 text-xs font-black text-[#C89355] shadow-[0_10px_20px_rgba(38,53,68,0.4)] disabled:opacity-60 active:scale-95 transition-all border border-[#C89355]/40 group/btn"
                   >
-                    {isSubmittingImport ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                    تأكيد الاستيراد
+                    <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/50" />
+                    {isSubmittingImport ? <Loader2 size={18} className="animate-spin relative z-10" /> : <Save size={18} className="relative z-10" />}
+                    <span className="relative z-10">تأكيد الاستيراد والحفظ</span>
                   </button>
                 </div>
               </div>
 
               {isPreparingPreview ? (
-                <div className="text-sm font-bold text-[#00bba7] mb-6 p-4 bg-[#00bba7]/5 rounded-xl border border-[#00bba7]/10 inline-flex items-center gap-3">
-                  <Loader2 size={18} className="animate-spin" />
+                <div className="text-sm font-black text-[#263544] mb-6 p-4 bg-white/60 backdrop-blur-md rounded-2xl border border-white shadow-sm inline-flex items-center gap-3 relative z-10">
+                  <Loader2 size={18} className="animate-spin text-[#C89355]" />
                   جاري فحص الملف والتحقق من البيانات...
                 </div>
               ) : null}
 
-              <div className="overflow-hidden border border-slate-100 rounded-3xl shadow-sm">
+              <div className="overflow-hidden border-2 border-white/90 rounded-3xl shadow-sm relative z-10">
                 <div className="w-full overflow-x-auto custom-scrollbar">
                   <table className="min-w-full text-right border-collapse">
-                    <thead className="bg-slate-50/80">
+                    <thead className="bg-white/60 border-b border-white/80">
                       <tr>
-                        <th className="p-4 border-b border-slate-100 text-[#00bba7] font-black text-xs sticky right-0 bg-slate-50/90 backdrop-blur-sm z-10 w-12 text-center shadow-[1px_0_5px_rgba(0,0,0,0.02)]">#</th>
+                        <th className="p-4 border-b border-white/80 text-[#C89355] font-black text-xs sticky right-0 bg-white backdrop-blur-xl z-10 w-12 text-center shadow-[2px_0_10px_rgba(0,0,0,0.05)]">#</th>
                         {preview.headers.map((header) => (
-                          <th key={header} className="p-4 border-b border-slate-100 text-slate-600 font-extrabold text-xs whitespace-nowrap bg-slate-50/50">
+                          <th key={header} className="p-4 border-b border-white/80 text-[#263544] font-black text-xs whitespace-nowrap bg-white/40">
                             {header}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50 bg-white">
+                    <tbody className="divide-y divide-white/40 bg-white/40 backdrop-blur-sm">
                       {visiblePreviewRows.map((row) => (
-                        <tr key={row.rowNumber} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
-                          <td className="p-3 border-b border-slate-50 text-slate-400 font-mono text-xs sticky right-0 bg-white group-hover:bg-slate-50/50 transition-colors text-center shadow-[1px_0_5px_rgba(0,0,0,0.02)]">{row.rowNumber}</td>
+                        <tr key={row.rowNumber} className="hover:bg-white/90 transition-colors group/row">
+                          <td className="p-3 border-b border-white/40 text-slate-400 font-mono font-bold text-xs sticky right-0 bg-white group-hover/row:bg-white/90 group-hover/row:text-[#263544] transition-colors text-center shadow-[2px_0_10px_rgba(0,0,0,0.02)]">{row.rowNumber}</td>
                           {preview.headers.map((header) => (
-                            <td key={`${row.rowNumber}-${header}`} className="p-2 border-b border-slate-50 min-w-40">
+                            <td key={`${row.rowNumber}-${header}`} className="p-2 border-b border-white/40 min-w-40">
                               <input
                                 value={getEditedCellValue(row, header)}
                                 onChange={(e) => onEditCell(row.rowNumber, header, e.target.value)}
-                                className="w-full rounded-lg border border-transparent bg-slate-50/50 hover:bg-slate-100/80 px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] transition-all"
+                                className="w-full rounded-xl border border-transparent bg-white/50 hover:bg-white px-3 py-2.5 text-xs font-black text-[#263544] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] transition-all shadow-inner"
                               />
                             </td>
                           ))}
@@ -869,32 +897,32 @@ export default function ImportPage() {
               </div>
 
               {hiddenPreviewRows > 0 ? (
-                <p className="mt-5 text-xs font-bold text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                  يتم عرض أول <span className="text-[#00bba7]">{PREVIEW_ROWS_LIMIT}</span> صف فقط لتسريع الشاشة. سيتم إرسال جميع الصفوف عند التأكيد.
+                <p className="mt-5 text-xs font-black text-slate-500 bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-white shadow-sm text-center relative z-10">
+                  يتم عرض أول <span className="text-[#C89355]">{PREVIEW_ROWS_LIMIT}</span> صف فقط لتسريع الشاشة. سيتم إرسال جميع الصفوف عند التأكيد.
                 </p>
               ) : null}
             </div>
           ) : null}
 
           {/* قسم التعليمات */}
-          <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)]">
-            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-              <CheckCircle2 className="text-[#E7C873]" /> تعليمات الاستيراد
+          <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-8 border-2 border-white/90 shadow-[0_15px_30px_rgba(38,53,68,0.06)] group/inst overflow-hidden">
+            <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/inst:border-[#C89355]/50 z-0" />
+            <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 relative z-10">
+              <CheckCircle2 className="text-[#C89355] animate-pulse" size={24} /> تعليمات وإرشادات الاستيراد
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 relative z-10">
               {instructions.map((text, index) => (
-                <div key={index} className="flex items-start gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:border-[#00bba7]/30 transition-colors">
-                  <div className="w-6 h-6 rounded-full bg-[#00bba7]/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-xs font-black text-[#00bba7]">{index + 1}</span>
+                <div key={index} className="flex items-start gap-4 bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-white shadow-sm hover:border-[#C89355]/30 hover:shadow-md transition-all">
+                  <div className="w-7 h-7 rounded-xl bg-[#1a2530] flex items-center justify-center shrink-0 mt-0.5 border border-[#C89355]/30 shadow-inner">
+                    <span className="text-xs font-black text-[#C89355]">{index + 1}</span>
                   </div>
-                  <span className="text-sm text-slate-700 font-bold leading-relaxed">{text}</span>
+                  <span className="text-sm text-[#263544] font-bold leading-relaxed">{text}</span>
                 </div>
               ))}
             </div>
           </div>
 
         </div>
-      </div>
     </div>
   );
 }

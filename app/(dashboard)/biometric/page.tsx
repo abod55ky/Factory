@@ -400,56 +400,68 @@ export default function BiometricPage() {
   };
 
   return (
-    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden" dir="rtl">
+    /* الحاوية الرئيسية: تأثير زجاجي مع درازة خارجية */
+    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/50 backdrop-blur-[40px] rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(38,53,68,0.2)] border-2 border-dashed border-[#C89355]/60 flex flex-col overflow-hidden" dir="rtl">
         
+        {/* نقشة الفايبر (القماش) الثابتة والشفافة */}
+        <div 
+          className="absolute inset-0 opacity-[0.04] pointer-events-none z-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 12h24M12 0v24' stroke='%23263544' stroke-width='1' stroke-dasharray='4 4' fill='none'/%3E%3C/svg%3E")`,
+            backgroundSize: '24px 24px'
+          }}
+        />
+
         {/* المحتوى الداخلي */}
-        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
+        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar relative z-10">
           
-          <header className="mb-10 text-right border-b border-black/5 pb-6 relative">
+          <header className="mb-10 text-right border-b border-[#263544]/10 pb-6 relative">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
-                {/* أنيميشن قفز لأيقونة العنوان */}
-                <Fingerprint size={24} className="text-white animate-bounce" />
+              <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px]">
+                <Fingerprint size={24} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
               </div>
-              <h1 className="text-3xl font-black text-slate-800 tracking-tight">بصمتي وحضوري</h1>
+              <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">بصمتي وحضوري</h1>
             </div>
-            <p className="text-slate-500 text-sm font-medium pr-14 mt-1">
+            <p className="text-slate-600 text-sm font-bold pr-14 mt-1">
               سجل بصمتك مرة واحدة، وبعدها بصمة واحدة تسجل الحضور مباشرة مع الوقت بالدقيقة.
             </p>
           </header>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             
-            {/* كارد تسجيل البصمة (Glassmorphism) */}
-            <section className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:shadow-lg transition-all p-8 group">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 rounded-xl bg-[#00bba7]/10 text-[#00bba7] border border-[#00bba7]/20">
+            {/* كارد تسجيل البصمة (Glassmorphism + درازة) */}
+            <section className="relative overflow-hidden bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] hover:shadow-[0_20px_50px_rgba(38,53,68,0.12)] transition-all p-8 group">
+              <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+              
+              <div className="flex items-center gap-3 mb-6 relative z-10">
+                <div className="p-3 rounded-xl bg-[#263544] text-[#C89355] border border-[#C89355]/30 shadow-sm">
                   <ShieldCheck size={22} className="group-hover:animate-pulse" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-extrabold text-slate-800">تسجيل البصمة</h2>
-                  <p className="text-xs text-slate-500 font-medium">ربط هذا الجهاز بحسابك البيومتري</p>
+                  <h2 className="text-xl font-black text-[#263544]">تسجيل البصمة</h2>
+                  <p className="text-xs text-slate-500 font-bold mt-1">ربط هذا الجهاز بحسابك البيومتري</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-6 hover:border-[#00bba7]/30 transition-colors">
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-[#263544]/10 shadow-sm p-5 mb-6 hover:border-[#C89355]/30 transition-colors relative z-10 group/card">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 bg-[#E7C873]/10 rounded-lg">
-                    <KeyRound className="text-[#E7C873] shrink-0" size={20} />
+                  <div className="p-2 bg-[#1a2530] rounded-xl shadow-inner border border-[#C89355]/20">
+                    <KeyRound className="text-[#C89355] shrink-0" size={20} />
                   </div>
-                  <div className="text-sm text-slate-600 w-full">
-                    <p className="font-black text-slate-800">حالة الجهاز:</p>
+                  <div className="text-sm text-[#263544] w-full">
+                    <p className="font-black text-[#263544]">حالة الجهاز:</p>
                     {storedKey ? (
-                      <div className="mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <p className="text-emerald-600 font-bold text-xs mb-1 flex items-center gap-1"><CheckCircle2 size={14}/> مسجل محلياً</p>
-                        <p className="text-xs text-slate-500">معرف المفتاح: <span className="font-mono font-bold text-slate-700">{storedKey.keyId}</span></p>
+                      <div className="mt-3 bg-[#1a2530] p-4 rounded-xl border border-[#C89355]/30 shadow-inner relative overflow-hidden">
+                        <div className="absolute inset-1 rounded-lg border border-dashed border-[#C89355]/20 pointer-events-none" />
+                        <p className="text-emerald-400 font-black text-xs mb-2 flex items-center gap-1.5 relative z-10"><CheckCircle2 size={16}/> مسجل محلياً وموثق</p>
+                        <p className="text-xs text-slate-400 relative z-10">معرف المفتاح: <span className="font-mono font-bold text-[#C89355] block mt-1">{storedKey.keyId}</span></p>
                       </div>
                     ) : (
-                      <p className="mt-2 text-rose-500 font-bold text-xs bg-rose-50 p-3 rounded-xl border border-rose-100 flex items-center gap-1"><AlertCircle size={14}/> لا يوجد مفتاح بصمة محلي على هذا الجهاز بعد.</p>
+                      <p className="mt-3 text-rose-500 font-black text-xs bg-rose-50/80 backdrop-blur-sm p-4 rounded-xl border border-rose-100 flex items-center gap-1.5 shadow-sm"><AlertCircle size={16}/> لا يوجد مفتاح بصمة محلي على هذا الجهاز بعد.</p>
                     )}
-                    <p className="mt-3 text-xs font-bold text-slate-500 flex items-center justify-between border-t border-slate-100 pt-3">
+                    <p className="mt-4 text-xs font-black text-[#263544]/60 flex items-center justify-between border-t border-[#263544]/10 pt-4">
                       <span>المستخدم الحالي:</span>
-                      <span className="text-[#00bba7] px-2 py-1 bg-[#00bba7]/10 rounded-md font-mono">
+                      <span className="text-[#1a2530] px-3 py-1.5 bg-[#C89355]/10 rounded-lg font-mono font-bold border border-[#C89355]/20">
                         {isHydratingProfile ? "تحديث..." : (username || "غير متوفر")}
                       </span>
                     </p>
@@ -457,103 +469,113 @@ export default function BiometricPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 relative z-10">
                 <button
                   type="button"
                   onClick={handleRegisterBiometric}
                   disabled={isEnrolling}
-                  className="flex-1 inline-flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] text-white font-bold text-sm hover:from-[#00a392] hover:to-[#006e63] shadow-[0_8px_20px_rgba(0,187,167,0.3)] active:scale-95 disabled:opacity-60 transition-all border border-[#00bba7]/50"
+                  className="relative overflow-hidden flex-1 inline-flex justify-center items-center gap-2 px-4 py-3.5 rounded-2xl bg-[#1a2530] hover:bg-[#263544] text-[#C89355] font-black text-sm shadow-[0_10px_20px_rgba(38,53,68,0.4)] active:scale-95 disabled:opacity-60 transition-all border border-[#C89355]/40 group/btn"
                 >
-                  {isEnrolling ? <Loader2 size={18} className="animate-spin" /> : <Fingerprint size={18} />}
-                  {isEnrolling ? "جارٍ التسجيل..." : "تسجيل بصمة هذا الجهاز"}
+                  <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/50" />
+                  {isEnrolling ? <Loader2 size={18} className="animate-spin relative z-10" /> : <Fingerprint size={18} className="relative z-10" />}
+                  <span className="relative z-10">{isEnrolling ? "جارٍ التسجيل..." : "تسجيل بصمة هذا الجهاز"}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleClearBiometric}
                   disabled={!storedKey}
-                  className="flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white border border-rose-200 text-rose-600 font-bold text-sm hover:bg-rose-50 shadow-sm active:scale-95 disabled:opacity-50 transition-all"
+                  className="relative overflow-hidden flex-none inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-white/80 backdrop-blur-md border-2 border-white hover:border-rose-300 text-rose-600 font-black text-sm hover:bg-rose-50 shadow-sm active:scale-95 disabled:opacity-50 transition-all group/del"
                   title="حذف البصمة من الجهاز"
                 >
-                  <Trash2 size={18} />
+                  <div className="absolute inset-1 rounded-xl border border-dashed border-rose-200 pointer-events-none transition-colors group-hover/del:border-rose-400" />
+                  <Trash2 size={18} className="relative z-10" />
                 </button>
               </div>
             </section>
 
-            {/* كارد تسجيل الحضور (Glassmorphism) */}
-            <section className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:shadow-lg transition-all p-8 group">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 rounded-xl bg-[#E7C873]/20 text-[#b88710] border border-[#E7C873]/30">
+            {/* كارد تسجيل الحضور (Glassmorphism + درازة) */}
+            <section className="relative overflow-hidden bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] hover:shadow-[0_20px_50px_rgba(38,53,68,0.12)] transition-all p-8 group">
+              <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+              
+              <div className="flex items-center gap-3 mb-6 relative z-10">
+                <div className="p-3 rounded-xl bg-[#C89355] text-[#1a2530] border border-[#1a2530]/20 shadow-sm">
                   <Clock3 size={22} className="group-hover:animate-pulse" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-extrabold text-slate-800">تسجيل الحضور بالبصمة</h2>
-                  <p className="text-xs text-slate-500 font-medium">بصمة واحدة = حفظ وقت الدخول أو الخروج</p>
+                  <h2 className="text-xl font-black text-[#263544]">تسجيل الحضور بالبصمة</h2>
+                  <p className="text-xs text-slate-500 font-bold mt-1">بصمة واحدة = حفظ وقت الدخول أو الخروج</p>
                 </div>
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-black text-slate-700 mb-2">رقم الموظف</label>
-                <input
-                  type="text"
-                  value={employeeId}
-                  onChange={(event) => setEmployeeId(event.target.value.toUpperCase())}
-                  placeholder="EMP001"
-                  className="w-full rounded-2xl border border-slate-200 bg-white/50 backdrop-blur-sm px-4 py-3 font-mono font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] shadow-inner transition-all text-lg"
-                  dir="ltr"
-                />
-                <p className="text-[11px] font-bold text-slate-400 mt-2 flex items-center gap-1.5">
-                  <AlertCircle size={12} className="text-[#E7C873]"/>
-                  يجب أن يكون رقم الموظف مطابقاً لحسابك.
+              <div className="mb-8 relative z-10">
+                <label className="block text-sm font-black text-[#263544] mb-3">رقم الموظف الخاص بك</label>
+                <div className="relative">
+                  <div className="absolute inset-1 rounded-[14px] border border-dashed border-[#C89355]/30 pointer-events-none z-10" />
+                  <input
+                    type="text"
+                    value={employeeId}
+                    onChange={(event) => setEmployeeId(event.target.value.toUpperCase())}
+                    placeholder="EMP001"
+                    className="w-full rounded-2xl border-2 border-white bg-white/80 backdrop-blur-md px-5 py-4 font-mono font-black text-[#263544] outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] shadow-inner transition-all text-xl text-center relative z-0"
+                    dir="ltr"
+                  />
+                </div>
+                <p className="text-[11px] font-bold text-[#263544]/60 mt-3 flex items-center justify-center gap-1.5">
+                  <AlertCircle size={14} className="text-[#C89355]"/>
+                  يجب أن يكون رقم الموظف مطابقاً لحسابك البيومتري.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-4 relative z-10">
                 <button
                   type="button"
                   onClick={() => void handleBiometricAttendance("IN")}
                   disabled={clockingType !== null}
-                  className="flex-1 inline-flex justify-center items-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] text-white font-bold text-sm shadow-[0_8px_20px_rgba(0,187,167,0.3)] active:scale-95 disabled:opacity-60 transition-all border border-[#00bba7]/50"
+                  className="relative overflow-hidden flex-1 inline-flex justify-center items-center gap-2 px-4 py-4 rounded-2xl bg-[#1a2530] hover:bg-[#263544] text-[#C89355] font-black text-sm shadow-[0_10px_20px_rgba(38,53,68,0.4)] active:scale-95 disabled:opacity-60 transition-all border border-[#C89355]/40 group/btn"
                 >
-                  {clockingType === "IN" ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} className="group-hover:animate-bounce" />}
-                  بصمة دخول
+                  <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/50" />
+                  {clockingType === "IN" ? <Loader2 size={20} className="animate-spin relative z-10" /> : <LogIn size={20} className="group-hover/btn:animate-bounce relative z-10" />}
+                  <span className="relative z-10 text-base">بصمة دخول</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => void handleBiometricAttendance("OUT")}
                   disabled={clockingType !== null}
-                  className="flex-1 inline-flex justify-center items-center gap-2 px-4 py-3.5 rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700 font-bold text-sm hover:bg-slate-50 hover:border-slate-300 active:scale-95 disabled:opacity-60 transition-all"
+                  className="relative overflow-hidden flex-1 inline-flex justify-center items-center gap-2 px-4 py-4 rounded-2xl border-2 border-white bg-white/80 backdrop-blur-md shadow-sm text-[#263544] font-black text-sm hover:bg-white hover:border-[#C89355]/40 active:scale-95 disabled:opacity-60 transition-all group/btn"
                 >
-                  {clockingType === "OUT" ? <Loader2 size={18} className="animate-spin" /> : <LogOut size={18} className="group-hover:animate-bounce" />}
-                  بصمة خروج
+                  <div className="absolute inset-1 rounded-xl border border-dashed border-[#263544]/10 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/30" />
+                  {clockingType === "OUT" ? <Loader2 size={20} className="animate-spin text-[#C89355] relative z-10" /> : <LogOut size={20} className="text-[#C89355] group-hover/btn:animate-bounce relative z-10" />}
+                  <span className="relative z-10 text-base">بصمة خروج</span>
                 </button>
               </div>
 
               {/* النتيجة / آخر سجل */}
-              <div className="mt-8 rounded-2xl border border-slate-100 bg-white/50 backdrop-blur-sm p-5 shadow-sm">
+              <div className="mt-8 relative overflow-hidden rounded-2xl border-2 border-white/80 bg-white/50 backdrop-blur-xl p-5 shadow-[0_8px_20px_rgba(38,53,68,0.04)] group/res">
+                <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/20 pointer-events-none transition-colors group-hover/res:border-[#C89355]/40" />
                 {latestAttendance ? (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-emerald-100 text-emerald-600 rounded-full shrink-0">
-                      <CheckCircle2 size={20} />
+                  <div className="flex items-start gap-4 relative z-10">
+                    <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl border border-emerald-200 shadow-inner shrink-0">
+                      <CheckCircle2 size={24} />
                     </div>
-                    <div className="text-slate-700 w-full">
-                      <p className="font-black text-slate-800 text-base">
-                        آخر عملية: <span className={latestAttendance.type === "IN" ? "text-[#00bba7]" : "text-rose-500"}>{latestAttendance.type === "IN" ? "دخول" : "خروج"}</span>
+                    <div className="text-[#263544] w-full">
+                      <p className="font-black text-[#263544] text-lg">
+                        آخر عملية: <span className={latestAttendance.type === "IN" ? "text-[#C89355]" : "text-rose-500"}>{latestAttendance.type === "IN" ? "دخول" : "خروج"}</span>
                       </p>
-                      <div className="mt-2 bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-500">الوقت المسجل:</span>
-                        <span className="font-mono font-black text-lg text-slate-800">{formatAttendanceTime(latestAttendance.timestamp)}</span>
+                      <div className="mt-3 bg-white/80 p-4 rounded-xl border border-white shadow-sm flex items-center justify-between">
+                        <span className="text-xs font-black text-slate-500">الوقت المسجل:</span>
+                        <span className="font-mono font-black text-xl text-[#263544] drop-shadow-sm">{formatAttendanceTime(latestAttendance.timestamp)}</span>
                       </div>
-                      <p className="text-[11px] font-bold text-slate-400 mt-2 text-center bg-slate-50 py-1 rounded-lg">
+                      <p className="text-[11px] font-black text-[#C89355] mt-3 text-center bg-[#1a2530] py-1.5 rounded-lg shadow-inner">
                         {latestAttendance.action === "created" ? "سجل جديد" : "تحديث سجل اليوم"}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center gap-2 text-sm text-slate-400 py-4">
-                    <Fingerprint className="text-slate-300" size={32} />
-                    <span className="font-bold">لا يوجد تسجيل حضور بالبصمة بعد.</span>
+                  <div className="flex flex-col items-center justify-center gap-3 text-sm text-[#263544]/40 py-6 relative z-10">
+                    <Fingerprint className="text-[#C89355]/40" size={40} />
+                    <span className="font-black text-[#263544]/60">لا يوجد تسجيل حضور بالبصمة بعد.</span>
                   </div>
                 )}
               </div>

@@ -264,3 +264,4 @@ export const useInventory = (params?: { page?: number; limit?: number; search?: 
     adjustStock,
   };
 };
+

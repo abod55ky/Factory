@@ -20,3 +20,4 @@ describe("auth-session", () => {
     expect(getStoredUser<{ name: string }>()).toBeNull();
   });
 });
+

@@ -21,3 +21,4 @@ export interface AdvanceInput {
   remainingAmount?: number | string;
   notes?: string;
 }
+

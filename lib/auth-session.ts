@@ -48,3 +48,4 @@ export const getStoredUser = <T>() => {
     return null as T | null;
   }
 };
+

@@ -384,82 +384,98 @@ export default function SalariesPage() {
 
   return (
     <>
-      <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden" dir="rtl">
+      <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/50 backdrop-blur-2xl rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(38,53,68,0.2)] border-2 border-dashed border-[#C89355]/60 flex flex-col overflow-hidden" dir="rtl">
         
+        {/* نقشة الفايبر (القماش) الثابتة والشفافة */}
+        <div 
+          className="absolute inset-0 opacity-[0.04] pointer-events-none z-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 12h24M12 0v24' stroke='%23263544' stroke-width='1' stroke-dasharray='4 4' fill='none'/%3E%3C/svg%3E")`,
+            backgroundSize: '24px 24px'
+          }}
+        />
+
         {/* المحتوى الداخلي */}
-        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
+        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar relative z-10">
           
-          {/* مسار التنقل (Breadcrumbs) الديناميكي */}
-          <nav className="mb-6 flex items-center gap-2 text-xs font-extrabold text-slate-500 bg-white/60 backdrop-blur-md w-fit px-4 py-2.5 rounded-2xl border border-white/80 shadow-sm">
-            <span className="hover:text-[#00bba7] cursor-pointer transition-colors">المركز المالي</span>
-            <ChevronLeft size={14} className="text-[#E7C873]" />
-            <span className="text-[#00bba7]">{tabLabels[activeTab]}</span>
+          {/* مسار التنقل (Breadcrumbs) بتصميم زجاجي مع درازة داخلية */}
+          <nav className="mb-6 relative overflow-hidden flex items-center gap-2 text-xs font-black text-slate-500 bg-white/60 backdrop-blur-xl w-fit px-4 py-2.5 rounded-2xl border border-white/80 shadow-[0_5px_15px_rgba(38,53,68,0.05)] group">
+            <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+            <span className="hover:text-[#263544] cursor-pointer transition-colors relative z-10">المركز المالي</span>
+            <ChevronLeft size={14} className="text-[#C89355] relative z-10" />
+            <span className="text-[#263544] relative z-10">{tabLabels[activeTab]}</span>
           </nav>
 
-          <header className="mb-10 flex flex-col xl:flex-row xl:items-end justify-between gap-6 border-b border-black/5 pb-8 relative">
+          <header className="mb-10 flex flex-col xl:flex-row xl:items-end justify-between gap-6 border-b border-[#263544]/10 pb-8 relative">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
-                  <Sparkles size={24} className="text-white animate-bounce" />
+                {/* أيقونة العنوان بهوية الماركة مع الدرزة */}
+                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline-dashed outline-1 outline-[#C89355]/50 outline-offset-4">
+                  <Sparkles size={22} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
                 </div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+                <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">
                   المركز المالي الذكي
                 </h1>
               </div>
-              <p className="text-slate-500 text-sm font-medium pr-14 mt-1">لوحة موحدة لإدارة الرواتب والسلف والمكافآت وحساب المسير النهائي بدقة مؤسسية.</p>
+              <p className="text-slate-600 text-sm font-bold pr-14 mt-1">لوحة موحدة لإدارة الرواتب والسلف والمكافآت وحساب المسير النهائي بدقة مؤسسية.</p>
             </div>
 
             <div className="mt-4 xl:mt-0 flex flex-wrap items-center gap-4 w-full xl:w-auto">
-              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <HandCoins size={14} className="text-[#E7C873] group-hover:animate-pulse" />
-                  <p className="text-[11px] font-bold text-slate-500">إجمالي السلف المتبقية</p>
+              {/* كروت الإحصائيات العلوية بتصميم Glassmorphism + درازة */}
+              <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(38,53,68,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-35">
+                <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+                <div className="flex items-center gap-2 mb-1.5 relative z-10">
+                  <HandCoins size={14} className="text-[#C89355] group-hover:animate-pulse" />
+                  <p className="text-[11px] font-black text-slate-500">إجمالي السلف المتبقية</p>
                 </div>
-                <p className="font-black text-xl text-slate-800">{tabStats.totalAdvances.toLocaleString()}</p>
+                <p className="font-black text-xl text-[#263544] relative z-10">{tabStats.totalAdvances.toLocaleString()}</p>
               </div>
               
-              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Gift size={14} className="text-[#00bba7] group-hover:animate-pulse" />
-                  <p className="text-[11px] font-bold text-slate-500">إجمالي المكافآت</p>
+              <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(38,53,68,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-35">
+                <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+                <div className="flex items-center gap-2 mb-1.5 relative z-10">
+                  <Gift size={14} className="text-[#C89355] group-hover:animate-pulse" />
+                  <p className="text-[11px] font-black text-slate-500">إجمالي المكافآت</p>
                 </div>
-                <p className="font-black text-xl text-[#00bba7]">{tabStats.totalBonus.toLocaleString()}</p>
+                <p className="font-black text-xl text-[#263544] relative z-10">{tabStats.totalBonus.toLocaleString()}</p>
               </div>
 
-              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
-                <div className="flex items-center gap-2 mb-1.5">
+              <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(38,53,68,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-35">
+                <div className="absolute inset-1 rounded-xl border border-dashed border-rose-300 pointer-events-none transition-colors group-hover:border-rose-400" />
+                <div className="flex items-center gap-2 mb-1.5 relative z-10">
                   <Wallet size={14} className="text-rose-500 group-hover:animate-pulse" />
-                  <p className="text-[11px] font-bold text-slate-500">إجمالي الخصومات</p>
+                  <p className="text-[11px] font-black text-slate-500">إجمالي الخصومات</p>
                 </div>
-                <p className="font-black text-xl text-rose-600">{tabStats.totalDeductions.toLocaleString()}</p>
+                <p className="font-black text-xl text-rose-600 relative z-10">{tabStats.totalDeductions.toLocaleString()}</p>
               </div>
             </div>
           </header>
 
-          {/* محتوى القسم حسب التبويب (بدون شريط التبويبات) */}
+          {/* محتوى القسم حسب التبويب */}
           {activeTab === "salary-config" && (
-            <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden mt-6">
+            <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(38,53,68,0.08)] border-2 border-white/90 overflow-hidden mt-6 group">
+              <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none z-0 transition-colors group-hover:border-[#C89355]/50" />
               {isLoading ? (
                 <SkeletonRows />
               ) : isError ? (
-                <div className="p-8 text-center font-bold text-rose-600 bg-rose-50/50">خطأ: {error?.message ?? "فشل تحميل البيانات"}</div>
+                <div className="p-8 text-center font-bold text-rose-600 bg-rose-50/50 backdrop-blur-md rounded-2xl m-4 border border-rose-200 relative z-10">خطأ: {error?.message ?? "فشل تحميل البيانات"}</div>
               ) : (
-                <div className="w-full overflow-x-auto custom-scrollbar">
+                <div className="w-full overflow-x-auto custom-scrollbar relative z-10">
                   <table className="w-full text-right min-w-245">
-                    <thead className="bg-slate-50/50 border-b border-slate-100/80">
+                    <thead className="bg-white/40 border-b border-white/80">
                       <tr>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">كود الموظف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">اسم الموظف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المهنة</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الراتب الأساسي</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إجمالي البدلات</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الإجمالي الثابت الشهري</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">كود الموظف</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">اسم الموظف</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">المهنة</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">الراتب الأساسي</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">إجمالي البدلات</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">الإجمالي الثابت الشهري</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-white/40">
                       {allIds.length === 0 ? (
-                        <tr><td colSpan={7} className="p-16 text-center text-slate-500 font-medium">لا توجد سجلات.</td></tr>
+                        <tr><td colSpan={7} className="p-16 text-center text-[#263544]/60 font-black">لا توجد سجلات.</td></tr>
                       ) : (
                         allIds.map((id: string) => {
                           const s = salaryMap.get(id) ?? null;
@@ -470,16 +486,16 @@ export default function SalariesPage() {
                             const monthlyFixedTotal = baseFromEmployee;
 
                             return (
-                              <tr key={id} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
-                                <td className="p-4 font-mono text-center text-sm text-slate-500">{id}</td>
-                                <td className="p-4 text-center font-bold text-slate-800">{employeesLoading ? "جارٍ التحميل..." : (emp?.name ?? "موظف محذوف")}</td>
-                                <td className="p-4 text-center text-sm text-slate-600 font-medium">{emp?.profession ?? emp?.department ?? "—"}</td>
-                                <td className="p-4 text-center font-mono font-bold text-slate-700">{baseFromEmployee > 0 ? baseFromEmployee.toLocaleString() : "—"}</td>
-                                <td className="p-4 text-center text-slate-400">0</td>
-                                <td className="p-4 font-black text-center text-slate-800">{monthlyFixedTotal > 0 ? monthlyFixedTotal.toLocaleString() : <span className="text-rose-500 text-xs">لم يتم ضبط الراتب</span>}</td>
+                              <tr key={id} className="hover:bg-white/80 transition-all duration-300 group/row">
+                                <td className="p-4 font-mono font-black text-center text-sm text-[#263544]/60">{id}</td>
+                                <td className="p-4 text-center font-black text-slate-800 group-hover/row:text-[#263544]">{employeesLoading ? "جارٍ التحميل..." : (emp?.name ?? "موظف محذوف")}</td>
+                                <td className="p-4 text-center text-sm text-[#263544]/80 font-black">{emp?.profession ?? emp?.department ?? "—"}</td>
+                                <td className="p-4 text-center font-mono font-black text-[#263544]">{baseFromEmployee > 0 ? baseFromEmployee.toLocaleString() : "—"}</td>
+                                <td className="p-4 text-center text-[#263544]/40 font-black">—</td>
+                                <td className="p-4 font-black text-center text-[#263544]">{monthlyFixedTotal > 0 ? monthlyFixedTotal.toLocaleString() : <span className="text-rose-500 text-xs bg-rose-50 px-2 py-1 rounded border border-rose-100">لم يتم ضبط الراتب</span>}</td>
                                 <td className="p-4 text-center">
-                                  <div className="flex items-center gap-3 justify-center opacity-80 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => openFor(null, id)} className="px-4 py-1.5 rounded-xl bg-[#00bba7]/10 text-[#00bba7] hover:bg-[#00bba7] hover:text-white font-bold text-xs transition-all shadow-sm">
+                                  <div className="flex items-center gap-3 justify-center opacity-80 group-hover/row:opacity-100 transition-opacity">
+                                    <button onClick={() => openFor(null, id)} className="px-4 py-1.5 rounded-xl bg-[#1a2530] text-[#C89355] hover:bg-[#263544] font-black text-xs transition-all shadow-sm border border-[#C89355]/30">
                                       ضبط الراتب
                                     </button>
                                   </div>
@@ -497,19 +513,19 @@ export default function SalariesPage() {
                           const employeeName = employeeNameMap[s.employeeId];
 
                           return (
-                            <tr key={s.employeeId} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
-                              <td className="p-4 font-mono text-center text-sm text-slate-500">{s.employeeId}</td>
-                              <td className="p-4 text-center font-bold text-slate-800">{employeesLoading ? "جارٍ التحميل..." : (employeeName ?? "موظف محذوف")}</td>
-                              <td className="p-4 text-center text-sm text-slate-600 font-medium">{s.profession}</td>
-                              <td className="p-4 text-center font-mono font-bold text-slate-700">{base.toLocaleString()}</td>
-                              <td className="p-4 text-center font-mono font-bold text-[#E7C873]">{totalAllowances.toLocaleString()}</td>
-                              <td className="p-4 font-black text-center text-[#00bba7]">{monthlyFixedTotal.toLocaleString()}</td>
+                            <tr key={s.employeeId} className="hover:bg-white/80 transition-all duration-300 group/row">
+                              <td className="p-4 font-mono font-black text-center text-sm text-[#263544]/60">{s.employeeId}</td>
+                              <td className="p-4 text-center font-black text-slate-800 group-hover/row:text-[#263544]">{employeesLoading ? "جارٍ التحميل..." : (employeeName ?? "موظف محذوف")}</td>
+                              <td className="p-4 text-center text-sm text-[#263544]/80 font-black">{s.profession}</td>
+                              <td className="p-4 text-center font-mono font-black text-[#263544]">{base.toLocaleString()}</td>
+                              <td className="p-4 text-center font-mono font-black text-[#C89355]">{totalAllowances.toLocaleString()}</td>
+                              <td className="p-4 font-black text-center text-[#1a2530] bg-[#C89355]/5 rounded-xl">{monthlyFixedTotal.toLocaleString()}</td>
                               <td className="p-4 text-center">
-                                <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={() => openFor(s)} className="text-[#E7C873] hover:bg-[#E7C873]/10 p-2.5 rounded-xl transition-all hover:scale-110" title="تعديل الراتب">
+                                <div className="flex items-center justify-center gap-2 opacity-60 group-hover/row:opacity-100 transition-opacity">
+                                  <button onClick={() => openFor(s)} className="text-[#C89355] hover:bg-[#1a2530] hover:text-[#C89355] p-2.5 rounded-xl transition-all hover:scale-110 border border-transparent hover:border-[#C89355]/30" title="تعديل الراتب">
                                     <Edit size={16} />
                                   </button>
-                                  <button onClick={() => handleDelete(s.employeeId)} className="text-rose-500 hover:bg-rose-50 p-2.5 rounded-xl transition-all hover:scale-110" title="حذف">
+                                  <button onClick={() => handleDelete(s.employeeId)} className="text-rose-500 hover:bg-rose-500 hover:text-white p-2.5 rounded-xl transition-all hover:scale-110 border border-transparent hover:border-rose-400" title="حذف">
                                     {deleteSalary.isPending ? <Loader2 className="animate-spin" size={16} /> : <Trash size={16} />}
                                   </button>
                                 </div>
@@ -526,52 +542,53 @@ export default function SalariesPage() {
           )}
 
           {activeTab === "advances" && (
-            <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden mt-6">
-              <div className="w-full overflow-x-auto custom-scrollbar">
+            <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(38,53,68,0.08)] border-2 border-white/90 overflow-hidden mt-6 group">
+              <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none z-0 transition-colors group-hover:border-[#C89355]/50" />
+              <div className="w-full overflow-x-auto custom-scrollbar relative z-10">
                 <table className="w-full text-right min-w-245">
-                  <thead className="bg-slate-50/50 border-b border-slate-100/80">
+                  <thead className="bg-white/40 border-b border-white/80">
                     <tr>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إجمالي السلفة</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">القسط الشهري</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المتبقي</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">تاريخ الإصدار</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">حالة الخصم</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
+                      <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                      <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">إجمالي السلفة</th>
+                      <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">القسط الشهري</th>
+                      <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">المتبقي</th>
+                      <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">تاريخ الإصدار</th>
+                      <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">حالة الخصم</th>
+                      <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-white/40">
                     {(advances || []).length === 0 ? (
-                      <tr><td colSpan={7} className="p-16 text-center text-slate-500 font-medium">لا توجد سلف مسجلة حالياً.</td></tr>
+                      <tr><td colSpan={7} className="p-16 text-center text-[#263544]/60 font-black">لا توجد سلف مسجلة حالياً.</td></tr>
                     ) : (
                       (advances || []).map((item: Advance) => {
                         const remaining = toNumber(item.remainingAmount);
                         return (
-                          <tr key={item.id} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
-                            <td className="p-4 text-center font-bold text-slate-800">{employeeNameMap[item.employeeId] || item.employeeId}</td>
-                            <td className="p-4 text-center font-mono font-bold text-slate-700">{toNumber(item.totalAmount).toLocaleString()}</td>
-                            <td className="p-4 text-center font-mono font-bold text-[#E7C873]">{toNumber(item.installmentAmount).toLocaleString()}</td>
-                            <td className="p-4 text-center font-black text-[#00bba7]">{remaining.toLocaleString()}</td>
-                            <td className="p-4 text-center font-mono text-sm text-slate-500">{new Date(item.issueDate).toLocaleDateString("ar-EG")}</td>
+                          <tr key={item.id} className="hover:bg-white/80 transition-all duration-300 group/row">
+                            <td className="p-4 text-center font-black text-slate-800 group-hover/row:text-[#263544]">{employeeNameMap[item.employeeId] || item.employeeId}</td>
+                            <td className="p-4 text-center font-mono font-black text-[#263544]">{toNumber(item.totalAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center font-mono font-black text-[#C89355]">{toNumber(item.installmentAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-[#1a2530] bg-[#C89355]/5 rounded-xl">{remaining.toLocaleString()}</td>
+                            <td className="p-4 text-center font-mono font-bold text-sm text-[#263544]/70">{new Date(item.issueDate).toLocaleDateString("ar-EG")}</td>
                             <td className="p-4 text-center">
-                              <span className={`px-4 py-1.5 rounded-xl text-[11px] font-bold border shadow-sm ${remaining > 0 ? "bg-orange-50 text-orange-600 border-orange-100" : "bg-[#00bba7]/10 text-[#00bba7] border-[#00bba7]/20"}`}>
+                              <span className={`px-4 py-1.5 rounded-xl text-[11px] font-black border shadow-sm ${remaining > 0 ? "bg-orange-50 text-orange-600 border-orange-100" : "bg-[#1a2530] text-[#C89355] border-[#C89355]/30"}`}>
                                 {remaining > 0 ? "جارٍ الخصم" : "مكتمل"}
                               </span>
                             </td>
                             <td className="p-4 text-center">
-                              <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center justify-center gap-2 opacity-60 group-hover/row:opacity-100 transition-opacity">
                                 <button
                                   onClick={() => {
                                     setSelectedAdvance(item);
                                     setIsAdvanceModalOpen(true);
                                   }}
-                                  className="text-[#E7C873] hover:bg-[#E7C873]/10 p-2.5 rounded-xl transition-all hover:scale-110"
+                                  className="text-[#C89355] hover:bg-[#1a2530] hover:text-[#C89355] p-2.5 rounded-xl transition-all hover:scale-110 border border-transparent hover:border-[#C89355]/30"
                                 >
                                   <Edit size={16} />
                                 </button>
                                 <button
                                   onClick={() => deleteAdvance.mutate(item.id)}
-                                  className="text-rose-500 hover:bg-rose-50 p-2.5 rounded-xl transition-all hover:scale-110"
+                                  className="text-rose-500 hover:bg-rose-500 hover:text-white p-2.5 rounded-xl transition-all hover:scale-110 border border-transparent hover:border-rose-400"
                                 >
                                   {deleteAdvance.isPending ? <Loader2 className="animate-spin" size={16} /> : <Trash size={16} />}
                                 </button>
@@ -589,58 +606,60 @@ export default function SalariesPage() {
 
           {activeTab === "bonuses" && (
             <div className="space-y-6 mt-6">
-              <div className="flex justify-between items-center rounded-2xl border border-white/80 bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
-                <h2 className="font-black text-slate-800 flex items-center gap-3 text-lg">
-                  <Gift size={20} className="text-[#00bba7] animate-pulse" /> إدارة المكافآت والخصومات
+              <div className="relative overflow-hidden flex justify-between items-center rounded-4xl border-2 border-white/90 bg-white/60 backdrop-blur-2xl shadow-[0_15px_40px_rgba(38,53,68,0.08)] p-6 group">
+                <div className="absolute inset-1.5 rounded-[1.7rem] border border-dashed border-[#C89355]/30 pointer-events-none z-0 transition-colors group-hover:border-[#C89355]/50" />
+                <h2 className="font-black text-[#263544] flex items-center gap-3 text-lg relative z-10">
+                  <Gift size={20} className="text-[#C89355] animate-pulse" /> إدارة المكافآت والخصومات
                 </h2>
-                <div className="relative">
+                <div className="relative z-10">
                   <input
                     type="month"
                     value={period}
                     onChange={(e) => setPeriod(e.target.value)}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#00bba7] focus:ring-2 focus:ring-[#00bba7]/20 transition-all shadow-sm"
+                    className="p-3 rounded-xl border border-white/90 bg-white/80 font-mono font-bold text-sm text-[#263544] outline-none focus:border-[#C89355] focus:ring-2 focus:ring-[#C89355]/20 transition-all shadow-inner"
                   />
                 </div>
               </div>
 
-              <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
-                <div className="w-full overflow-x-auto custom-scrollbar">
+              <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(38,53,68,0.08)] border-2 border-white/90 overflow-hidden group">
+                <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none z-0 transition-colors group-hover:border-[#C89355]/50" />
+                <div className="w-full overflow-x-auto custom-scrollbar relative z-10">
                   <table className="w-full text-right min-w-245">
-                    <thead className="bg-slate-50/50 border-b border-slate-100/80">
+                    <thead className="bg-white/40 border-b border-white/80">
                       <tr>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الفترة</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المكافأة</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">السبب</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">الفترة</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">المكافأة</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">السبب</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-white/40">
                       {(bonuses || []).length === 0 ? (
-                        <tr><td colSpan={6} className="p-16 text-center text-slate-500 font-medium">لا توجد سجلات في هذه الفترة.</td></tr>
+                        <tr><td colSpan={6} className="p-16 text-center text-[#263544]/60 font-black">لا توجد سجلات في هذه الفترة.</td></tr>
                       ) : (
                         (bonuses || []).map((item: Bonus) => (
-                          <tr key={item.id} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
-                            <td className="p-4 text-center font-bold text-slate-800">{employeeNameMap[item.employeeId] || item.employeeId}</td>
-                            <td className="p-4 text-center font-mono text-sm text-slate-500">{item.period || "—"}</td>
-                            <td className="p-4 text-center text-[#00bba7] font-black">{toNumber(item.bonusAmount).toLocaleString()}</td>
-                            <td className="p-4 text-center text-rose-600 font-black">{toNumber(item.assistanceAmount).toLocaleString()}</td>
-                            <td className="p-4 text-center text-slate-600 text-sm font-medium">{item.bonusReason || "—"}</td>
+                          <tr key={item.id} className="hover:bg-white/80 transition-all duration-300 group/row">
+                            <td className="p-4 text-center font-black text-slate-800 group-hover/row:text-[#263544]">{employeeNameMap[item.employeeId] || item.employeeId}</td>
+                            <td className="p-4 text-center font-mono text-sm font-bold text-[#263544]/80">{item.period || "—"}</td>
+                            <td className="p-4 text-center text-[#C89355] font-black">{toNumber(item.bonusAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center text-rose-600 font-black bg-rose-50/50 rounded-xl">{toNumber(item.assistanceAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center text-[#263544]/80 text-sm font-bold">{item.bonusReason || "—"}</td>
                             <td className="p-4 text-center">
-                              <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center justify-center gap-2 opacity-60 group-hover/row:opacity-100 transition-opacity">
                                 <button
                                   onClick={() => {
                                     setSelectedBonus(item);
                                     setIsBonusModalOpen(true);
                                   }}
-                                  className="text-[#E7C873] hover:bg-[#E7C873]/10 p-2.5 rounded-xl transition-all hover:scale-110"
+                                  className="text-[#C89355] hover:bg-[#1a2530] hover:text-[#C89355] p-2.5 rounded-xl transition-all hover:scale-110 border border-transparent hover:border-[#C89355]/30"
                                 >
                                   <Edit size={16} />
                                 </button>
                                 <button
                                   onClick={() => deleteBonus.mutate(item.id)}
-                                  className="text-rose-500 hover:bg-rose-50 p-2.5 rounded-xl transition-all hover:scale-110"
+                                  className="text-rose-500 hover:bg-rose-500 hover:text-white p-2.5 rounded-xl transition-all hover:scale-110 border border-transparent hover:border-rose-400"
                                 >
                                   {deleteBonus.isPending ? <Loader2 className="animate-spin" size={16} /> : <Trash size={16} />}
                                 </button>
@@ -658,72 +677,77 @@ export default function SalariesPage() {
 
           {activeTab === "final-payroll" && (
             <div className="space-y-6 mt-6">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-4 rounded-2xl border border-white/80 bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
-                <h2 className="font-black text-slate-800 flex items-center gap-3 text-lg">
-                  <Calculator size={20} className="text-[#00bba7] animate-pulse" /> المسير النهائي للفترة
+              <div className="relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-4 rounded-4xl border-2 border-white/90 bg-white/60 backdrop-blur-2xl shadow-[0_15px_40px_rgba(38,53,68,0.08)] p-6 group">
+                <div className="absolute inset-1.5 rounded-[1.7rem] border border-dashed border-[#C89355]/30 pointer-events-none z-0 transition-colors group-hover:border-[#C89355]/50" />
+                <h2 className="font-black text-[#263544] flex items-center gap-3 text-lg relative z-10">
+                  <Calculator size={20} className="text-[#C89355] animate-pulse" /> المسير النهائي للفترة
                 </h2>
-                <div className="flex flex-wrap items-center justify-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-3 relative z-10">
                   <input
                     type="month"
                     value={period}
                     onChange={(e) => setPeriod(e.target.value)}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#00bba7] focus:ring-2 focus:ring-[#00bba7]/20 transition-all shadow-sm"
+                    className="p-3 rounded-xl border border-white/90 bg-white/80 font-mono font-bold text-sm text-[#263544] outline-none focus:border-[#C89355] focus:ring-2 focus:ring-[#C89355]/20 transition-all shadow-inner"
                   />
                   <button
                     type="button"
                     onClick={handleExportPayrollExcel}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition-all shadow-sm hover:shadow-md active:scale-95"
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600/90 backdrop-blur-md px-5 py-3 text-sm font-black text-white hover:bg-emerald-700 transition-all shadow-[0_10px_20px_rgba(5,150,105,0.3)] hover:shadow-[0_15px_25px_rgba(5,150,105,0.4)] active:scale-95 border border-emerald-500"
                   >
-                    <FileSpreadsheet size={16} />
+                    <FileSpreadsheet size={18} />
                     تصدير Excel
                   </button>
                   <button
                     type="button"
                     onClick={handleRunPayroll}
                     disabled={calculatePayroll.isPending}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] hover:from-[#00a392] hover:to-[#006e63] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_20px_rgba(0,187,167,0.3)] transition-all active:scale-95 border border-[#00bba7]/50 disabled:opacity-60 disabled:cursor-not-allowed group"
+                    className="relative overflow-hidden inline-flex items-center gap-2 rounded-xl bg-[#1a2530] hover:bg-[#263544] px-5 py-3 text-sm font-black text-[#C89355] shadow-[0_10px_20px_rgba(38,53,68,0.4)] transition-all active:scale-95 border border-[#C89355]/40 disabled:opacity-60 disabled:cursor-not-allowed group/btn"
                   >
-                    {calculatePayroll.isPending ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} className="group-hover:animate-bounce" />}
-                    تشغيل المسير
+                    <div className="absolute inset-1 rounded-lg border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/50" />
+                    {calculatePayroll.isPending ? <Loader2 size={18} className="animate-spin relative z-10" /> : <Calculator size={18} className="group-hover/btn:animate-bounce relative z-10" />}
+                    <span className="relative z-10">تشغيل المسير</span>
                   </button>
                 </div>
               </div>
 
               {lastCalculatedRunId ? (
-                <div className="text-sm text-[#00bba7] bg-[#00bba7]/10 border border-[#00bba7]/20 rounded-xl px-4 py-3 font-bold flex items-center gap-2 shadow-sm">
-                  <Sparkles size={16} /> آخر تشغيل ناجح للمسير: <span className="font-mono">{lastCalculatedRunId}</span>
+                <div className="text-sm text-[#263544] bg-white/80 backdrop-blur-md border border-[#C89355]/30 rounded-2xl p-4 font-black flex items-center gap-3 shadow-sm relative overflow-hidden group">
+                  <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/20 pointer-events-none" />
+                  <Sparkles size={18} className="text-[#C89355] animate-pulse relative z-10" /> 
+                  <span className="relative z-10">آخر تشغيل ناجح للمسير: <span className="font-mono bg-[#1a2530] text-[#C89355] px-2 py-0.5 rounded shadow-sm mx-1">{lastCalculatedRunId}</span></span>
                 </div>
               ) : null}
 
-              <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
-                <div className="w-full overflow-x-auto custom-scrollbar">
+              <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(38,53,68,0.08)] border-2 border-white/90 overflow-hidden group">
+                <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none z-0 transition-colors group-hover:border-[#C89355]/50" />
+                <div className="w-full overflow-x-auto custom-scrollbar relative z-10">
                   <table className="w-full text-right min-w-245">
-                    <thead className="bg-slate-50/50 border-b border-slate-100/80">
+                    <thead className="bg-white/40 border-b border-white/80">
                       <tr>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">أيام الحضور</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الراتب النسبي</th>
-                        <th className="p-5 text-rose-500 font-black text-xs uppercase tracking-wider text-center">خصم التأخير</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المكافآت</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">خصم السلف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">صافي المستحق</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">أيام الحضور</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">الراتب النسبي</th>
+                        <th className="p-5 text-rose-600 font-black text-xs uppercase tracking-wider text-center">خصم التأخير</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">المكافآت</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
+                        <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center">خصم السلف</th>
+                        <th className="p-5 text-[#1a2530] font-black text-xs uppercase tracking-wider text-center bg-[#C89355]/10">صافي المستحق</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-white/40">
                       {finalPayrollRows.length === 0 ? (
-                        <tr><td colSpan={8} className="p-16 text-center text-slate-500 font-medium">لا توجد بيانات كافية لحساب المسير.</td></tr>
+                        <tr><td colSpan={8} className="p-16 text-center text-[#263544]/60 font-black">لا توجد بيانات كافية لحساب المسير.</td></tr>
                       ) : (
                         finalPayrollRows.map((row) => (
-                          <tr key={row.employeeId} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
-                            <td className="p-4 text-center font-bold text-slate-800">{row.employeeName}</td>
-                            <td className="p-4 text-center font-mono font-bold text-slate-600">{row.attendanceDays}</td>
-                            <td className="p-4 text-center font-mono font-bold text-slate-700">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                            <td className="p-4 text-center font-mono font-bold text-rose-600 bg-rose-50/30">{row.lateDeduction.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                            <td className="p-4 text-center font-black text-[#00bba7]">{row.totalBonus.toLocaleString()}</td>
+                          <tr key={row.employeeId} className="hover:bg-white/80 transition-all duration-300 group/row">
+                            <td className="p-4 text-center font-black text-slate-800 group-hover/row:text-[#263544]">{row.employeeName}</td>
+                            <td className="p-4 text-center font-mono font-black text-[#263544]/80">{row.attendanceDays}</td>
+                            <td className="p-4 text-center font-mono font-black text-[#263544]">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 text-center font-mono font-black text-rose-600 bg-rose-50/50 rounded-xl">{row.lateDeduction.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 text-center font-black text-[#C89355]">{row.totalBonus.toLocaleString()}</td>
                             <td className="p-4 text-center font-black text-rose-600">{row.totalDeductions.toLocaleString()}</td>
-                            <td className="p-4 text-center font-black text-[#E7C873]">{row.advancesInstallments.toLocaleString()}</td>
-                            <td className="p-4 text-center font-black text-xl text-slate-900 bg-[#00bba7]/5">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 text-center font-black text-[#C89355]">{row.advancesInstallments.toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-xl text-[#1a2530] bg-[#C89355]/10 rounded-xl shadow-inner border border-[#C89355]/20">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                           </tr>
                         ))
                       )}
@@ -731,24 +755,28 @@ export default function SalariesPage() {
                   </table>
                 </div>
               </div>
-              <p className="text-xs text-slate-500 font-medium px-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#E7C873]"></span>
-                المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف - خصم التأخير.
-              </p>
+              <div className="relative overflow-hidden p-4 rounded-2xl border border-white/80 bg-white/60 backdrop-blur-md shadow-sm">
+                <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/20 pointer-events-none" />
+                <p className="text-xs text-[#263544] font-black flex items-center gap-2 relative z-10">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#C89355] shadow-[0_0_8px_rgba(200,147,85,0.6)] animate-pulse"></span>
+                  المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف - خصم التأخير.
+                </p>
+              </div>
             </div>
           )}
 
         </div>
       </div>
 
-      {/* زر الإضافة العائم */}
+      {/* زر الإضافة العائم بأسلوب الماركة الفخم */}
       {isFloatingActionVisible && (
         <button
           onClick={openFloatingAction}
-          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-gradient-to-br from-[#00bba7] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#00bba7]/50 group"
+          className="fixed bottom-8 left-8 z-40 rounded-full w-16 h-16 bg-[#1a2530] text-[#C89355] shadow-[0_10px_30px_rgba(38,53,68,0.5)] hover:bg-[#263544] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border-2 border-[#C89355]/40 group"
           title="إضافة سجل جديد"
         >
-          <Plus size={26} className="group-hover:animate-spin" />
+          <div className="absolute inset-1.5 rounded-full border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+          <Plus size={28} className="group-hover:animate-spin relative z-10" />
         </button>
       )}
 
@@ -849,12 +877,13 @@ export default function SalariesPage() {
         />
       ) : null}
 
-      {/* تنبيه الحفظ (Loading Toaster) */}
+      {/* تنبيه الحفظ (Loading Toaster) بتصميم زجاجي */}
       {isSaving && (
-        <div className="fixed bottom-6 right-6 z-40 rounded-2xl border border-white/60 bg-white/85 backdrop-blur-md px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.1)] flex items-center gap-3">
-          <Loader2 className="animate-spin text-[#00bba7]" size={18} />
-          <p className="text-sm font-bold text-slate-700">
-            جارٍ حفظ التعديلات المالية...
+        <div className="fixed bottom-6 right-6 z-50 rounded-2xl border-2 border-white/90 bg-white/80 backdrop-blur-xl px-6 py-4 shadow-[0_15px_40px_rgba(38,53,68,0.15)] flex items-center gap-4 animate-in slide-in-from-bottom-5">
+          <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none" />
+          <Loader2 className="animate-spin text-[#C89355] relative z-10" size={20} />
+          <p className="text-sm font-black text-[#263544] relative z-10">
+            جارٍ حفظ وتحديث البيانات المالية...
           </p>
         </div>
       )}

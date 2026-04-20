@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard, Users, ClipboardList,
   Wallet, Box, FileInput, Settings, Fingerprint,
-  ChevronDown, LogOut, Hexagon,
+  ChevronDown, LogOut, Shield,
   ChevronsRight, UserMinus
 } from 'lucide-react';
 
@@ -116,31 +116,32 @@ export default function Sidebar() {
       />
 
       <aside
-        // أضفنا z-[9999] هنا أيضاً ليطفو الشريط فوق كل جداول الصفحة
-        className={`fixed top-0 right-0 h-full bg-white/70 backdrop-blur-2xl border-y border-l border-white/80 shadow-[0_20px_60px_-15px_rgba(0,187,167,0.15)] rounded-l-4xl flex flex-col transition-all duration-500 ease-out z-[9999]
+        // تم تغيير الخلفية لتكون داكنة وزجاجية (Dark Frosted Glass) تليق بالهوية الجديدة
+        className={`fixed top-0 right-0 h-full bg-[#101720]/80 backdrop-blur-3xl border-y border-l border-white/5 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] rounded-l-[2.5rem] flex flex-col transition-all duration-500 ease-out z-[9999]
           ${isCollapsed ? 'w-24' : 'w-72'}
         `}
       >
-        {/* زر الطي العائم - تم تعزيز الـ z-index له ليكون فوق كل شيء إطلاقاً */}
+        {/* زر الطي العائم - بألوان الجلد النحاسي والكحلي */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -left-4 top-10 bg-white border border-slate-100 shadow-xl shadow-[#00bba7]/10 p-2.5 rounded-full text-slate-400 hover:text-[#00bba7] hover:scale-110 transition-all duration-300 z-[99999] group"
+          className="absolute -left-4 top-10 bg-[#1a2530] border border-[#C89355]/30 shadow-[0_0_15px_rgba(200,147,85,0.15)] p-2.5 rounded-full text-slate-400 hover:text-[#C89355] hover:scale-110 transition-all duration-300 z-[99999] group"
           aria-label="Toggle Sidebar"
         >
-          <ChevronsRight size={18} className={`transition-transform duration-500 ease-out ${isCollapsed ? 'rotate-180 text-[#00bba7]' : ''}`} />
+          <ChevronsRight size={18} className={`transition-transform duration-500 ease-out ${isCollapsed ? 'rotate-180 text-[#C89355]' : ''}`} />
         </button>
 
-        {/* اللوغو */}
+        {/* لوغو KU&M JEANS الجديد */}
         <div className="flex items-center gap-4 p-6 mb-2">
           <div className="relative group shrink-0">
-            <div className="absolute inset-0 bg-[#00bba7] blur-md opacity-40 group-hover:opacity-70 transition-opacity duration-300 rounded-xl" />
-            <div className="relative bg-linear-to-br from-[#00bba7] to-[#008072] p-2.5 rounded-xl shadow-lg border border-white/30">
-              <Hexagon size={26} className="fill-[#E7C873] text-[#E7C873] animate-[spin_10s_linear_infinite]" style={{ animationPlayState: 'paused' }} onMouseEnter={(e) => e.currentTarget.style.animationPlayState = 'running'} onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'paused'} />
+            <div className="absolute inset-0 bg-[#C89355] blur-md opacity-20 group-hover:opacity-40 transition-opacity duration-300 rounded-xl" />
+            {/* الشعار بتأثير رقعة الجينز المحاكة */}
+            <div className="relative bg-[#1a2530] p-2.5 rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-[#C89355]/40 outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px]">
+              <Shield size={24} className="text-[#C89355]" strokeWidth={2} />
             </div>
           </div>
-          <div className={`overflow-hidden transition-all duration-500 ease-out ${isCollapsed ? 'w-0 opacity-0' : 'w-full opacity-100'}`}>
-            <h1 className="text-2xl font-black bg-linear-to-l from-slate-800 to-slate-500 bg-clip-text text-transparent tracking-tight">BookS</h1>
-            <p className="text-[10px] font-bold text-[#00bba7] uppercase tracking-widest mt-0.5">Clothes Factory</p>
+          <div className={`overflow-hidden transition-all duration-500 ease-out flex flex-col justify-center ${isCollapsed ? 'w-0 opacity-0' : 'w-full opacity-100'}`}>
+            <h1 className="text-3xl font-serif font-black text-white tracking-widest leading-none drop-shadow-md">KU&M</h1>
+            <p className="text-[9px] font-black text-[#C89355] uppercase tracking-[0.4em] mt-1 border-b border-[#C89355]/20 w-fit pb-1">J E A N S</p>
           </div>
         </div>
 
@@ -154,12 +155,12 @@ export default function Sidebar() {
 
             return (
               <div key={item.name} className="relative group/nav">
-                {/* المؤشر الجانبي النشط */}
-                <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-1.5 bg-[#E7C873] rounded-l-full shadow-[0_0_15px_rgba(231,200,115,0.9)] transition-all duration-500 z-10 ${isMainActive ? 'h-8 opacity-100' : 'h-0 opacity-0'}`} />
+                {/* المؤشر الجانبي النشط باللون النحاسي للبراند */}
+                <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-1.5 bg-[#C89355] rounded-l-full shadow-[0_0_15px_rgba(200,147,85,0.8)] transition-all duration-500 z-10 ${isMainActive ? 'h-8 opacity-100' : 'h-0 opacity-0'}`} />
 
                 {/* التلميح الذكي (Tooltip) عند طي القائمة */}
                 {isCollapsed && (
-                  <div className="absolute top-1/2 -translate-y-1/2 left-0 -translate-x-[calc(100%+12px)] bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-300 z-50 whitespace-nowrap before:absolute before:top-1/2 before:-translate-y-1/2 before:-right-1 before:border-4 before:border-transparent before:border-l-slate-800">
+                  <div className="absolute top-1/2 -translate-y-1/2 left-0 -translate-x-[calc(100%+12px)] bg-[#C89355] text-[#1a2530] text-xs font-black px-3 py-2 rounded-lg shadow-xl opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-300 z-50 whitespace-nowrap before:absolute before:top-1/2 before:-translate-y-1/2 before:-right-1 before:border-4 before:border-transparent before:border-l-[#C89355]">
                     {item.name}
                   </div>
                 )}
@@ -168,16 +169,15 @@ export default function Sidebar() {
                   <button
                     onClick={() => toggleSubMenu(item.name)}
                     className={`w-full flex items-center justify-between py-2.5 px-3 rounded-xl transition-all duration-300 group relative overflow-hidden
-                      ${isMainActive || isOpen ? 'bg-linear-to-l from-[#00bba7]/10 to-transparent' : 'hover:bg-slate-50/80'}
+                      ${isMainActive || isOpen ? 'bg-gradient-to-l from-[#C89355]/10 to-transparent' : 'hover:bg-[#263544]/50'}
                     `}
                   >
                     <div className="flex items-center gap-3 relative z-10">
                       <div className={`p-2 rounded-xl transition-all duration-300 flex items-center justify-center relative
                         ${isMainActive || isOpen 
-                          ? 'bg-[#00bba7] text-[#E7C873] shadow-md shadow-[#00bba7]/40' 
-                          : 'bg-slate-100 text-slate-400 group-hover:bg-[#00bba7]/10 group-hover:text-[#00bba7]'}
+                          ? 'bg-[#C89355] text-[#1a2530] shadow-md shadow-[#C89355]/20' 
+                          : 'bg-[#263544] text-slate-400 group-hover:bg-[#1a2530] group-hover:text-[#C89355] border border-transparent group-hover:border-[#C89355]/20'}
                       `}>
-                        {(isMainActive || isOpen) && <div className="absolute inset-0 bg-white/20 rounded-xl blur-sm" />}
                         <item.icon 
                           size={20} 
                           strokeWidth={isMainActive ? 2.5 : 2} 
@@ -185,13 +185,13 @@ export default function Sidebar() {
                         />
                       </div>
                       {!isCollapsed && (
-                        <span className={`text-sm transition-all duration-300 ${isMainActive || isOpen ? 'font-bold text-[#00bba7]' : 'font-semibold text-slate-600 group-hover:text-slate-900'}`}>
+                        <span className={`text-sm transition-all duration-300 ${isMainActive || isOpen ? 'font-bold text-[#C89355]' : 'font-medium text-slate-400 group-hover:text-white'}`}>
                           {item.name}
                         </span>
                       )}
                     </div>
                     {!isCollapsed && (
-                      <ChevronDown size={18} className={`transition-transform duration-300 ${isOpen ? 'text-[#00bba7] rotate-180' : 'text-slate-400 group-hover:text-[#00bba7] group-hover:translate-y-0.5'}`} />
+                      <ChevronDown size={18} className={`transition-transform duration-300 ${isOpen ? 'text-[#C89355] rotate-180' : 'text-slate-500 group-hover:text-[#C89355] group-hover:translate-y-0.5'}`} />
                     )}
                   </button>
                 ) : (
@@ -199,15 +199,14 @@ export default function Sidebar() {
                     href={item.href || '#'}
                     onClick={() => setOpenMenu(null)}
                     className={`flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-300 group relative overflow-hidden
-                      ${isMainActive ? 'bg-linear-to-l from-[#00bba7]/10 to-transparent' : 'hover:bg-slate-50/80'}
+                      ${isMainActive ? 'bg-gradient-to-l from-[#C89355]/10 to-transparent' : 'hover:bg-[#263544]/50'}
                     `}
                   >
                     <div className={`p-2 rounded-xl transition-all duration-300 flex items-center justify-center relative
                       ${isMainActive 
-                        ? 'bg-[#00bba7] text-[#E7C873] shadow-md shadow-[#00bba7]/40' 
-                        : 'bg-slate-100 text-slate-400 group-hover:bg-[#00bba7]/10 group-hover:text-[#00bba7]'}
+                        ? 'bg-[#C89355] text-[#1a2530] shadow-md shadow-[#C89355]/20' 
+                        : 'bg-[#263544] text-slate-400 group-hover:bg-[#1a2530] group-hover:text-[#C89355] border border-transparent group-hover:border-[#C89355]/20'}
                     `}>
-                      {isMainActive && <div className="absolute inset-0 bg-white/20 rounded-xl blur-sm" />}
                       <item.icon 
                         size={20} 
                         strokeWidth={isMainActive ? 2.5 : 2} 
@@ -215,7 +214,7 @@ export default function Sidebar() {
                       />
                     </div>
                     {!isCollapsed && (
-                      <span className={`text-sm transition-all duration-300 ${isMainActive ? 'font-bold text-[#00bba7]' : 'font-semibold text-slate-600 group-hover:text-slate-900'}`}>
+                      <span className={`text-sm transition-all duration-300 ${isMainActive ? 'font-bold text-[#C89355]' : 'font-medium text-slate-400 group-hover:text-white'}`}>
                         {item.name}
                       </span>
                     )}
@@ -225,7 +224,7 @@ export default function Sidebar() {
                 {hasSubItems && !isCollapsed && (
                   <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-60 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col gap-1 pr-12 pl-2 relative">
-                      <div className="absolute right-6 top-2 bottom-2 w-[2px] bg-linear-to-b from-transparent via-slate-200 to-transparent rounded-full" />
+                      <div className="absolute right-6 top-2 bottom-2 w-[2px] bg-gradient-to-b from-transparent via-[#263544] to-transparent rounded-full" />
                       
                       {item.subItems?.map((sub) => {
                         const isSubActive = isHrefActive(sub.href);
@@ -235,12 +234,12 @@ export default function Sidebar() {
                             href={sub.href}
                             prefetch={false}
                             className={`relative text-sm py-2 px-3 rounded-xl transition-all duration-300 flex items-center gap-3
-                              ${isSubActive ? 'font-bold text-[#00bba7] bg-white shadow-sm ring-1 ring-[#00bba7]/20' : 'font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 hover:-translate-x-1'}
+                              ${isSubActive ? 'font-bold text-[#C89355] bg-[#1a2530] shadow-sm ring-1 ring-[#C89355]/30' : 'font-medium text-slate-500 hover:text-white hover:bg-[#263544]/60 hover:-translate-x-1'}
                             `}
                           >
                             <div className="absolute -right-[26px] flex items-center justify-center">
-                              <div className={`absolute w-4 h-4 bg-[#E7C873]/30 rounded-full blur-sm transition-all duration-300 ${isSubActive ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`} />
-                              <div className={`w-2.5 h-2.5 rounded-full border-2 border-white relative z-10 transition-all duration-300 ${isSubActive ? 'bg-[#E7C873] scale-100' : 'bg-slate-200 scale-0'}`} />
+                              <div className={`absolute w-4 h-4 bg-[#C89355]/20 rounded-full blur-sm transition-all duration-300 ${isSubActive ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`} />
+                              <div className={`w-2.5 h-2.5 rounded-full border-2 transition-all duration-300 ${isSubActive ? 'bg-[#C89355] border-[#1a2530] scale-100' : 'bg-[#263544] border-transparent scale-50 group-hover:scale-100 group-hover:bg-slate-400'}`} />
                             </div>
                             {sub.name}
                           </Link>
@@ -254,36 +253,35 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* بطاقة المستخدم - VIP Look */}
-        <div className="p-4 mt-auto shrink-0">
-          <div className={`relative overflow-hidden bg-linear-to-br from-[#00bba7] via-[#00a392] to-[#008f80] rounded-3xl shadow-[0_10px_25px_-5px_rgba(0,187,167,0.4)] transition-all duration-500 ${isCollapsed ? 'p-3' : 'p-4'} group`}>
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#E7C873]/30 rounded-full blur-2xl pointer-events-none transition-transform duration-700 group-hover:scale-150" />
-            <div className="absolute -left-4 -bottom-4 w-20 h-20 bg-white/20 rounded-full blur-xl pointer-events-none transition-transform duration-700 group-hover:scale-150" />
-
+        {/* بطاقة المستخدم السفلية بتصميم الجلد (Leather Tag Style) */}
+        <div className="p-4 mt-auto shrink-0 relative z-20">
+          <div className={`relative overflow-hidden bg-[#1a2530] rounded-2xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] border border-[#C89355]/20 outline outline-dashed outline-1 outline-[#C89355]/30 outline-offset-[-6px] transition-all duration-500 ${isCollapsed ? 'p-2' : 'p-4'} group`}>
+            
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} relative z-10`}>
               <div className={`flex items-center gap-3 overflow-hidden transition-all duration-500 ${isCollapsed ? 'w-0 opacity-0 hidden' : 'w-[70%] opacity-100'}`}>
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center text-white text-lg font-bold shadow-inner">
+                  {/* الدائرة الرمزية بلون النحاس/الجلد */}
+                  <div className="w-10 h-10 rounded-full bg-[#C89355] border-2 border-[#1a2530] flex items-center justify-center text-[#1a2530] text-lg font-black shadow-inner">
                     {displayName.slice(0, 1)}
                   </div>
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#E7C873] border-2 border-[#00bba7] rounded-full shadow-[0_0_8px_rgba(231,200,115,0.8)]" />
+                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#1a2530] rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
                 </div>
                 <div className="overflow-hidden flex-1">
-                  <p className="text-sm font-bold text-white truncate drop-shadow-md">{displayName}</p>
-                  <p className="text-[10px] text-white/90 truncate mt-0.5 font-medium tracking-wide uppercase">{displayRole}</p>
+                  <p className="text-sm font-bold text-white truncate">{displayName}</p>
+                  <p className="text-[10px] text-[#C89355] truncate mt-0.5 font-bold tracking-wider uppercase">{displayRole}</p>
                 </div>
               </div>
 
               <button
                 onClick={handleLogout}
-                className={`group/logout flex items-center justify-center bg-white/10 hover:bg-rose-500/90 text-white/90 hover:text-white p-2.5 rounded-xl transition-all duration-300 backdrop-blur-md border border-white/20 hover:border-rose-400 hover:shadow-[0_0_15px_rgba(244,63,94,0.5)]
+                className={`group/logout flex items-center justify-center bg-[#263544] hover:bg-rose-500/90 text-slate-400 hover:text-white p-2.5 rounded-xl transition-all duration-300 border border-transparent hover:border-rose-400 hover:shadow-[0_0_15px_rgba(244,63,94,0.3)]
                   ${isCollapsed ? 'w-full' : 'w-auto'}
                 `}
                 title="تسجيل الخروج"
               >
                 <LogOut 
                   size={18} 
-                  strokeWidth={2.5}
+                  strokeWidth={2}
                   className={`transition-all duration-300 group-hover/logout:scale-110 group-hover/logout:-translate-x-1 ${isCollapsed ? 'rotate-180' : ''}`} 
                 />
               </button>

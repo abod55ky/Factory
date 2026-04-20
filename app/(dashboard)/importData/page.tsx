@@ -13,3 +13,4 @@ const ImportDataClientPage = dynamic(() => import("./ImportDataClientPage"), {
 export default function ImportDataPage() {
   return <ImportDataClientPage />;
 }
+

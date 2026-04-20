@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Lock, Loader2, AlertCircle, Hexagon, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Loader2, AlertCircle, Eye, EyeOff, Shield, Tag } from "lucide-react";
 import apiClient from "@/lib/api-client";
 import axios from "axios";
 import { resetAuthVerificationCache, verifyAuthSession } from "@/lib/auth-verify";
@@ -87,7 +87,7 @@ export default function LoginPage() {
 
       setStatus("authenticated");
       router.replace("/home");
- 
+
      } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: string }>(error) && error.response) {
         const serverMessage = error.response.data?.message;
@@ -107,7 +107,6 @@ export default function LoginPage() {
       resetAuthVerificationCache();
       clear();
 
-      // allow session probe again after a failed login attempt
       skipInitialSessionProbeRef.current = false;
     } finally {
       setIsLoading(false);
@@ -115,43 +114,74 @@ export default function LoginPage() {
   };
 
   return (
-    // الخلفية العامة للصفحة مع ألوان مقتبسة من زوايا التصميم الأصلي
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 font-sans p-4 relative overflow-hidden" dir="rtl">
+    /* خلفية هادئة (رمادي مزرق) تبرز فخامة الكحلي */
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 font-sans p-4 md:p-8 relative overflow-hidden" dir="rtl">
       
-      {/* دوائر وزخارف خلفية محاكية للتصميم */}
-      <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-amber-400 rounded-full opacity-50 blur-2xl"></div>
-      <div className="absolute -top-20 -right-20 w-80 h-80 bg-rose-400 rounded-full opacity-40 blur-2xl"></div>
+      {/* نقشة نسيج الجينز في الخلفية بشكل خفيف جداً */}
+      <div 
+        className="absolute inset-0 opacity-[0.03] pointer-events-none z-0"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 12L12 0M-2 2L2 -2M10 14L14 10' stroke='%23263544' stroke-width='1' fill='none'/%3E%3C/svg%3E")`,
+          backgroundSize: '12px 12px'
+        }}
+      />
 
-      {/* الحاوية الرئيسية (البطاقة المقسمة) */}
-      <div className="bg-white rounded-4xl shadow-2xl w-full max-w-5xl flex overflow-hidden relative z-10 min-h-137.5">
+      {/* أشكال خلفية مائية للبراند */}
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#263544]/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#C89355]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      {/* الحاوية الرئيسية (البطاقة الزجاجية) */}
+      <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(38,53,68,0.3)] border border-white w-full max-w-5xl flex overflow-hidden relative z-10 min-h-150 animate-in fade-in zoom-in-95 duration-500">
         
-        {/* القسم الأيمن (الترحيب الملون - يظهر في الشاشات المتوسطة والكبيرة فقط) */}
-        <div className="hidden md:flex md:w-5/12 bg-teal-500 flex-col items-center justify-center p-12 text-center relative overflow-hidden">
-          {/* زخارف هندسية داخل القسم الملون */}
-          <div className="absolute top-10 right-10 w-16 h-16 bg-white/10 rotate-45"></div>
-          <div className="absolute bottom-20 left-10 w-24 h-24 bg-white/10 rounded-full"></div>
+        {/* القسم الأيمن (هوية KU&M JEANS) - يظهر في الشاشات المتوسطة والكبيرة فقط */}
+        {/* استخدمنا اللون الكحلي الخاص باللوغو #263544 */}
+        <div className="hidden md:flex md:w-5/12 bg-[#263544] flex-col items-center justify-center p-12 text-center relative overflow-hidden outline-dashed outline-1 outline-white/20 outline-offset-[-12px]">
           
-          <div className="relative z-10 flex flex-col items-center text-white">
-            <Hexagon size={48} className="mb-6 opacity-90" />
-            <h2 className="text-4xl font-bold mb-4">مرحباً بعودتك!</h2>
-            <p className="text-teal-50 leading-relaxed text-sm">
-              للبقاء على اتصال معنا ومتابعة أعمالك، يرجى تسجيل الدخول باستخدام بياناتك الشخصية.
+          {/* زخارف مائية مأخوذة من فكرة اللوغو */}
+          <div className="absolute top-12 right-12 text-white opacity-[0.03] -rotate-12 pointer-events-none">
+            <Shield size={180} />
+          </div>
+          
+          <div className="relative z-10 flex flex-col items-center w-full">
+            {/* أيقونة تعبر عن اللوغو مع لون رقعة الجلد #C89355 */}
+            <div className="p-5 bg-[#1a2530] rounded-2xl shadow-[0_15px_30px_rgba(0,0,0,0.5)] border border-[#C89355]/30 mb-8 relative outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-6px]">
+              {/* لمحاكاة البرغي النحاسي (الزر) الموجود في الجينز */}
+              <div className="absolute -top-3 -right-3 w-6 h-6 bg-[#C89355] rounded-full border-2 border-[#1a2530] shadow-inner flex items-center justify-center">
+                 <div className="w-2 h-2 bg-[#8c6032] rounded-full"></div>
+              </div>
+              <div className="absolute -bottom-3 -left-3 w-6 h-6 bg-[#C89355] rounded-full border-2 border-[#1a2530] shadow-inner flex items-center justify-center">
+                 <div className="w-2 h-2 bg-[#8c6032] rounded-full"></div>
+              </div>
+              
+              <Shield size={56} className="text-[#C89355]" strokeWidth={1.5} />
+            </div>
+            
+            <h1 className="text-5xl font-serif font-black text-white tracking-wider mb-2" style={{ textShadow: "0 4px 10px rgba(0,0,0,0.5)" }}>KU&M</h1>
+            <p className="text-sm font-black text-[#C89355] uppercase tracking-[0.4em] mb-10 border-b border-[#C89355]/30 pb-4 w-full">J E A N S</p>
+            
+            <h2 className="text-2xl font-bold text-white mb-3 tracking-wide">أصالة الصناعة</h2>
+            <p className="text-slate-400 font-medium leading-relaxed text-sm px-4">
+              نظام الإدارة المتكامل. يرجى تسجيل الدخول للوصول إلى لوحة تحكم الموظفين والرواتب.
             </p>
           </div>
         </div>
 
         {/* القسم الأيسر (نموذج الدخول) */}
-        <div className="w-full md:w-7/12 p-8 md:p-16 flex flex-col justify-center items-center bg-white">
+        <div className="w-full md:w-7/12 p-8 md:p-16 flex flex-col justify-center items-center bg-transparent">
           
-          <div className="w-full max-w-sm">
+          <div className="w-full max-w-sm relative z-20">
             <div className="text-center mb-10">
-              <h1 className="text-3xl font-extrabold text-teal-600 mb-2">تسجيل الدخول</h1>
-              <p className="text-slate-400 text-sm">أدخل بيانات الاعتماد الخاصة بك للوصول</p>
+              <div className="md:hidden flex flex-col items-center justify-center mb-8">
+                <h1 className="text-4xl font-serif font-black text-[#263544] tracking-wider mb-1">KU&M</h1>
+                <p className="text-xs font-black text-[#C89355] uppercase tracking-[0.3em]">J E A N S</p>
+              </div>
+              <h2 className="text-3xl font-black text-[#263544] mb-2">تسجيل الدخول</h2>
+              <p className="text-slate-500 font-bold text-sm">أدخل بيانات الاعتماد الخاصة بك للوصول</p>
             </div>
 
             {errorMessage && (
-              <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-xl flex items-center gap-3 text-sm font-bold border border-rose-100">
-                <AlertCircle size={20} />
+              <div className="mb-6 p-4 bg-rose-50 border-r-4 border-rose-500 text-rose-700 rounded-xl flex items-center gap-3 text-sm font-bold shadow-sm animate-in slide-in-from-top-2">
+                <AlertCircle size={20} className="shrink-0" />
                 <p>{errorMessage}</p>
               </div>
             )}
@@ -161,12 +191,12 @@ export default function LoginPage() {
               {/* حقل اسم المستخدم */}
               <div className="w-full relative group">
                 <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                  <User className="text-slate-400 group-focus-within:text-teal-500 transition-colors" size={20} />
+                  <User className="text-slate-400 group-focus-within:text-[#263544] transition-colors" size={20} />
                 </div>
                 <input
                   type="text"
                   required
-                  className="w-full pl-4 pr-12 py-4 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
+                  className="w-full pl-4 pr-12 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#263544]/20 focus:border-[#263544] outline-none transition-all shadow-sm text-[#263544] font-bold placeholder:text-slate-400 placeholder:font-medium"
                   placeholder="اسم المستخدم أو الإيميل"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -177,21 +207,20 @@ export default function LoginPage() {
               {/* حقل كلمة المرور */}
               <div className="w-full relative group">
                 <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                  <Lock className="text-slate-400 group-focus-within:text-teal-500 transition-colors" size={20} />
+                  <Lock className="text-slate-400 group-focus-within:text-[#263544] transition-colors" size={20} />
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 hover:text-teal-500 transition-colors"
+                  className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 hover:text-[#263544] transition-colors"
                   title={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                  aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  className="w-full pl-12 pr-12 py-4 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
+                  className="w-full pl-12 pr-12 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#263544]/20 focus:border-[#263544] outline-none transition-all shadow-sm text-[#263544] font-bold placeholder:text-slate-400 placeholder:font-medium"
                   placeholder="كلمة المرور"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -199,19 +228,27 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="flex justify-start w-full">
-                <button type="button" className="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors">
+              <div className="flex justify-start w-full px-1">
+                <button type="button" className="text-xs font-bold text-[#C89355] hover:text-[#a67741] transition-colors">
                   نسيت كلمة المرور؟
                 </button>
               </div>
 
-              {/* زر الدخول */}
+              {/* زر الدخول بلون الجلد/الذهبي الخاص بالماركة */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-teal-500 hover:bg-teal-600 active:scale-[0.98] text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-teal-500/30 flex justify-center items-center h-14 mt-4"
+                className="w-full relative overflow-hidden bg-[#263544] hover:bg-[#1a2530] active:scale-[0.98] text-[#C89355] font-black py-4 rounded-2xl transition-all shadow-[0_10px_20px_rgba(38,53,68,0.2)] flex justify-center items-center h-14 mt-4 disabled:opacity-70 disabled:cursor-not-allowed group"
               >
-                {isLoading ? <Loader2 className="animate-spin" size={24} /> : "تسجيل الدخول"}
+                {/* خطوط خياطة داخلية للزر */}
+                <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none"></div>
+                
+                {isLoading ? <Loader2 className="animate-spin relative z-10 text-[#C89355]" size={24} /> : (
+                  <span className="flex items-center gap-2 relative z-10 tracking-wide">
+                    <Tag size={18} className="text-[#C89355]" />
+                    دخول إلى النظام
+                  </span>
+                )}
               </button>
             </form>
           </div>
@@ -221,4 +258,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

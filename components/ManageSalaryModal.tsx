@@ -233,3 +233,4 @@ export default function ManageSalaryModal({ isOpen, onClose, onSave, isPending, 
     </div>
   );
 }
+

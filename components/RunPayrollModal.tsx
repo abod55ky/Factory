@@ -117,3 +117,4 @@ export default function RunPayrollModal({ isOpen, onClose, onRun, isPending }: R
     </div>
   );
 }
+

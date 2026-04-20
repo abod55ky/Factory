@@ -50,3 +50,4 @@ export interface PayrollReportResponse {
   totals: PayrollReportTotals;
   items: PayrollItem[];
 }
+

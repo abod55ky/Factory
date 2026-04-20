@@ -40,3 +40,4 @@ describe("useEmployees helpers", () => {
     expect(() => assertHourlyRate(MAX_HOURLY_RATE + 1)).toThrow("أجر الساعة كبير جدًا");
   });
 });
+

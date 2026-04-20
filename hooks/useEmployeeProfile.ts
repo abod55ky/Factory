@@ -53,3 +53,4 @@ export const useEmployeeProfile = (
     gcTime: QUERY_GC_TIME.RELAXED,
   });
 };
+

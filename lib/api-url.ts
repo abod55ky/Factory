@@ -36,3 +36,4 @@ export const normalizeApiUrl = (rawUrl?: string, fallback = DEFAULT_API_URL) => 
     return fallbackUrl;
   }
 };
+

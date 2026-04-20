@@ -94,3 +94,4 @@ export const useAdvances = (employeeId?: string) => {
     deleteAdvance,
   };
 };
+

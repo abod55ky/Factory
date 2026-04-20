@@ -109,3 +109,4 @@ export const biometricApi = {
     return api.post<BiometricRevokeResponse>("/auth/biometric/revoke", body);
   },
 };
+

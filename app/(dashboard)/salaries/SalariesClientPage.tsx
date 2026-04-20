@@ -376,14 +376,14 @@ export default function SalariesPage() {
 
   return (
     <>
-      <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden" dir="rtl">
+      <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#C89355]/80 flex flex-col overflow-hidden" dir="rtl">
         
         <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
           
           <header className="mb-10 flex flex-col xl:flex-row xl:items-end justify-between gap-6 border-b border-black/5 pb-8 relative">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
+                <div className="p-2.5 bg-gradient-to-br from-[#101720] to-[#008275] rounded-2xl shadow-lg shadow-[#101720]/20 border border-[#101720]/20">
                   <Sparkles size={24} className="text-white animate-bounce" />
                 </div>
                 <h1 className="text-3xl font-black text-slate-800 tracking-tight">
@@ -396,7 +396,7 @@ export default function SalariesPage() {
             <div className="mt-4 xl:mt-0 flex flex-wrap items-center gap-4 w-full xl:w-auto">
               <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <HandCoins size={14} className="text-[#E7C873] group-hover:animate-pulse" />
+                  <HandCoins size={14} className="text-[#C89355] group-hover:animate-pulse" />
                   <p className="text-[11px] font-bold text-slate-500">إجمالي السلف المتبقية</p>
                 </div>
                 <p className="font-black text-xl text-slate-800">{tabStats.totalAdvances.toLocaleString()}</p>
@@ -404,10 +404,10 @@ export default function SalariesPage() {
               
               <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Gift size={14} className="text-[#00bba7] group-hover:animate-pulse" />
+                  <Gift size={14} className="text-[#101720] group-hover:animate-pulse" />
                   <p className="text-[11px] font-bold text-slate-500">إجمالي المكافآت</p>
                 </div>
-                <p className="font-black text-xl text-[#00bba7]">{tabStats.totalBonus.toLocaleString()}</p>
+                <p className="font-black text-xl text-[#101720]">{tabStats.totalBonus.toLocaleString()}</p>
               </div>
 
               <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
@@ -431,13 +431,13 @@ export default function SalariesPage() {
                   <table className="w-full text-right min-w-245">
                     <thead className="bg-slate-50/50 border-b border-slate-100/80">
                       <tr>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">كود الموظف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">اسم الموظف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المهنة</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الراتب الأساسي</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إجمالي البدلات</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الإجمالي الثابت الشهري</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">كود الموظف</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">اسم الموظف</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">المهنة</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">الراتب الأساسي</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">إجمالي البدلات</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">الإجمالي الثابت الشهري</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -453,7 +453,7 @@ export default function SalariesPage() {
                             const monthlyFixedTotal = baseFromEmployee;
 
                             return (
-                              <tr key={id} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                              <tr key={id} className="hover:bg-[#101720]/[0.02] transition-colors group">
                                 <td className="p-4 font-mono text-center text-sm text-slate-500">{id}</td>
                                 <td className="p-4 text-center font-bold text-slate-800">{employeesLoading ? "جارٍ التحميل..." : (emp?.name ?? "موظف محذوف")}</td>
                                 <td className="p-4 text-center text-sm text-slate-600 font-medium">{emp?.profession ?? emp?.department ?? "—"}</td>
@@ -462,7 +462,7 @@ export default function SalariesPage() {
                                 <td className="p-4 font-black text-center text-slate-800">{monthlyFixedTotal > 0 ? monthlyFixedTotal.toLocaleString() : <span className="text-rose-500 text-xs">لم يتم ضبط الراتب</span>}</td>
                                 <td className="p-4 text-center">
                                   <div className="flex items-center gap-3 justify-center opacity-80 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => openFor(null, id)} className="px-4 py-1.5 rounded-xl bg-[#00bba7]/10 text-[#00bba7] hover:bg-[#00bba7] hover:text-white font-bold text-xs transition-all shadow-sm">
+                                    <button onClick={() => openFor(null, id)} className="px-4 py-1.5 rounded-xl bg-[#101720]/10 text-[#101720] hover:bg-[#101720] hover:text-white font-bold text-xs transition-all shadow-sm">
                                       ضبط الراتب
                                     </button>
                                   </div>
@@ -480,16 +480,16 @@ export default function SalariesPage() {
                           const employeeName = employeeNameMap[s.employeeId];
 
                           return (
-                            <tr key={s.employeeId} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                            <tr key={s.employeeId} className="hover:bg-[#101720]/[0.02] transition-colors group">
                               <td className="p-4 font-mono text-center text-sm text-slate-500">{s.employeeId}</td>
                               <td className="p-4 text-center font-bold text-slate-800">{employeesLoading ? "جارٍ التحميل..." : (employeeName ?? "موظف محذوف")}</td>
                               <td className="p-4 text-center text-sm text-slate-600 font-medium">{s.profession}</td>
                               <td className="p-4 text-center font-mono font-bold text-slate-700">{base.toLocaleString()}</td>
-                              <td className="p-4 text-center font-mono font-bold text-[#E7C873]">{totalAllowances.toLocaleString()}</td>
-                              <td className="p-4 font-black text-center text-[#00bba7]">{monthlyFixedTotal.toLocaleString()}</td>
+                              <td className="p-4 text-center font-mono font-bold text-[#C89355]">{totalAllowances.toLocaleString()}</td>
+                              <td className="p-4 font-black text-center text-[#101720]">{monthlyFixedTotal.toLocaleString()}</td>
                               <td className="p-4 text-center">
                                 <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={() => openFor(s)} className="text-[#E7C873] hover:bg-[#E7C873]/10 p-2.5 rounded-xl transition-all hover:scale-110" title="تعديل الراتب">
+                                  <button onClick={() => openFor(s)} className="text-[#C89355] hover:bg-[#C89355]/10 p-2.5 rounded-xl transition-all hover:scale-110" title="تعديل الراتب">
                                     <Edit size={16} />
                                   </button>
                                   <button onClick={() => handleDelete(s.employeeId)} className="text-rose-500 hover:bg-rose-50 p-2.5 rounded-xl transition-all hover:scale-110" title="حذف">
@@ -514,13 +514,13 @@ export default function SalariesPage() {
                 <table className="w-full text-right min-w-245">
                   <thead className="bg-slate-50/50 border-b border-slate-100/80">
                     <tr>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إجمالي السلفة</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">القسط الشهري</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المتبقي</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">تاريخ الإصدار</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">حالة الخصم</th>
-                      <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
+                      <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                      <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">إجمالي السلفة</th>
+                      <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">القسط الشهري</th>
+                      <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">المتبقي</th>
+                      <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">تاريخ الإصدار</th>
+                      <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">حالة الخصم</th>
+                      <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -530,14 +530,14 @@ export default function SalariesPage() {
                       (advances || []).map((item: Advance) => {
                         const remaining = toNumber(item.remainingAmount);
                         return (
-                          <tr key={item.id} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                          <tr key={item.id} className="hover:bg-[#101720]/[0.02] transition-colors group">
                             <td className="p-4 text-center font-bold text-slate-800">{employeeNameMap[item.employeeId] || item.employeeId}</td>
                             <td className="p-4 text-center font-mono font-bold text-slate-700">{toNumber(item.totalAmount).toLocaleString()}</td>
-                            <td className="p-4 text-center font-mono font-bold text-[#E7C873]">{toNumber(item.installmentAmount).toLocaleString()}</td>
-                            <td className="p-4 text-center font-black text-[#00bba7]">{remaining.toLocaleString()}</td>
+                            <td className="p-4 text-center font-mono font-bold text-[#C89355]">{toNumber(item.installmentAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-[#101720]">{remaining.toLocaleString()}</td>
                             <td className="p-4 text-center font-mono text-sm text-slate-500">{new Date(item.issueDate).toLocaleDateString("ar-EG")}</td>
                             <td className="p-4 text-center">
-                              <span className={`px-4 py-1.5 rounded-xl text-[11px] font-bold border shadow-sm ${remaining > 0 ? "bg-orange-50 text-orange-600 border-orange-100" : "bg-[#00bba7]/10 text-[#00bba7] border-[#00bba7]/20"}`}>
+                              <span className={`px-4 py-1.5 rounded-xl text-[11px] font-bold border shadow-sm ${remaining > 0 ? "bg-orange-50 text-orange-600 border-orange-100" : "bg-[#101720]/10 text-[#101720] border-[#101720]/20"}`}>
                                 {remaining > 0 ? "جارٍ الخصم" : "مكتمل"}
                               </span>
                             </td>
@@ -548,7 +548,7 @@ export default function SalariesPage() {
                                     setSelectedAdvance(item);
                                     setIsAdvanceModalOpen(true);
                                   }}
-                                  className="text-[#E7C873] hover:bg-[#E7C873]/10 p-2.5 rounded-xl transition-all hover:scale-110"
+                                  className="text-[#C89355] hover:bg-[#C89355]/10 p-2.5 rounded-xl transition-all hover:scale-110"
                                 >
                                   <Edit size={16} />
                                 </button>
@@ -574,14 +574,14 @@ export default function SalariesPage() {
             <div className="space-y-6 mt-6">
               <div className="flex justify-between items-center rounded-2xl border border-white/80 bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
                 <h2 className="font-black text-slate-800 flex items-center gap-3 text-lg">
-                  <Gift size={20} className="text-[#00bba7] animate-pulse" /> إدارة المكافآت والخصومات
+                  <Gift size={20} className="text-[#101720] animate-pulse" /> إدارة المكافآت والخصومات
                 </h2>
                 <div className="relative">
                   <input
                     type="month"
                     value={period}
                     onChange={(e) => setPeriod(e.target.value)}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#00bba7] focus:ring-2 focus:ring-[#00bba7]/20 transition-all shadow-sm"
+                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#101720] focus:ring-2 focus:ring-[#101720]/20 transition-all shadow-sm"
                   />
                 </div>
               </div>
@@ -591,12 +591,12 @@ export default function SalariesPage() {
                   <table className="w-full text-right min-w-245">
                     <thead className="bg-slate-50/50 border-b border-slate-100/80">
                       <tr>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الفترة</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المكافأة</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">السبب</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">الفترة</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">المكافأة</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">السبب</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">إدارة</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -604,10 +604,10 @@ export default function SalariesPage() {
                         <tr><td colSpan={6} className="p-16 text-center text-slate-500 font-medium">لا توجد سجلات في هذه الفترة.</td></tr>
                       ) : (
                         (bonuses || []).map((item: Bonus) => (
-                          <tr key={item.id} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                          <tr key={item.id} className="hover:bg-[#101720]/[0.02] transition-colors group">
                             <td className="p-4 text-center font-bold text-slate-800">{employeeNameMap[item.employeeId] || item.employeeId}</td>
                             <td className="p-4 text-center font-mono text-sm text-slate-500">{item.period || "—"}</td>
-                            <td className="p-4 text-center text-[#00bba7] font-black">{toNumber(item.bonusAmount).toLocaleString()}</td>
+                            <td className="p-4 text-center text-[#101720] font-black">{toNumber(item.bonusAmount).toLocaleString()}</td>
                             <td className="p-4 text-center text-rose-600 font-black">{toNumber(item.assistanceAmount).toLocaleString()}</td>
                             <td className="p-4 text-center text-slate-600 text-sm font-medium">{item.bonusReason || "—"}</td>
                             <td className="p-4 text-center">
@@ -617,7 +617,7 @@ export default function SalariesPage() {
                                     setSelectedBonus(item);
                                     setIsBonusModalOpen(true);
                                   }}
-                                  className="text-[#E7C873] hover:bg-[#E7C873]/10 p-2.5 rounded-xl transition-all hover:scale-110"
+                                  className="text-[#C89355] hover:bg-[#C89355]/10 p-2.5 rounded-xl transition-all hover:scale-110"
                                 >
                                   <Edit size={16} />
                                 </button>
@@ -643,14 +643,14 @@ export default function SalariesPage() {
             <div className="space-y-6 mt-6">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 rounded-2xl border border-white/80 bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
                 <h2 className="font-black text-slate-800 flex items-center gap-3 text-lg">
-                  <Calculator size={20} className="text-[#00bba7] animate-pulse" /> المسير النهائي للفترة
+                  <Calculator size={20} className="text-[#101720] animate-pulse" /> المسير النهائي للفترة
                 </h2>
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <input
                     type="month"
                     value={period}
                     onChange={(e) => setPeriod(e.target.value)}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#00bba7] focus:ring-2 focus:ring-[#00bba7]/20 transition-all shadow-sm"
+                    className="p-2.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-700 outline-none focus:border-[#101720] focus:ring-2 focus:ring-[#101720]/20 transition-all shadow-sm"
                   />
                   <button
                     type="button"
@@ -664,7 +664,7 @@ export default function SalariesPage() {
                     type="button"
                     onClick={handleRunPayroll}
                     disabled={calculatePayroll.isPending}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] hover:from-[#00a392] hover:to-[#006e63] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_20px_rgba(0,187,167,0.3)] transition-all active:scale-95 border border-[#00bba7]/50 disabled:opacity-60 disabled:cursor-not-allowed group"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#101720] to-[#008275] hover:from-[#00a392] hover:to-[#006e63] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_20px_rgba(0,187,167,0.3)] transition-all active:scale-95 border border-[#101720]/50 disabled:opacity-60 disabled:cursor-not-allowed group"
                   >
                     {calculatePayroll.isPending ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} className="group-hover:animate-bounce" />}
                     تشغيل المسير
@@ -673,7 +673,7 @@ export default function SalariesPage() {
               </div>
 
               {lastCalculatedRunId ? (
-                <div className="text-sm text-[#00bba7] bg-[#00bba7]/10 border border-[#00bba7]/20 rounded-xl px-4 py-3 font-bold flex items-center gap-2 shadow-sm">
+                <div className="text-sm text-[#101720] bg-[#101720]/10 border border-[#101720]/20 rounded-xl px-4 py-3 font-bold flex items-center gap-2 shadow-sm">
                   <Sparkles size={16} /> آخر تشغيل ناجح للمسير: <span className="font-mono">{lastCalculatedRunId}</span>
                 </div>
               ) : null}
@@ -683,14 +683,14 @@ export default function SalariesPage() {
                   <table className="w-full text-right min-w-245">
                     <thead className="bg-slate-50/50 border-b border-slate-100/80">
                       <tr>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">أيام الحضور</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الراتب النسبي</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">الموظف</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">أيام الحضور</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">الراتب النسبي</th>
                         <th className="p-5 text-rose-500 font-black text-xs uppercase tracking-wider text-center">خصم التأخير</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">المكافآت</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">خصم السلف</th>
-                        <th className="p-5 text-[#00bba7] font-black text-xs uppercase tracking-wider text-center">صافي المستحق</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">المكافآت</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">الخصومات</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">خصم السلف</th>
+                        <th className="p-5 text-[#101720] font-black text-xs uppercase tracking-wider text-center">صافي المستحق</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -698,15 +698,15 @@ export default function SalariesPage() {
                         <tr><td colSpan={8} className="p-16 text-center text-slate-500 font-medium">لا توجد بيانات كافية لحساب المسير.</td></tr>
                       ) : (
                         finalPayrollRows.map((row) => (
-                          <tr key={row.employeeId} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
+                          <tr key={row.employeeId} className="hover:bg-[#101720]/[0.02] transition-colors group">
                             <td className="p-4 text-center font-bold text-slate-800">{row.employeeName}</td>
                             <td className="p-4 text-center font-mono font-bold text-slate-600">{row.attendanceDays}</td>
                             <td className="p-4 text-center font-mono font-bold text-slate-700">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                             <td className="p-4 text-center font-mono font-bold text-rose-600 bg-rose-50/30">{row.lateDeduction.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                            <td className="p-4 text-center font-black text-[#00bba7]">{row.totalBonus.toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-[#101720]">{row.totalBonus.toLocaleString()}</td>
                             <td className="p-4 text-center font-black text-rose-600">{row.totalDeductions.toLocaleString()}</td>
-                            <td className="p-4 text-center font-black text-[#E7C873]">{row.advancesInstallments.toLocaleString()}</td>
-                            <td className="p-4 text-center font-black text-xl text-slate-900 bg-[#00bba7]/5">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 text-center font-black text-[#C89355]">{row.advancesInstallments.toLocaleString()}</td>
+                            <td className="p-4 text-center font-black text-xl text-slate-900 bg-[#101720]/5">{row.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                           </tr>
                         ))
                       )}
@@ -715,7 +715,7 @@ export default function SalariesPage() {
                 </div>
               </div>
               <p className="text-xs text-slate-500 font-medium px-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#E7C873]"></span>
+                <span className="w-2 h-2 rounded-full bg-[#C89355]"></span>
                 المعادلة: (الراتب الأساسي ÷ 26 × أيام الحضور) + المكافآت - الخصومات - أقساط السلف - خصم التأخير.
               </p>
             </div>
@@ -728,7 +728,7 @@ export default function SalariesPage() {
       {isFloatingActionVisible && (
         <button
           onClick={openFloatingAction}
-          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-gradient-to-br from-[#00bba7] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#00bba7]/50 group"
+          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-gradient-to-br from-[#101720] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#101720]/50 group"
           title="إضافة سجل جديد"
         >
           <Plus size={26} className="group-hover:animate-spin" />
@@ -835,7 +835,7 @@ export default function SalariesPage() {
       {/* تنبيه الحفظ (Loading Toaster) */}
       {isSaving && (
         <div className="fixed bottom-6 right-6 z-40 rounded-2xl border border-white/60 bg-white/85 backdrop-blur-md px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.1)] flex items-center gap-3">
-          <Loader2 className="animate-spin text-[#00bba7]" size={18} />
+          <Loader2 className="animate-spin text-[#101720]" size={18} />
           <p className="text-sm font-bold text-slate-700">
             جارٍ حفظ التعديلات المالية...
           </p>

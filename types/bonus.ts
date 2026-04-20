@@ -16,3 +16,4 @@ export interface BonusInput {
   assistanceAmount?: number | string;
   period?: string;
 }
+

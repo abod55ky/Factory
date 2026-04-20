@@ -78,3 +78,4 @@ export const getAttendanceSocket = () => {
   window.__factoryAttendanceSocket = socket;
   return socket;
 };
+

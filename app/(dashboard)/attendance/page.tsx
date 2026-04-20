@@ -61,10 +61,11 @@ const getStatus = (checkIn?: string, scheduledStart?: string): TableStatus => {
   return "present";
 };
 
+// تحديث ألوان الحالات لتتناسب مع الهوية البصرية الجديدة للمعمل
 const statusUi: Record<TableStatus, { label: string; classes: string }> = {
-  present: { label: "حاضر", classes: "text-[#00bba7] bg-[#00bba7]/10 border-[#00bba7]/20" },
-  late: { label: "متأخر", classes: "text-orange-700 bg-orange-50 border-orange-200" },
-  absent: { label: "غائب", classes: "text-red-700 bg-red-50 border-red-200" },
+  present: { label: "حاضر", classes: "text-[#C89355] bg-[#1a2530] border-[#C89355]/30 shadow-sm" },
+  late: { label: "متأخر", classes: "text-rose-600 bg-rose-50/80 backdrop-blur-md border-rose-100 shadow-sm" },
+  absent: { label: "غائب", classes: "text-red-700 bg-red-50/80 backdrop-blur-md border-red-200 shadow-sm" },
 };
 
 interface AttendanceTableRow {
@@ -192,7 +193,6 @@ export default function AttendancePage() {
     };
   }, [queryClient]);
 
-  // فتح النافذة المنبثقة بدلاً من window.prompt
   const handleOpenTimeModal = (row: AttendanceTableRow, field: "checkIn" | "checkOut") => {
     if (!EMPLOYEE_ID_REGEX.test(row.employeeId)) {
       window.alert(`لا يمكن تسجيل الحضور لهذا السطر لأن رقم الموظف غير صالح: ${row.employeeId}`);
@@ -207,7 +207,6 @@ export default function AttendancePage() {
     setTimeModal({ isOpen: true, row, field, value: defaultValue });
   };
 
-  // حفظ الوقت المدخل في النافذة المنبثقة
   const handleSaveTime = () => {
     const { row, field, value } = timeModal;
     if (!row || !field) return;
@@ -236,60 +235,77 @@ export default function AttendancePage() {
   };
 
   if (isLoading || employeesLoading) return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#00bba7] to-[#E7C873]">
-      <div className="flex flex-col items-center gap-4 relative z-10 bg-white/20 p-8 rounded-3xl backdrop-blur-md border border-[#E7C873] shadow-2xl">
-        <div className="w-14 h-14 border-4 border-white/30 border-t-white rounded-full animate-spin shadow-lg" />
-        <p className="text-white font-bold animate-pulse text-sm">جاري معالجة السجلات...</p>
+    <div className="relative min-h-[85vh] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4 relative z-10 bg-white/40 p-8 rounded-3xl backdrop-blur-2xl border border-white/60 shadow-[0_20px_40px_rgba(38,53,68,0.1)]">
+        <div className="w-14 h-14 border-4 border-[#C89355]/30 border-t-[#263544] rounded-full animate-spin shadow-lg" />
+        <p className="text-[#263544] font-black animate-pulse text-sm tracking-wide">جاري معالجة السجلات...</p>
       </div>
     </div>
   );
 
   if (isError) {
-    return <div className="p-8 text-center text-red-600 font-bold bg-rose-50/50 mt-10 rounded-2xl mx-10">حدث خطأ في تحميل الحضور: {(error as Error)?.message || "خطأ غير معروف"}</div>;
+    return <div className="p-8 text-center text-red-600 font-bold bg-rose-50/50 mt-10 rounded-2xl mx-10 border border-rose-200">حدث خطأ في تحميل الحضور: {(error as Error)?.message || "خطأ غير معروف"}</div>;
   }
 
   return (
-    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden" dir="rtl">
+    /* الحاوية الرئيسية: تأثير زجاجي مع درازة خارجية */
+    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/50 backdrop-blur-2xl rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(38,53,68,0.2)] border-2 border-dashed border-[#C89355]/60 flex flex-col overflow-hidden" dir="rtl">
         
+        {/* نقشة الفايبر (القماش) الثابتة والشفافة */}
+        <div 
+          className="absolute inset-0 opacity-[0.04] pointer-events-none z-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 12h24M12 0v24' stroke='%23263544' stroke-width='1' stroke-dasharray='4 4' fill='none'/%3E%3C/svg%3E")`,
+            backgroundSize: '24px 24px'
+          }}
+        />
+
         {/* محتوى الصفحة الداخلي */}
-        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
+        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar relative z-10">
                           
-        {/* مسار التنقل (Breadcrumbs) - تم نقله وتنسيقه ليكون داخل الحاوية الزجاجية */}
-        <nav className="mb-6 flex items-center gap-2 text-xs font-extrabold text-slate-500 bg-white/60 backdrop-blur-md w-fit px-4 py-2.5 rounded-2xl border border-white/80 shadow-sm">
-          <span className="hover:text-[#00bba7] cursor-pointer transition-colors">إدارة الموارد البشرية</span>
-          <ChevronLeft size={14} className="text-[#E7C873]" />
-          <span className="text-[#00bba7]">سجل الحضور</span>
-        </nav>
+          {/* مسار التنقل (Breadcrumbs) - درزة من الداخل */}
+          <nav className="mb-6 relative overflow-hidden flex items-center gap-2 text-xs font-black text-slate-500 bg-white/60 backdrop-blur-xl w-fit px-4 py-2.5 rounded-2xl border border-white/80 shadow-[0_5px_15px_rgba(38,53,68,0.05)] group">
+            <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+            <span className="hover:text-[#263544] cursor-pointer transition-colors relative z-10">إدارة الموارد البشرية</span>
+            <ChevronLeft size={14} className="text-[#C89355] relative z-10" />
+            <span className="text-[#263544] relative z-10">سجل الحضور</span>
+          </nav>
+
           {/* الترويسة */}
-          <header className="mb-10 text-right border-b border-black/5 pb-6 relative">
+          <header className="mb-10 text-right border-b border-[#263544]/10 pb-6 relative">
             <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
-                    <ClipboardCheck size={24} className="text-white animate-bounce" />
+                  {/* أيقونة العنوان بهوية الماركة مع الدرزة */}
+                  <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline-dashed outline-1 outline-[#C89355]/50 -outline-offset-4">
+                    <ClipboardCheck size={22} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
                   </div>
-                  <h1 className="text-3xl font-black text-slate-800 tracking-tight">سجل الحضور والانصراف</h1>
+                  <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">سجل الحضور والانصراف</h1>
                 </div>
-                <p className="text-slate-500 text-sm font-medium pr-14 mt-1">جاهز للتكامل الفوري مع جهاز البصمة (BASSAMA) باستخدام <span className="font-mono bg-white px-1.5 py-0.5 rounded shadow-sm text-[#00bba7]">employeeId</span></p>
+                <p className="text-slate-600 text-sm font-bold pr-14 mt-1 flex items-center gap-2">
+                  <Fingerprint size={14} className="text-[#C89355]" />
+                  جاهز للتكامل الفوري مع جهاز البصمة باستخدام <span className="font-mono bg-[#1a2530] text-[#C89355] px-1.5 py-0.5 rounded shadow-sm border border-[#C89355]/30">employeeId</span>
+                </p>
 
-                {/* التنبيه الفوري */}
+                {/* التنبيه الفوري - زجاجي */}
                 {liveAttendanceEvent && (
-                  <div className="mt-5 rounded-2xl border border-[#00bba7]/20 bg-white/60 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 flex items-start justify-between gap-4 animate-in slide-in-from-right-4 duration-300">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-[#00bba7]/10 rounded-xl">
-                        <Fingerprint size={18} className="text-[#00bba7] animate-pulse" />
+                  <div className="mt-5 relative overflow-hidden rounded-2xl border border-white/80 bg-white/60 backdrop-blur-xl shadow-[0_8px_30px_rgba(38,53,68,0.08)] p-4 flex items-start justify-between gap-4 animate-in slide-in-from-right-4 duration-300 group">
+                    <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none" />
+                    <div className="flex items-start gap-3 relative z-10">
+                      <div className="p-2 bg-[#263544] rounded-xl shadow-inner border border-[#C89355]/30">
+                        <Fingerprint size={18} className="text-[#C89355] animate-pulse" />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-[#00bba7]">{liveAttendanceEvent.message}</p>
+                        <p className="text-sm font-black text-[#263544]">{liveAttendanceEvent.message}</p>
                         <p className="text-xs text-slate-500 mt-1 font-bold">
-                          {liveAttendanceEvent.employeeName} <span className="text-slate-300 mx-1">|</span> <span className="font-mono">{liveAttendanceEvent.employeeId}</span>
+                          {liveAttendanceEvent.employeeName} <span className="text-[#C89355] mx-1">|</span> <span className="font-mono text-[#263544]">{liveAttendanceEvent.employeeId}</span>
                         </p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setLiveAttendanceEvent(null)}
-                      className="text-slate-400 hover:text-rose-500 transition-colors bg-white hover:bg-rose-50 p-1.5 rounded-full shadow-sm"
+                      className="relative z-10 text-slate-400 hover:text-rose-500 transition-colors bg-white/80 hover:bg-white p-1.5 rounded-full shadow-sm border border-slate-200"
                       aria-label="إغلاق التنبيه الفوري"
                     >
                       <X size={16} />
@@ -299,10 +315,11 @@ export default function AttendancePage() {
               </div>
 
               <div className="mt-4 xl:mt-0 flex flex-wrap items-end gap-4 w-full xl:w-auto">
-                {/* كارد التاريخ بأسلوب Glassmorphism */}
-                <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group">
-                  <label className="flex items-center gap-2 text-xs font-bold text-[#00bba7] mb-2">
-                    <CalendarIcon size={14} className="group-hover:animate-pulse" />
+                {/* كارد التاريخ بأسلوب Glassmorphism + درازة */}
+                <div className="relative overflow-hidden bg-white/60 backdrop-blur-2xl border border-white/80 rounded-2xl p-4 shadow-sm flex-1 xl:flex-none hover:shadow-md transition-all group">
+                  <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+                  <label className="flex items-center gap-2 text-xs font-black text-[#263544] mb-2 relative z-10">
+                    <CalendarIcon size={14} className="text-[#C89355] group-hover:animate-pulse" />
                     التاريخ
                   </label>
                   <input
@@ -310,19 +327,20 @@ export default function AttendancePage() {
                     value={selectedDate}
                     max={today}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full p-2.5 bg-white rounded-xl border border-slate-100 focus:ring-2 focus:ring-[#00bba7]/50 focus:border-[#00bba7] outline-none text-slate-700 font-mono text-sm transition-all"
+                    className="w-full relative z-10 p-2.5 bg-white/80 backdrop-blur-sm rounded-xl border border-white/90 focus:ring-2 focus:ring-[#C89355]/50 focus:border-[#C89355] outline-none text-[#263544] font-mono font-bold text-sm transition-all shadow-inner"
                   />
                 </div>
 
-                {/* كارد الإحصائيات بأسلوب Glassmorphism */}
-                <div className="flex flex-wrap items-center gap-3 mr-auto bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all">
-                  <span className="bg-[#00bba7]/10 text-[#00bba7] px-4 py-1.5 rounded-xl text-xs font-bold border border-[#00bba7]/20 shadow-sm">حاضر: {stats.present}</span>
-                  <span className="bg-orange-50 text-orange-600 px-4 py-1.5 rounded-xl text-xs font-bold border border-orange-100 shadow-sm">متأخر: {stats.late}</span>
-                  <span className="bg-red-50 text-red-600 px-4 py-1.5 rounded-xl text-xs font-bold border border-red-100 shadow-sm">غائب: {stats.absent}</span>
-                  <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
-                  <span className="text-slate-500 px-3 py-1 text-xs font-bold">
+                {/* كارد الإحصائيات بأسلوب Glassmorphism + درازة */}
+                <div className="relative overflow-hidden flex flex-wrap items-center gap-3 mr-auto bg-white/60 backdrop-blur-xl p-4 rounded-2xl border border-white/80 shadow-sm hover:shadow-md transition-all group">
+                  <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+                  <span className="relative z-10 bg-[#1a2530] text-[#C89355] px-4 py-1.5 rounded-xl text-xs font-black border border-[#C89355]/30 shadow-sm">حاضر: {stats.present}</span>
+                  <span className="relative z-10 bg-orange-50 text-orange-600 px-4 py-1.5 rounded-xl text-xs font-black border border-orange-100 shadow-sm">متأخر: {stats.late}</span>
+                  <span className="relative z-10 bg-red-50 text-red-600 px-4 py-1.5 rounded-xl text-xs font-black border border-red-100 shadow-sm">غائب: {stats.absent}</span>
+                  <div className="w-px h-6 bg-[#263544]/20 mx-1 hidden md:block relative z-10"></div>
+                  <span className="relative z-10 text-[#263544] px-3 py-1 text-xs font-black">
                     {isFetching ? (
-                      <span className="flex items-center gap-2"><Loader2 size={12} className="animate-spin text-[#00bba7]" /> تحديث...</span>
+                      <span className="flex items-center gap-2"><Loader2 size={12} className="animate-spin text-[#C89355]" /> تحديث...</span>
                     ) : (
                       <span className="font-mono">{selectedDate}</span>
                     )}
@@ -332,27 +350,28 @@ export default function AttendancePage() {
             </div>
           </header>
 
-          {/* 2. الجدول بتصميم الكارد مع الشادو */}
-          <div className="bg-white rounded-[2.5rem] shadow-[0_25px_50px_rgba(0,0,0,0.05)] border border-white/80 overflow-hidden">
-            <div className="w-full overflow-x-auto custom-scrollbar">
+          {/* 2. الجدول بتصميم الكارد الزجاجي العميق - درزة من الداخل */}
+          <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(38,53,68,0.08)] border-2 border-white/90 overflow-hidden group">
+            <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50 z-0" />
+            <div className="w-full overflow-x-auto custom-scrollbar relative z-10">
               <table className="w-full text-right border-collapse min-w-245">
                 <thead>
-                  <tr className="bg-slate-50/80 border-b border-slate-100">
-                    <th className="p-5 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider">الموظف</th>
-                    <th className="p-5 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider">التاريخ</th>
-                    <th className="p-5 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider">الدخول</th>
-                    <th className="p-5 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider">الخروج</th>
-                    <th className="p-5 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">الحالة</th>
-                    <th className="p-5 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">المصدر</th>
-                    <th className="p-5 text-xs font-extrabold text-[#00bba7] uppercase tracking-wider text-center">إجراءات</th>
+                  <tr className="bg-white/40 border-b border-white/80">
+                    <th className="p-5 text-xs font-black text-[#263544] uppercase tracking-wider text-center">الموظف</th>
+                    <th className="p-5 text-xs font-black text-[#263544] uppercase tracking-wider text-center">التاريخ</th>
+                    <th className="p-5 text-xs font-black text-[#263544] uppercase tracking-wider text-center">الدخول</th>
+                    <th className="p-5 text-xs font-black text-[#263544] uppercase tracking-wider text-center">الخروج</th>
+                    <th className="p-5 text-xs font-black text-[#263544] uppercase tracking-wider text-center">الحالة</th>
+                    <th className="p-5 text-xs font-black text-[#263544] uppercase tracking-wider text-center">المصدر</th>
+                    <th className="p-5 text-xs font-black text-[#263544] uppercase tracking-wider text-center">إجراءات</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-white/40">
                   {markAttendance.isPending && (
                     <tr>
-                      <td colSpan={7} className="p-6 text-center text-[#00bba7] bg-[#00bba7]/5">
-                        <span className="inline-flex items-center gap-2 font-bold">
-                          <Loader2 size={18} className="animate-spin" />
+                      <td colSpan={7} className="p-6 text-center text-[#263544] bg-white/50">
+                        <span className="inline-flex items-center gap-2 font-black">
+                          <Loader2 size={18} className="animate-spin text-[#C89355]" />
                           جارٍ حفظ سجل الحضور...
                         </span>
                       </td>
@@ -360,65 +379,69 @@ export default function AttendancePage() {
                   )}
                   {rows.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-16 text-center text-slate-400 font-medium">
+                      <td colSpan={7} className="p-16 text-center text-[#263544]/60 font-black text-lg">
                         لا توجد بيانات حضور ضمن هذا النطاق
                       </td>
                     </tr>
                   ) : (
                     rows.map((row) => (
-                      <tr key={row.key} className="hover:bg-[#00bba7]/[0.02] transition-colors group">
-                        <td className="p-4">
+                      <tr key={row.key} className="hover:bg-white/80 transition-all duration-300 group/row">
+                        <td className="p-4 text-center">
                           <div>
-                            <p className="font-bold text-slate-800 text-sm group-hover:text-[#00bba7] transition-colors">{row.employeeName}</p>
-                            <p className="text-[11px] text-slate-400 font-mono mt-0.5">{row.employeeId}</p>
+                            <p className="font-black text-slate-800 text-sm group-hover/row:text-[#263544] transition-colors">{row.employeeName}</p>
+                            <p className="text-[11px] text-slate-500 font-mono mt-0.5">{row.employeeId}</p>
                           </div>
                         </td>
-                        <td className="p-4 text-sm text-slate-500 font-medium">{toArabicDate(row.date)}</td>
-                        <td className="p-4 text-sm text-slate-800 font-bold">{normalizeHHmm(row.checkIn) || "—"}</td>
-                        <td className="p-4 text-sm text-slate-800 font-bold">{normalizeHHmm(row.checkOut) || "—"}</td>
+                        <td className="p-4 text-sm text-[#263544]/80 font-bold text-center">{toArabicDate(row.date)}</td>
+                        <td className="p-4 text-sm text-[#263544] font-black font-mono text-center bg-white/30 rounded-lg">{normalizeHHmm(row.checkIn) || "—"}</td>
+                        <td className="p-4 text-sm text-[#263544] font-black font-mono text-center bg-white/30 rounded-lg">{normalizeHHmm(row.checkOut) || "—"}</td>
                         <td className="p-4 text-center">
-                          <span className={`px-4 py-1.5 rounded-xl text-[11px] font-bold shadow-sm ${statusUi[row.status].classes}`}>
+                          <span className={`px-4 py-1.5 rounded-xl text-[11px] font-black border ${statusUi[row.status].classes}`}>
                             {statusUi[row.status].label}
                           </span>
                         </td>
                         <td className="p-4 text-center">
                           {row.checkIn || row.checkOut ? (
-                            <span className="inline-flex items-center gap-2 text-xs font-semibold">
+                            <span className="inline-flex items-center justify-center gap-2 text-xs font-black">
                               {row.source === "device" ? (
                                 <>
-                                  <Fingerprint size={16} className="text-[#00bba7] group-hover:animate-pulse" />
-                                  <span className="text-[#00bba7]">جهاز</span>
+                                  <Fingerprint size={16} className="text-[#263544] group-hover/row:animate-pulse" />
+                                  <span className="text-[#263544]">جهاز</span>
                                 </>
                               ) : (
                                 <>
-                                  <PencilLine size={16} className="text-[#E7C873] group-hover:animate-pulse" />
-                                  <span className="text-[#E7C873]">يدوي</span>
+                                  <PencilLine size={16} className="text-[#C89355] group-hover/row:animate-pulse" />
+                                  <span className="text-[#C89355]">يدوي</span>
                                 </>
                               )}
                             </span>
                           ) : (
-                            <span className="text-slate-300">—</span>
+                            <span className="text-slate-400 font-bold">—</span>
                           )}
                         </td>
                         <td className="p-4 text-center">
-                          <div className="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-center gap-2 opacity-80 group-hover/row:opacity-100 transition-opacity">
+                            {/* زر تسجيل الدخول بهوية المصنع */}
                             <button
                               onClick={() => handleOpenTimeModal(row, "checkIn")}
                               disabled={markAttendance.isPending}
-                              className="group/btn inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[#00bba7] bg-[#00bba7]/5 hover:bg-[#00bba7]/10 border border-transparent hover:border-[#00bba7]/20 text-xs font-bold disabled:opacity-50 active:scale-95 transition-all shadow-sm"
+                              className="group/btn relative overflow-hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[#C89355] bg-[#1a2530] hover:bg-[#263544] border border-[#C89355]/40 text-xs font-black disabled:opacity-50 active:scale-95 transition-all shadow-sm"
                             >
-                              <LogIn size={15} className="group-hover/btn:-translate-x-1 transition-transform" />
-                              {row.checkIn ? "تعديل دخول" : "تسجيل دخول"}
+                              <div className="absolute inset-0.5 rounded-lg border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/50" />
+                              <LogIn size={15} className="group-hover/btn:-translate-x-1 transition-transform relative z-10" />
+                              <span className="relative z-10">{row.checkIn ? "تعديل دخول" : "تسجيل دخول"}</span>
                             </button>
 
+                            {/* زر الخروج زجاجي فاتح */}
                             <button
                               onClick={() => handleOpenTimeModal(row, "checkOut")}
                               disabled={markAttendance.isPending || !row.checkIn}
-                              className="group/btn inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 text-xs font-bold disabled:opacity-50 active:scale-95 transition-all shadow-sm"
+                              className="group/btn relative overflow-hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[#263544] bg-white/80 backdrop-blur-md border border-white hover:bg-white hover:border-[#C89355]/30 text-xs font-black disabled:opacity-50 active:scale-95 transition-all shadow-sm"
                               title={!row.checkIn ? "يجب تسجيل الدخول أولاً" : "تسجيل/تعديل الخروج"}
                             >
-                              <LogOut size={15} className="group-hover/btn:translate-x-1 transition-transform" />
-                              {row.checkOut ? "تعديل خروج" : "تسجيل خروج"}
+                               <div className="absolute inset-0.5 rounded-lg border border-dashed border-[#263544]/10 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/30" />
+                              <LogOut size={15} className="text-[#C89355] group-hover/btn:translate-x-1 transition-transform relative z-10" />
+                              <span className="relative z-10">{row.checkOut ? "تعديل خروج" : "تسجيل خروج"}</span>
                             </button>
                           </div>
                         </td>
@@ -430,56 +453,61 @@ export default function AttendancePage() {
             </div>
           </div>
 
-          <div className="mt-8 bg-white/80 backdrop-blur-md p-5 rounded-[2rem] border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-            <div className="text-xs text-slate-500 font-medium flex items-center gap-2.5">
-              <Clock3 size={16} className="text-[#E7C873] animate-pulse" />
+          {/* قواعد النظام بتصميم Glassmorphism + درازة */}
+          <div className="mt-8 relative overflow-hidden bg-white/60 backdrop-blur-xl p-5 rounded-4xl border border-white/80 shadow-[0_8px_30px_rgba(38,53,68,0.05)] flex flex-col md:flex-row gap-4 justify-between items-start md:items-center group">
+            <div className="absolute inset-1 rounded-[1.8rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+            <div className="text-xs text-[#263544] font-black flex items-center gap-2.5 relative z-10">
+              <Clock3 size={16} className="text-[#C89355] animate-pulse" />
               يعتبر الموظف متأخراً إذا تجاوز وقت الدخول وقت الدوام المجدول + 15 دقيقة.
             </div>
-            <div className="text-xs text-slate-500 font-medium flex items-center gap-2.5">
-              <Fingerprint size={16} className="text-[#00bba7] animate-pulse" />
+            <div className="text-xs text-[#263544] font-black flex items-center gap-2.5 relative z-10">
+              <Fingerprint size={16} className="text-[#C89355] animate-pulse" />
               تحديثات فورية من أجهزة البصمة، تأكد من صحة رمز الموظف.
             </div>
           </div>
 
-          {/* النافذة المنبثقة (Modal) لإدخال الوقت بتصميم Glassmorphism */}
+          {/* النافذة المنبثقة (Modal) لإدخال الوقت بتصميم Glassmorphism فخم */}
           {timeModal.isOpen && timeModal.row && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-              <div className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.2)] border border-white w-full max-w-lg overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-200">
-                
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#101720]/60 backdrop-blur-md p-4">
+              <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.4)] border-2 border-white/80 w-full max-w-lg overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300 relative">
+                 {/* درازة حول المودال بالكامل */}
+                 <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none z-0" />
+
                 {/* الحاوية اليمنى: إدخال الوقت */}
-                <div className="p-8 flex-1 order-2 md:order-1">
+                <div className="p-8 flex-1 order-2 md:order-1 relative z-10">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-black text-[#00bba7] flex items-center gap-2">
-                      {timeModal.field === 'checkIn' ? <LogIn className="text-[#E7C873]" /> : <LogOut className="text-[#E7C873]" />}
+                    <h3 className="text-xl font-black text-[#263544] flex items-center gap-2">
+                      {timeModal.field === 'checkIn' ? <LogIn className="text-[#C89355]" /> : <LogOut className="text-[#C89355]" />}
                       {timeModal.field === 'checkIn' ? 'تسجيل الدخول' : 'تسجيل الخروج'}
                     </h3>
                     <button 
                       onClick={() => setTimeModal({ isOpen: false, row: null, field: null, value: "" })}
-                      className="text-slate-400 hover:text-rose-500 transition-colors bg-slate-50 hover:bg-rose-50 p-1.5 rounded-full"
+                      className="text-slate-400 hover:text-rose-500 transition-colors bg-white hover:bg-rose-50 p-1.5 rounded-full shadow-sm border border-slate-100"
                     >
                       <X size={20} />
                     </button>
                   </div>
                   
-                  <label className="block text-sm font-bold text-slate-700 mb-2">حدد الوقت بدقة</label>
+                  <label className="block text-sm font-black text-[#263544]/80 mb-2">حدد الوقت بدقة</label>
                   <input 
                     type="time" 
                     value={timeModal.value}
                     onChange={(e) => setTimeModal(prev => ({...prev, value: e.target.value}))}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00bba7]/50 focus:border-[#00bba7] outline-none font-mono text-xl text-center text-slate-800 transition-all shadow-inner"
+                    className="w-full p-4 bg-white/80 border-2 border-white focus:ring-2 focus:ring-[#C89355]/50 focus:border-[#C89355] outline-none font-mono text-2xl font-black text-center text-[#263544] transition-all shadow-inner rounded-2xl"
                     dir="ltr"
                   />
 
                   <div className="mt-8 flex gap-3">
                     <button 
                        onClick={handleSaveTime}
-                       className="flex-1 bg-gradient-to-r from-[#00bba7] to-[#008275] hover:from-[#00a392] hover:to-[#006e63] active:scale-95 text-white font-bold py-3 rounded-xl transition-all shadow-[0_10px_20px_rgba(0,187,167,0.3)] border border-[#00bba7]/50"
+                       className="relative overflow-hidden flex-1 bg-[#1a2530] hover:bg-[#263544] active:scale-95 text-[#C89355] font-black py-3 rounded-xl transition-all shadow-[0_10px_20px_rgba(38,53,68,0.3)] border border-[#C89355]/40 group"
                     >
-                      حفظ السجل
+                      <div className="absolute inset-1 rounded-lg border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
+                      <span className="relative z-10">حفظ السجل</span>
                     </button>
                     <button 
                        onClick={() => setTimeModal({ isOpen: false, row: null, field: null, value: "" })}
-                       className="flex-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold py-3 rounded-xl transition-all border border-slate-200"
+                       className="flex-1 bg-white hover:bg-slate-50 active:scale-95 text-[#263544] font-black py-3 rounded-xl transition-all border-2 border-white shadow-sm"
                     >
                       إلغاء
                     </button>
@@ -487,11 +515,11 @@ export default function AttendancePage() {
                 </div>
 
                 {/* الحاوية اليسرى: عرض التاريخ واسم الموظف */}
-                <div className="bg-slate-50/50 p-8 md:w-2/5 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col justify-center items-center text-center order-1 md:order-2">
-                   <CalendarIcon size={40} className="text-[#E7C873] mb-4 drop-shadow-md animate-bounce" />
-                   <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider mb-1">تاريخ السجل</p>
-                   <p className="text-xl font-black text-[#00bba7] font-mono mb-6">{timeModal.row.date}</p>
-                   <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-relaxed">{timeModal.row.employeeName}</p>
+                <div className="bg-[#263544]/5 p-8 md:w-2/5 border-b md:border-b-0 md:border-r border-[#C89355]/20 flex flex-col justify-center items-center text-center order-1 md:order-2 relative z-10">
+                   <CalendarIcon size={40} className="text-[#C89355] mb-4 drop-shadow-md animate-bounce" />
+                   <p className="text-[10px] text-[#263544]/60 font-black uppercase tracking-wider mb-1">تاريخ السجل</p>
+                   <p className="text-xl font-black text-[#263544] font-mono mb-6 bg-white/80 px-3 py-1 rounded-xl shadow-sm border border-white">{timeModal.row.date}</p>
+                   <p className="text-sm font-black text-[#263544] line-clamp-2 leading-relaxed bg-[#C89355]/10 px-3 py-2 rounded-xl border border-[#C89355]/20">{timeModal.row.employeeName}</p>
                 </div>
 
               </div>

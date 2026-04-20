@@ -209,7 +209,7 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
   if (isEmployeeLoading) {
     return (
       <div className="p-8 h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="animate-spin text-[#00bba7]" size={36} />
+        <Loader2 className="animate-spin text-[#101720]" size={36} />
       </div>
     );
   }
@@ -238,26 +238,26 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
       <nav className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-8">
 
         
-        <Link href="/employees" className="hover:text-[#00bba7] transition-colors">إدارة الموارد البشرية</Link>
+        <Link href="/employees" className="hover:text-[#101720] transition-colors">إدارة الموارد البشرية</Link>
         <ChevronLeft size={14} />
-        <Link href="/employees" className="hover:text-[#00bba7] transition-colors">قائمة الموظفين</Link>
+        <Link href="/employees" className="hover:text-[#101720] transition-colors">قائمة الموظفين</Link>
         <ChevronLeft size={14} />
-        <span className="text-[#00bba7]">بروفايل الموظف</span>
+        <span className="text-[#101720]">بروفايل الموظف</span>
       </nav>
 
   <div className="bg-white rounded-4xl shadow-sm border border-slate-100 p-8 mb-8 relative overflow-hidden">
-        <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#E7C873] opacity-10 rounded-full blur-2xl" />
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#00bba7] opacity-5 rounded-full blur-2xl" />
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#C89355] opacity-10 rounded-full blur-2xl" />
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#101720] opacity-5 rounded-full blur-2xl" />
 
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-            <div className="w-20 h-20 bg-[#E7C873] text-white rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg shadow-[#E7C873]/30">
+            <div className="w-20 h-20 bg-[#C89355] text-white rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg shadow-[#C89355]/30">
               {employee.name?.[0] || "م"}
             </div>
             <div>
               <h1 className="text-3xl font-black text-slate-800 mb-1.5">{employee.name}</h1>
               <div className="flex items-center gap-3">
-                <span className="bg-[#00bba7]/10 text-[#00bba7] px-3 py-1 rounded-lg text-xs font-bold border border-[#00bba7]/20">
+                <span className="bg-[#101720]/10 text-[#101720] px-3 py-1 rounded-lg text-xs font-bold border border-[#101720]/20">
                   {employee.department || "—"}
                 </span>
                 <span className="text-sm font-bold text-slate-400 font-mono">#{employee.employeeId}</span>
@@ -268,20 +268,20 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
           <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
             <div className="flex flex-col gap-3 text-slate-600 text-sm font-bold bg-slate-50 p-4 rounded-2xl border border-slate-100 w-full sm:w-auto">
               <div className="flex items-center gap-3">
-                <Phone size={18} className="text-[#E7C873]" />
+                <Phone size={18} className="text-[#C89355]" />
                 <span dir="ltr" className="tracking-wider">{contactPhone}</span>
               </div>
               <div className="flex items-center gap-3">
-                <CreditCard size={18} className="text-[#E7C873]" />
+                <CreditCard size={18} className="text-[#C89355]" />
                 <span className="tracking-wider">{contactIdentity}</span>
               </div>
             </div>
 
-            <div className="bg-[#00bba7]/5 rounded-2xl p-6 text-center border border-[#00bba7]/20 min-w-50 w-full sm:w-auto">
-              <p className="text-[#00bba7] font-extrabold mb-1 text-xs uppercase tracking-wider">المستحقات الحالية</p>
+            <div className="bg-[#101720]/5 rounded-2xl p-6 text-center border border-[#101720]/20 min-w-50 w-full sm:w-auto">
+              <p className="text-[#101720] font-extrabold mb-1 text-xs uppercase tracking-wider">المستحقات الحالية</p>
               <div className="flex justify-center items-baseline gap-2">
-                <h2 className="text-4xl font-black text-[#00bba7]">{formatMoney(salaryBreakdown.totalDues)}</h2>
-                <span className="text-[#E7C873] font-bold text-sm">ل.س</span>
+                <h2 className="text-4xl font-black text-[#101720]">{formatMoney(salaryBreakdown.totalDues)}</h2>
+                <span className="text-[#C89355] font-bold text-sm">ل.س</span>
               </div>
             </div>
           </div>
@@ -291,25 +291,25 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
   <div className="bg-white rounded-4xl shadow-sm border border-slate-100 p-8">
           <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-5">
-            <div className="p-2.5 bg-[#E7C873]/10 rounded-xl text-[#E7C873]"><Wallet size={24} /></div>
-            <h3 className="text-xl font-black text-[#00bba7]">تفاصيل الراتب</h3>
+            <div className="p-2.5 bg-[#C89355]/10 rounded-xl text-[#C89355]"><Wallet size={24} /></div>
+            <h3 className="text-xl font-black text-[#101720]">تفاصيل الراتب</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="bg-[#00bba7]/5 p-5 rounded-2xl border border-[#00bba7]/10 flex items-start justify-between">
+            <div className="bg-[#101720]/5 p-5 rounded-2xl border border-[#101720]/10 flex items-start justify-between">
               <div>
-                <p className="text-xs font-bold text-[#00bba7] mb-1">الراتب الأساسي</p>
+                <p className="text-xs font-bold text-[#101720] mb-1">الراتب الأساسي</p>
                 <p className="text-2xl font-black text-slate-800">{formatMoney(salaryBreakdown.baseSalary)}</p>
               </div>
-              <Coins className="text-[#00bba7] opacity-40" size={24} />
+              <Coins className="text-[#101720] opacity-40" size={24} />
             </div>
 
-            <div className="bg-[#E7C873]/10 p-5 rounded-2xl border border-[#E7C873]/20 flex items-start justify-between">
+            <div className="bg-[#C89355]/10 p-5 rounded-2xl border border-[#C89355]/20 flex items-start justify-between">
               <div>
                 <p className="text-xs font-bold text-[#c2a042] mb-1">الإضافي والمكافآت</p>
                 <p className="text-2xl font-black text-slate-800">+{formatMoney(salaryBreakdown.extraAndBonuses)}</p>
               </div>
-              <TrendingUp className="text-[#E7C873] opacity-40" size={24} />
+              <TrendingUp className="text-[#C89355] opacity-40" size={24} />
             </div>
 
             <div className="bg-rose-50 p-5 rounded-2xl border border-rose-100 flex items-start justify-between">
@@ -332,19 +332,19 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
 
   <div className="bg-white rounded-4xl shadow-sm border border-slate-100 p-8">
           <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-5">
-            <div className="p-2.5 bg-[#00bba7]/10 rounded-xl text-[#00bba7]"><Clock size={24} /></div>
-            <h3 className="text-xl font-black text-[#00bba7]">سجل الدوام (حتى اليوم)</h3>
+            <div className="p-2.5 bg-[#101720]/10 rounded-xl text-[#101720]"><Clock size={24} /></div>
+            <h3 className="text-xl font-black text-[#101720]">سجل الدوام (حتى اليوم)</h3>
             {isSecondaryLoading && <Loader2 size={16} className="animate-spin text-slate-400" />}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="bg-[#00bba7]/5 flex items-center gap-4 p-5 rounded-2xl border border-[#00bba7]/10">
-              <CalendarCheck className="text-[#00bba7]" size={24} />
-              <div><p className="text-xs font-bold text-[#00bba7]">أيام الحضور</p><p className="text-2xl font-black text-slate-800">{attendanceSummary.daysAttended}</p></div>
+            <div className="bg-[#101720]/5 flex items-center gap-4 p-5 rounded-2xl border border-[#101720]/10">
+              <CalendarCheck className="text-[#101720]" size={24} />
+              <div><p className="text-xs font-bold text-[#101720]">أيام الحضور</p><p className="text-2xl font-black text-slate-800">{attendanceSummary.daysAttended}</p></div>
             </div>
 
-            <div className="bg-[#E7C873]/10 flex items-center gap-4 p-5 rounded-2xl border border-[#E7C873]/20">
-              <Clock className="text-[#E7C873]" size={24} />
+            <div className="bg-[#C89355]/10 flex items-center gap-4 p-5 rounded-2xl border border-[#C89355]/20">
+              <Clock className="text-[#C89355]" size={24} />
               <div><p className="text-xs font-bold text-[#c2a042]">دقائق إضافية</p><p className="text-2xl font-black text-slate-800">{attendanceSummary.overtimeMinutes}</p></div>
             </div>
 

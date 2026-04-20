@@ -42,3 +42,4 @@ export default function FinancialHubTabs({ tabs, activeTab, onChange }: Financia
     </div>
   );
 }
+

@@ -26,3 +26,4 @@ describe("route-access", () => {
     expect(hasAnyRequiredRole(["Warehouse"], ["finance", "manager"])).toBe(false);
   });
 });
+

@@ -20,55 +20,79 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-[#E7C873]/80 flex flex-col overflow-hidden" dir="rtl">
+    /* الحاوية الرئيسية: تأثير زجاجي مع درازة خارجية متطابقة مع باقي النظام */
+    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/50 backdrop-blur-[40px] rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(38,53,68,0.2)] border-2 border-dashed border-[#C89355]/60 flex flex-col overflow-hidden" dir="rtl">
         
+        {/* نقشة الفايبر (القماش) الثابتة والشفافة */}
+        <div 
+          className="absolute inset-0 opacity-[0.04] pointer-events-none z-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 12h24M12 0v24' stroke='%23263544' stroke-width='1' stroke-dasharray='4 4' fill='none'/%3E%3C/svg%3E")`,
+            backgroundSize: '24px 24px'
+          }}
+        />
+
         {/* المحتوى الداخلي */}
-        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar">
+        <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar relative z-10">
           
           {/* الهيدر وزر الحفظ العام */}
-          <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-black/5 pb-8 relative">
+          <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#263544]/10 pb-8 relative">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2.5 bg-gradient-to-br from-[#00bba7] to-[#008275] rounded-2xl shadow-lg shadow-[#00bba7]/20 border border-[#00bba7]/20">
-                  <Settings size={24} className="text-white animate-[spin_4s_linear_infinite]" />
+                {/* أيقونة العنوان بهوية الماركة الكحلية والنحاسية مع الدرزة */}
+                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px]">
+                  <Settings size={22} className="text-[#C89355] animate-[spin_4s_linear_infinite]" strokeWidth={2.5} />
                 </div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight">الإعدادات</h1>
+                <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">الإعدادات</h1>
               </div>
-              <p className="text-slate-500 text-sm font-medium pr-14 mt-1">إعدادات النظام، قواعد المحاسبة، وتفضيلات المعمل</p>
+              <p className="text-slate-600 text-sm font-bold pr-14 mt-1">إعدادات النظام، قواعد المحاسبة، وتفضيلات المعمل</p>
             </div>
 
-            <button className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00bba7] to-[#008275] px-6 py-3 text-sm font-bold text-white shadow-[0_10px_20px_rgba(0,187,167,0.3)] hover:from-[#00a392] hover:to-[#006e63] active:scale-95 transition-all border border-[#00bba7]/50 group w-full md:w-auto justify-center">
-              <Save size={18} className="group-hover:-translate-y-1 transition-transform" />
-              حفظ التعديلات
+            <button className="relative overflow-hidden inline-flex items-center gap-2 rounded-2xl bg-[#1a2530] hover:bg-[#263544] px-6 py-3.5 text-sm font-black text-[#C89355] shadow-[0_10px_20px_rgba(38,53,68,0.4)] transition-all active:scale-95 border border-[#C89355]/40 group/btn w-full md:w-auto justify-center">
+              <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/50" />
+              <Save size={18} className="group-hover/btn:-translate-y-1 transition-transform relative z-10" />
+              <span className="relative z-10">حفظ التعديلات</span>
             </button>
           </header>
 
           <div className="flex flex-col lg:flex-row gap-8">
             
-            {/* القائمة الجانبية للإعدادات (Tabs) */}
+            {/* القائمة الجانبية للإعدادات (Tabs) بتصميم Glassmorphism */}
             <div className="w-full lg:w-72 shrink-0">
-              <div className="bg-white/80 backdrop-blur-md rounded-[2rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] p-4 flex flex-col gap-2">
-                {tabs.map((tab) => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-3 w-full text-right px-4 py-3.5 rounded-2xl transition-all group ${
-                        isActive
-                          ? "bg-gradient-to-l from-[#00bba7]/10 to-transparent border border-[#00bba7]/20 shadow-sm"
-                          : "hover:bg-white/50 border border-transparent"
-                      }`}
-                    >
-                      <div className={`p-2 rounded-xl transition-all duration-300 ${isActive ? 'bg-[#00bba7] text-white shadow-md' : 'bg-slate-50 text-slate-400 group-hover:bg-[#00bba7]/10 group-hover:text-[#00bba7]'}`}>
-                        <tab.icon size={18} className={isActive ? "animate-pulse" : "group-hover:scale-110 transition-transform"} />
-                      </div>
-                      <span className={`text-sm ${isActive ? 'font-bold text-[#00bba7]' : 'font-medium text-slate-600 group-hover:text-slate-900'}`}>
-                        {tab.name}
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] p-4 flex flex-col gap-2 overflow-hidden group/sidebar">
+                <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/sidebar:border-[#C89355]/50 z-0" />
+                
+                <div className="relative z-10 flex flex-col gap-2">
+                  {tabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`relative overflow-hidden flex items-center gap-3 w-full text-right px-4 py-3.5 rounded-2xl transition-all group/tab ${
+                          isActive
+                            ? "bg-[#1a2530] shadow-[0_8px_20px_rgba(38,53,68,0.3)] border border-[#C89355]/30"
+                            : "bg-white/40 hover:bg-white/80 border border-white hover:border-[#C89355]/30 shadow-sm"
+                        }`}
+                      >
+                        {isActive && <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/20 pointer-events-none" />}
+                        
+                        <div className={`p-2.5 rounded-xl transition-all duration-300 relative z-10 shadow-sm border ${
+                          isActive 
+                            ? 'bg-[#263544] text-[#C89355] border-[#C89355]/30 shadow-inner' 
+                            : 'bg-white text-slate-400 group-hover/tab:text-[#C89355] border-slate-100 group-hover/tab:border-[#C89355]/30'
+                        }`}>
+                          <tab.icon size={18} className={isActive ? "animate-pulse" : "group-hover/tab:scale-110 transition-transform"} />
+                        </div>
+                        <span className={`text-sm relative z-10 transition-colors ${
+                          isActive ? 'font-black text-[#C89355]' : 'font-bold text-[#263544]/70 group-hover/tab:text-[#263544]'
+                        }`}>
+                          {tab.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -80,77 +104,89 @@ export default function SettingsPage() {
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   
                   {/* بطاقة قواعد التأخير */}
-                  <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] p-8 group">
-                    <h2 className="text-xl font-extrabold text-slate-800 mb-8 flex items-center gap-3 border-b border-slate-100 pb-4">
-                      <div className="p-2.5 bg-orange-50 rounded-xl border border-orange-100">
-                        <ClockIcon className="text-orange-500 group-hover:animate-spin-slow" />
-                      </div>
-                      قواعد التأخير والانصراف
-                    </h2>
+                  <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] p-8 group/card overflow-hidden">
+                    <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/card:border-[#C89355]/50 z-0" />
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-3">مدة السماح (بالدقائق)</label>
-                        <input 
-                          type="number" 
-                          defaultValue="5"
-                          className="w-full bg-white/50 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] font-mono shadow-inner transition-all"
-                        />
-                        <p className="text-[11px] font-bold text-slate-400 mt-2 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-orange-400"></span> الدقائق المسموح بها بعد بدء الدوام دون خصم.
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-3">نسبة خصم التأخير</label>
-                        <div className="relative">
+                    <div className="relative z-10">
+                      <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 border-b border-white/80 pb-6">
+                        <div className="p-2.5 bg-[#C89355]/10 rounded-xl border border-[#C89355]/30 shadow-inner">
+                          <ClockIcon className="text-[#C89355] group-hover/card:animate-[spin_6s_linear_infinite]" />
+                        </div>
+                        قواعد التأخير والانصراف
+                      </h2>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <label className="block text-sm font-black text-[#263544] mb-3">مدة السماح (بالدقائق)</label>
                           <input 
                             type="number" 
-                            defaultValue="100"
-                            className="w-full bg-white/50 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] font-mono shadow-inner transition-all pl-12"
+                            defaultValue="5"
+                            className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] shadow-inner transition-all"
                           />
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-bold border border-slate-200">
-                            %
-                          </div>
+                          <p className="text-[11px] font-bold text-slate-500 mt-3 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#C89355] shadow-[0_0_8px_rgba(200,147,85,0.6)] animate-pulse"></span> 
+                            الدقائق المسموح بها بعد بدء الدوام دون خصم.
+                          </p>
                         </div>
-                        <p className="text-[11px] font-bold text-slate-400 mt-2 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span> 100% تعني خصم الدقيقة بدقيقة من الراتب.
-                        </p>
+                        <div>
+                          <label className="block text-sm font-black text-[#263544] mb-3">نسبة خصم التأخير</label>
+                          <div className="relative">
+                            <input 
+                              type="number" 
+                              defaultValue="100"
+                              className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] shadow-inner transition-all pl-14"
+                            />
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1a2530] rounded-xl flex items-center justify-center text-[#C89355] font-black border border-[#C89355]/30 shadow-md">
+                              %
+                            </div>
+                          </div>
+                          <p className="text-[11px] font-bold text-slate-500 mt-3 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse"></span> 
+                            100% تعني خصم الدقيقة بدقيقة من الراتب.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* بطاقة حساب الأجر الإضافي */}
-                  <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] p-8 group">
-                    <h2 className="text-xl font-extrabold text-slate-800 mb-8 flex items-center gap-3 border-b border-slate-100 pb-4">
-                      <div className="p-2.5 bg-[#00bba7]/10 rounded-xl border border-[#00bba7]/20">
-                        <CalculatorIcon className="text-[#00bba7] group-hover:animate-pulse" />
-                      </div>
-                      حساب الأجر الإضافي
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-3">مُعامل الإضافي (الأيام العادية)</label>
-                        <input 
-                          type="number" 
-                          step="0.1"
-                          defaultValue="1.5"
-                          className="w-full bg-white/50 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] font-mono shadow-inner transition-all"
-                        />
-                        <p className="text-[11px] font-bold text-slate-400 mt-2 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#00bba7]"></span> تحسب الساعة بساعة ونصف.
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-3">مُعامل الإضافي (العطل الرسمية)</label>
-                        <input 
-                          type="number" 
-                          step="0.1"
-                          defaultValue="2.0"
-                          className="w-full bg-white/50 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] font-mono shadow-inner transition-all"
-                        />
-                        <p className="text-[11px] font-bold text-slate-400 mt-2 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#E7C873]"></span> تحسب الساعة بساعتين.
-                        </p>
+                  <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] p-8 group/card overflow-hidden">
+                    <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/card:border-[#C89355]/50 z-0" />
+                    
+                    <div className="relative z-10">
+                      <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 border-b border-white/80 pb-6">
+                        <div className="p-2.5 bg-[#1a2530] rounded-xl border border-[#C89355]/40 shadow-inner">
+                          <CalculatorIcon className="text-[#C89355] group-hover/card:animate-bounce" />
+                        </div>
+                        حساب الأجر الإضافي
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <label className="block text-sm font-black text-[#263544] mb-3">مُعامل الإضافي (الأيام العادية)</label>
+                          <input 
+                            type="number" 
+                            step="0.1"
+                            defaultValue="1.5"
+                            className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] shadow-inner transition-all"
+                          />
+                          <p className="text-[11px] font-bold text-slate-500 mt-3 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#263544] shadow-[0_0_8px_rgba(38,53,68,0.6)]"></span> 
+                            تحسب الساعة بساعة ونصف.
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-black text-[#263544] mb-3">مُعامل الإضافي (العطل الرسمية)</label>
+                          <input 
+                            type="number" 
+                            step="0.1"
+                            defaultValue="2.0"
+                            className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] shadow-inner transition-all"
+                          />
+                          <p className="text-[11px] font-bold text-slate-500 mt-3 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#C89355] shadow-[0_0_8px_rgba(200,147,85,0.6)] animate-pulse"></span> 
+                            تحسب الساعة بساعتين.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -162,42 +198,46 @@ export default function SettingsPage() {
               {activeTab === "devices" && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   
-                  <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] p-8 group">
-                    <h2 className="text-xl font-extrabold text-slate-800 mb-8 flex items-center gap-3 border-b border-slate-100 pb-4">
-                      <div className="p-2.5 bg-blue-50 rounded-xl border border-blue-100">
-                        <Server className="text-blue-500 group-hover:animate-pulse" />
-                      </div>
-                      إعدادات جهاز البصمة الأساسي
-                    </h2>
+                  <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] p-8 group/card overflow-hidden">
+                    <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/card:border-[#C89355]/50 z-0" />
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-3">عنوان IP للجهاز</label>
-                        <input 
-                          type="text" 
-                          defaultValue="192.168.1.100"
-                          className="w-full bg-white/50 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] font-mono text-left dir-ltr shadow-inner transition-all"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-3">منفذ الاتصال (Port)</label>
-                        <input 
-                          type="text" 
-                          defaultValue="4370"
-                          className="w-full bg-white/50 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] font-mono text-left dir-ltr shadow-inner transition-all"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mt-8 pt-6 border-t border-slate-100">
-                      <div className="flex items-center justify-between bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                        <div>
-                          <h4 className="text-sm font-extrabold text-slate-800">المزامنة التلقائية</h4>
-                          <p className="text-[11px] font-bold text-slate-500 mt-1">سحب سجلات الحضور تلقائياً من الجهاز كل ساعة.</p>
+                    <div className="relative z-10">
+                      <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 border-b border-white/80 pb-6">
+                        <div className="p-2.5 bg-[#1a2530] rounded-xl border border-[#C89355]/40 shadow-inner">
+                          <Server className="text-[#C89355] group-hover/card:animate-pulse" />
                         </div>
-                        {/* Toggle Button UI */}
-                        <div className="w-14 h-7 bg-gradient-to-r from-[#00bba7] to-[#008275] rounded-full relative cursor-pointer shadow-inner border border-[#00bba7]/20">
-                          <div className="w-5 h-5 bg-white rounded-full absolute top-1 left-1 shadow-md transition-transform translate-x-7"></div>
+                        إعدادات جهاز البصمة الأساسي
+                      </h2>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <label className="block text-sm font-black text-[#263544] mb-3">عنوان IP للجهاز</label>
+                          <input 
+                            type="text" 
+                            defaultValue="192.168.1.100"
+                            className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] font-mono text-left dir-ltr shadow-inner transition-all tracking-widest"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-black text-[#263544] mb-3">منفذ الاتصال (Port)</label>
+                          <input 
+                            type="text" 
+                            defaultValue="4370"
+                            className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] font-mono text-left dir-ltr shadow-inner transition-all tracking-widest"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-8 pt-8 border-t border-white/80">
+                        <div className="flex items-center justify-between bg-white/60 backdrop-blur-md p-5 rounded-2xl border border-white shadow-sm hover:shadow-md transition-all">
+                          <div>
+                            <h4 className="text-sm font-black text-[#263544]">المزامنة التلقائية</h4>
+                            <p className="text-[11px] font-bold text-slate-500 mt-1">سحب سجلات الحضور تلقائياً من الجهاز كل ساعة.</p>
+                          </div>
+                          {/* Toggle Button UI */}
+                          <div className="w-14 h-7 bg-[#1a2530] rounded-full relative cursor-pointer shadow-inner border border-[#C89355]/40">
+                            <div className="w-5 h-5 bg-[#C89355] rounded-full absolute top-1 left-1 shadow-[0_0_10px_rgba(200,147,85,0.8)] transition-transform translate-x-7"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -208,28 +248,32 @@ export default function SettingsPage() {
 
               {/* --- قسم الإعدادات العامة --- */}
               {activeTab === "general" && (
-                <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-white/80 shadow-[0_15px_30px_rgba(0,0,0,0.04)] p-8 group animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-xl font-extrabold text-slate-800 mb-8 flex items-center gap-3 border-b border-slate-100 pb-4">
-                    <div className="p-2.5 bg-[#E7C873]/20 rounded-xl border border-[#E7C873]/30">
-                      <Building2 className="text-[#b88710] group-hover:animate-pulse" />
-                    </div>
-                    بيانات المنشأة
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-3">اسم المعمل / المنشأة</label>
-                      <input 
-                        type="text" 
-                        defaultValue="مصنع الأفق الحديث" 
-                        className="w-full bg-white/50 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-3 text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] shadow-inner transition-all" 
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-3">العملة الافتراضية</label>
-                      <select className="w-full bg-white/50 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-3 text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] shadow-inner transition-all appearance-none cursor-pointer">
-                        <option>ليرة سورية (ل.س)</option>
-                        <option>دولار أمريكي ($)</option>
-                      </select>
+                <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] p-8 group/card animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
+                  <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/card:border-[#C89355]/50 z-0" />
+                  
+                  <div className="relative z-10">
+                    <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 border-b border-white/80 pb-6">
+                      <div className="p-2.5 bg-[#C89355]/20 rounded-xl border border-[#C89355]/30 shadow-inner">
+                        <Building2 className="text-[#1a2530] group-hover/card:animate-pulse" />
+                      </div>
+                      بيانات المنشأة
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div>
+                        <label className="block text-sm font-black text-[#263544] mb-3">اسم المعمل / المنشأة</label>
+                        <input 
+                          type="text" 
+                          defaultValue="KU&M JEANS" 
+                          className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] shadow-inner transition-all" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-black text-[#263544] mb-3">العملة الافتراضية</label>
+                        <select className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] shadow-inner transition-all appearance-none cursor-pointer">
+                          <option>ليرة سورية (ل.س)</option>
+                          <option>دولار أمريكي ($)</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -237,12 +281,12 @@ export default function SettingsPage() {
 
               {/* أقسام قيد التطوير */}
               {(activeTab === "inventory" || activeTab === "security") && (
-                <div className="bg-white/60 backdrop-blur-md rounded-[2.5rem] border-2 border-dashed border-white/80 p-16 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500 shadow-sm">
-                  <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
-                    <Bell size={40} className="text-slate-400 animate-pulse" />
+                <div className="relative bg-white/40 backdrop-blur-2xl rounded-[2.5rem] border-2 border-dashed border-[#C89355]/40 p-16 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500 shadow-[0_15px_40px_rgba(38,53,68,0.05)] overflow-hidden">
+                  <div className="relative z-10 w-20 h-20 bg-white/80 backdrop-blur-md rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-white">
+                    <Bell size={40} className="text-[#C89355] animate-pulse" />
                   </div>
-                  <h3 className="text-xl text-slate-700 font-black mb-2">هذا القسم قيد التطوير</h3>
-                  <p className="text-slate-500 text-sm font-bold">يمكنك إضافة إعدادات التنبيهات والصلاحيات هنا لاحقاً.</p>
+                  <h3 className="relative z-10 text-2xl text-[#263544] font-black mb-3">هذا القسم قيد التطوير</h3>
+                  <p className="relative z-10 text-[#263544]/60 text-sm font-bold">يمكنك إضافة إعدادات التنبيهات والصلاحيات المخصصة هنا قريباً.</p>
                 </div>
               )}
 

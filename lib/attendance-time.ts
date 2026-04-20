@@ -12,3 +12,4 @@ export const normalizeHHmm = (value?: string) => {
   const hhmm = `${match[1]}:${match[2]}`;
   return HH_MM_REGEX.test(hhmm) ? hhmm : "";
 };
+

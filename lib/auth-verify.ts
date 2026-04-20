@@ -96,3 +96,4 @@ export const verifyAuthSession = async (options?: { force?: boolean }) => {
 
   return verificationPromise;
 };
+

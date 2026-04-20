@@ -13,3 +13,4 @@ const InventoryClientPage = dynamic(() => import("./InventoryClientPage"), {
 export default function InventoryPage() {
   return <InventoryClientPage />;
 }
+

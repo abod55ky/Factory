@@ -9,3 +9,4 @@ export interface Salary {
 }
 
 export type SalaryInput = Omit<Salary, "id">;
+

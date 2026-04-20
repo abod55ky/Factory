@@ -115,3 +115,4 @@ export interface EmployeeProfileResponse {
   advances: EmployeeProfileAdvances | null;
   bonuses: EmployeeProfileBonuses | null;
 }
+

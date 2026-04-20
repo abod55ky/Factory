@@ -53,3 +53,4 @@ describe("calculateAttendanceMetrics", () => {
     expect(metrics.active).toBe(0);
   });
 });
+

@@ -125,3 +125,4 @@ export default function AdjustStockModal({ isOpen, onClose, onSave, isPending = 
     </div>
   );
 }
+

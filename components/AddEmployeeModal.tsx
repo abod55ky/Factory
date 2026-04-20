@@ -295,10 +295,10 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
         {/* ترويسة النافذة (Header) */}
         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
           <div className="flex items-center gap-3">
-            <div className="bg-[#E7C873]/10 p-2 rounded-xl">
-               <UserCog className="text-[#E7C873]" size={26} />
+            <div className="bg-[#C89355]/10 p-2 rounded-xl">
+               <UserCog className="text-[#C89355]" size={26} />
             </div>
-            <h2 className="text-xl font-black text-[#00bba7]">
+            <h2 className="text-xl font-black text-[#101720]">
               {initialData ? "تعديل بيانات الموظف" : "إضافة موظف جديد"}
             </h2>
           </div>
@@ -315,10 +315,10 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
         <form onSubmit={handleSubmit} className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
           
           <div>
-            <label className="block text-sm font-bold text-[#00bba7] mb-2 text-right">اسم الموظف</label>
+            <label className="block text-sm font-bold text-[#101720] mb-2 text-right">اسم الموظف</label>
             <input 
               type="text" required
-              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] outline-none transition-all text-slate-700 font-bold shadow-inner"
+              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#101720]/40 focus:border-[#101720] outline-none transition-all text-slate-700 font-bold shadow-inner"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
             />
@@ -326,26 +326,26 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
 
           {/* حقل رقم الموبايل الجديد بدلاً من الإيميل */}
           <div>
-            <label className="block text-sm font-bold text-[#00bba7] mb-2 text-right">رقم الموبايل</label>
+            <label className="block text-sm font-bold text-[#101720] mb-2 text-right">رقم الموبايل</label>
             <div className="relative group">
               <input 
                 type="tel" required placeholder="09xx xxx xxx"
-                className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] outline-none transition-all text-slate-700 font-bold shadow-inner placeholder:text-slate-300 pl-12"
+                className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#101720]/40 focus:border-[#101720] outline-none transition-all text-slate-700 font-bold shadow-inner placeholder:text-slate-300 pl-12"
                 dir="ltr"
                 value={formData.mobile}
                 onChange={(e) => setFormData({...formData, mobile: e.target.value})}
               />
-              <Phone className="absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#00bba7] transition-colors" size={20} />
+              <Phone className="absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#101720] transition-colors" size={20} />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#00bba7] mb-2 text-right">كود الموظف (ID)</label>
+            <label className="block text-sm font-bold text-[#101720] mb-2 text-right">كود الموظف (ID)</label>
             <input 
               type="text" placeholder="مثال: EMP001" required
               pattern="^EMP[0-9]{3,}$"
               disabled={!!initialData}
-              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] outline-none transition-all text-left font-mono font-bold text-slate-700 disabled:opacity-60 disabled:cursor-not-allowed shadow-inner placeholder:text-slate-300"
+              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#101720]/40 focus:border-[#101720] outline-none transition-all text-left font-mono font-bold text-slate-700 disabled:opacity-60 disabled:cursor-not-allowed shadow-inner placeholder:text-slate-300"
               dir="ltr"
               value={formData.employeeId}
               onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
@@ -353,9 +353,9 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#00bba7] mb-2 text-right">القسم</label>
+            <label className="block text-sm font-bold text-[#101720] mb-2 text-right">القسم</label>
             <select 
-              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] outline-none transition-all text-slate-700 font-bold shadow-inner cursor-pointer"
+              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#101720]/40 focus:border-[#101720] outline-none transition-all text-slate-700 font-bold shadow-inner cursor-pointer"
               value={formData.department}
               onChange={(e) => setFormData({...formData, department: e.target.value})}
             >
@@ -367,10 +367,10 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#00bba7] mb-2 text-right">الصلاحية (الرتبة)</label>
+            <label className="block text-sm font-bold text-[#101720] mb-2 text-right">الصلاحية (الرتبة)</label>
             <select 
               required
-              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] outline-none transition-all text-slate-700 font-bold shadow-inner cursor-pointer disabled:opacity-60"
+              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#101720]/40 focus:border-[#101720] outline-none transition-all text-slate-700 font-bold shadow-inner cursor-pointer disabled:opacity-60"
               value={resolvedRoleId}
               onChange={(e) => setFormData({...formData, roleId: e.target.value})}
               disabled={rolesLoading}
@@ -386,20 +386,20 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#00bba7] mb-2 text-right">أجر الساعة (ل.س)</label>
+            <label className="block text-sm font-bold text-[#101720] mb-2 text-right">أجر الساعة (ل.س)</label>
             <input 
               type="number" required min={0.01} max={99999999.99} step="0.01"
-              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] outline-none transition-all text-slate-700 font-mono font-bold shadow-inner"
+              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#101720]/40 focus:border-[#101720] outline-none transition-all text-slate-700 font-mono font-bold shadow-inner"
               value={formData.hourlyRate}
               onChange={(e) => setFormData({...formData, hourlyRate: e.target.value})}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#00bba7] mb-2 text-right">بداية الدوام</label>
+            <label className="block text-sm font-bold text-[#101720] mb-2 text-right">بداية الدوام</label>
             <input 
               type="time" 
-              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] outline-none transition-all text-slate-700 font-mono font-bold shadow-inner text-center"
+              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#101720]/40 focus:border-[#101720] outline-none transition-all text-slate-700 font-mono font-bold shadow-inner text-center"
               value={formData.scheduledStart}
               onChange={(e) => setFormData({...formData, scheduledStart: e.target.value})}
               dir="ltr"
@@ -407,10 +407,10 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#00bba7] mb-2 text-right">نهاية الدوام</label>
+            <label className="block text-sm font-bold text-[#101720] mb-2 text-right">نهاية الدوام</label>
             <input 
               type="time"
-              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00bba7]/40 focus:border-[#00bba7] outline-none transition-all text-slate-700 font-mono font-bold shadow-inner text-center"
+              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#101720]/40 focus:border-[#101720] outline-none transition-all text-slate-700 font-mono font-bold shadow-inner text-center"
               value={formData.scheduledEnd}
               onChange={(e) => setFormData({...formData, scheduledEnd: e.target.value})}
               dir="ltr"
@@ -428,7 +428,7 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
             <button 
               type="submit"
               disabled={isPending}
-              className="bg-[#00bba7] text-white px-10 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[#00bba7]/90 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-[#00bba7]/20"
+              className="bg-[#101720] text-white px-10 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[#101720]/90 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-[#101720]/20"
             >
               {isPending ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
               {isPending ? "جاري الحفظ..." : "حفظ الموظف"}
