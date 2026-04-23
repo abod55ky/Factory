@@ -618,8 +618,8 @@ export default function ImportPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 {/* أيقونة العنوان بهوية الماركة الكحلية والنحاسية مع الدرزة */}
-                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px]">
-                  <Upload size={22} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
+                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px] group">
+                  <Upload size={22} className="text-[#C89355] group-hover:animate-bounce transition-all duration-300" strokeWidth={2.5} />
                 </div>
                 <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">استيراد البيانات</h1>
               </div>
@@ -632,7 +632,7 @@ export default function ImportPage() {
             <div className="mb-8 text-center p-5 relative overflow-hidden bg-white/80 backdrop-blur-xl rounded-[2rem] border-2 border-white/90 shadow-[0_15px_30px_rgba(38,53,68,0.06)] animate-in slide-in-from-top-4 duration-300 group/status">
               <div className="absolute inset-1.5 rounded-[1.7rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/status:border-[#C89355]/50 z-0" />
               <p className="text-sm font-black text-[#263544] flex items-center justify-center gap-2 relative z-10">
-                <Sparkles size={16} className="animate-pulse text-[#C89355]" /> {status}
+                <Sparkles size={16} className="group-hover/status:animate-pulse transition-all duration-300 text-[#C89355]" /> {status}
               </p>
               {generalFilePath ? <p className="mt-2 text-[11px] font-mono font-bold text-slate-500 relative z-10">المسار المخزن: {generalFilePath}</p> : null}
               
@@ -644,7 +644,7 @@ export default function ImportPage() {
                     className="relative overflow-hidden inline-flex items-center gap-2 rounded-xl bg-[#1a2530] hover:bg-[#263544] px-5 py-2.5 text-xs font-black text-[#C89355] shadow-[0_10px_20px_rgba(38,53,68,0.3)] active:scale-95 transition-all border border-[#C89355]/40 group/btn"
                   >
                     <div className="absolute inset-1 rounded-lg border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/50" />
-                    <Eye size={16} className="relative z-10 group-hover/btn:animate-pulse" /> 
+                    <Eye size={16} className="relative z-10 group-hover/btn:animate-pulse transition-all duration-300" /> 
                     <span className="relative z-10">عرض المعاينة</span>
                   </button>
                 ) : null}
@@ -710,7 +710,7 @@ export default function ImportPage() {
                     }}
                   />
                   <div className="flex flex-col items-center gap-2">
-                    <Upload size={24} className={`transition-colors ${dragEntity === section.entity ? 'text-[#C89355] animate-bounce' : 'text-slate-400 group-hover/drop:text-[#C89355]'}`} />
+                    <Upload size={24} className={`transition-all duration-300 ${dragEntity === section.entity ? 'text-[#C89355] animate-bounce' : 'text-slate-400 group-hover/drop:text-[#C89355] group-hover/drop:animate-bounce'}`} />
                     <p className="text-xs font-black text-[#263544] mt-2">
                       {section.enabled
                         ? dragEntity === section.entity
@@ -908,7 +908,7 @@ export default function ImportPage() {
           <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-8 border-2 border-white/90 shadow-[0_15px_30px_rgba(38,53,68,0.06)] group/inst overflow-hidden">
             <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/inst:border-[#C89355]/50 z-0" />
             <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 relative z-10">
-              <CheckCircle2 className="text-[#C89355] animate-pulse" size={24} /> تعليمات وإرشادات الاستيراد
+              <CheckCircle2 className="text-[#C89355] group-hover/inst:animate-pulse transition-all duration-300" size={24} /> تعليمات وإرشادات الاستيراد
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 relative z-10">
               {instructions.map((text, index) => (

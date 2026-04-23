@@ -103,8 +103,8 @@ export default function EmployeesPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 {/* أيقونة العنوان بهوية الماركة الكحلية والنحاسية مع الدرزة */}
-                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline-dashed outline-1 outline-[#C89355]/50 outline-offset-4">
-                  <Users size={22} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
+                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline-dashed outline-1 outline-[#C89355]/50 outline-offset-4 group">
+                  <Users size={22} className="text-[#C89355] group-hover:animate-bounce transition-all duration-300" strokeWidth={2.5} />
                 </div>
                 <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">
                   إدارة الموظفين
@@ -121,7 +121,7 @@ export default function EmployeesPage() {
               <div className="relative group">
                 <div className={`relative overflow-hidden flex items-center bg-white/60 backdrop-blur-xl border border-white/80 rounded-2xl px-3 py-2.5 shadow-sm transition-all duration-300 focus-within:border-[#C89355] focus-within:ring-2 focus-within:ring-[#C89355]/20 hover:shadow-md ${isSearchExpanded ? 'w-64' : 'w-10 md:w-48'}`}>
                   <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-focus-within:border-[#C89355]/50" />
-                  <Search size={18} className="text-[#C89355] ml-2 shrink-0 cursor-pointer group-hover:animate-pulse relative z-10" onClick={() => setIsSearchExpanded(true)} />
+                  <Search size={18} className="text-[#C89355] ml-2 shrink-0 cursor-pointer group-hover:animate-pulse transition-all duration-300 relative z-10" onClick={() => setIsSearchExpanded(true)} />
                   <input 
                     type="text" 
                     placeholder="ابحث بالاسم أو الرمز..." 
@@ -137,7 +137,7 @@ export default function EmployeesPage() {
               {/* فلتر الأقسام - درزة من الداخل */}
               <div className="relative overflow-hidden flex items-center bg-white/60 backdrop-blur-xl border border-white/80 rounded-2xl px-3 py-2.5 shadow-sm focus-within:border-[#C89355] focus-within:ring-2 focus-within:ring-[#C89355]/20 transition-all duration-300 hover:shadow-md group">
                 <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
-                <Filter size={16} className="text-[#C89355] ml-2 group-hover:animate-pulse relative z-10" />
+                <Filter size={16} className="text-[#C89355] ml-2 group-hover:animate-pulse transition-all duration-300 relative z-10" />
                 <select 
                   value={selectedDept}
                   onChange={(e) => setSelectedDept(e.target.value)}
@@ -156,7 +156,7 @@ export default function EmployeesPage() {
                   className="relative overflow-hidden bg-[#1a2530] hover:bg-[#263544] text-[#C89355] px-5 py-2.5 rounded-2xl flex items-center gap-2 shadow-[0_10px_20px_rgba(38,53,68,0.3)] transition-all active:scale-95 text-sm font-black border border-[#C89355]/40 group"
                 >
                   <div className="absolute inset-1.5 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
-                  <Plus size={18} className="group-hover:animate-spin relative z-10" /> 
+                  <Plus size={18} className="group-hover:animate-spin transition-all duration-300 relative z-10" /> 
                   <span className="relative z-10 tracking-wide">إضافة موظف</span>
                 </button>
               </div>

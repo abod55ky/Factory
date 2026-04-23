@@ -410,8 +410,8 @@ export default function SalariesPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 {/* أيقونة العنوان بهوية الماركة مع الدرزة */}
-                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline-dashed outline-1 outline-[#C89355]/50 outline-offset-4">
-                  <Sparkles size={22} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
+                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline-dashed outline-1 outline-[#C89355]/50 outline-offset-4 group">
+                  <Sparkles size={22} className="text-[#C89355] group-hover:animate-bounce transition-all duration-300" strokeWidth={2.5} />
                 </div>
                 <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">
                   المركز المالي الذكي
@@ -425,7 +425,7 @@ export default function SalariesPage() {
               <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(38,53,68,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-35">
                 <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
                 <div className="flex items-center gap-2 mb-1.5 relative z-10">
-                  <HandCoins size={14} className="text-[#C89355] group-hover:animate-pulse" />
+                  <HandCoins size={14} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" />
                   <p className="text-[11px] font-black text-slate-500">إجمالي السلف المتبقية</p>
                 </div>
                 <p className="font-black text-xl text-[#263544] relative z-10">{tabStats.totalAdvances.toLocaleString()}</p>
@@ -434,7 +434,7 @@ export default function SalariesPage() {
               <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(38,53,68,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-35">
                 <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
                 <div className="flex items-center gap-2 mb-1.5 relative z-10">
-                  <Gift size={14} className="text-[#C89355] group-hover:animate-pulse" />
+                  <Gift size={14} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" />
                   <p className="text-[11px] font-black text-slate-500">إجمالي المكافآت</p>
                 </div>
                 <p className="font-black text-xl text-[#263544] relative z-10">{tabStats.totalBonus.toLocaleString()}</p>
@@ -443,7 +443,7 @@ export default function SalariesPage() {
               <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(38,53,68,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-35">
                 <div className="absolute inset-1 rounded-xl border border-dashed border-rose-300 pointer-events-none transition-colors group-hover:border-rose-400" />
                 <div className="flex items-center gap-2 mb-1.5 relative z-10">
-                  <Wallet size={14} className="text-rose-500 group-hover:animate-pulse" />
+                  <Wallet size={14} className="text-rose-500 group-hover:animate-pulse transition-all duration-300" />
                   <p className="text-[11px] font-black text-slate-500">إجمالي الخصومات</p>
                 </div>
                 <p className="font-black text-xl text-rose-600 relative z-10">{tabStats.totalDeductions.toLocaleString()}</p>
@@ -609,7 +609,7 @@ export default function SalariesPage() {
               <div className="relative overflow-hidden flex justify-between items-center rounded-4xl border-2 border-white/90 bg-white/60 backdrop-blur-2xl shadow-[0_15px_40px_rgba(38,53,68,0.08)] p-6 group">
                 <div className="absolute inset-1.5 rounded-[1.7rem] border border-dashed border-[#C89355]/30 pointer-events-none z-0 transition-colors group-hover:border-[#C89355]/50" />
                 <h2 className="font-black text-[#263544] flex items-center gap-3 text-lg relative z-10">
-                  <Gift size={20} className="text-[#C89355] animate-pulse" /> إدارة المكافآت والخصومات
+                  <Gift size={20} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" /> إدارة المكافآت والخصومات
                 </h2>
                 <div className="relative z-10">
                   <input
@@ -680,7 +680,7 @@ export default function SalariesPage() {
               <div className="relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-4 rounded-4xl border-2 border-white/90 bg-white/60 backdrop-blur-2xl shadow-[0_15px_40px_rgba(38,53,68,0.08)] p-6 group">
                 <div className="absolute inset-1.5 rounded-[1.7rem] border border-dashed border-[#C89355]/30 pointer-events-none z-0 transition-colors group-hover:border-[#C89355]/50" />
                 <h2 className="font-black text-[#263544] flex items-center gap-3 text-lg relative z-10">
-                  <Calculator size={20} className="text-[#C89355] animate-pulse" /> المسير النهائي للفترة
+                  <Calculator size={20} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" /> المسير النهائي للفترة
                 </h2>
                 <div className="flex flex-wrap items-center justify-center gap-3 relative z-10">
                   <input
@@ -704,7 +704,7 @@ export default function SalariesPage() {
                     className="relative overflow-hidden inline-flex items-center gap-2 rounded-xl bg-[#1a2530] hover:bg-[#263544] px-5 py-3 text-sm font-black text-[#C89355] shadow-[0_10px_20px_rgba(38,53,68,0.4)] transition-all active:scale-95 border border-[#C89355]/40 disabled:opacity-60 disabled:cursor-not-allowed group/btn"
                   >
                     <div className="absolute inset-1 rounded-lg border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/btn:border-[#C89355]/50" />
-                    {calculatePayroll.isPending ? <Loader2 size={18} className="animate-spin relative z-10" /> : <Calculator size={18} className="group-hover/btn:animate-bounce relative z-10" />}
+                    {calculatePayroll.isPending ? <Loader2 size={18} className="animate-spin relative z-10" /> : <Calculator size={18} className="group-hover/btn:animate-bounce transition-all duration-300 relative z-10" />}
                     <span className="relative z-10">تشغيل المسير</span>
                   </button>
                 </div>
@@ -713,7 +713,7 @@ export default function SalariesPage() {
               {lastCalculatedRunId ? (
                 <div className="text-sm text-[#263544] bg-white/80 backdrop-blur-md border border-[#C89355]/30 rounded-2xl p-4 font-black flex items-center gap-3 shadow-sm relative overflow-hidden group">
                   <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/20 pointer-events-none" />
-                  <Sparkles size={18} className="text-[#C89355] animate-pulse relative z-10" /> 
+                  <Sparkles size={18} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300 relative z-10" /> 
                   <span className="relative z-10">آخر تشغيل ناجح للمسير: <span className="font-mono bg-[#1a2530] text-[#C89355] px-2 py-0.5 rounded shadow-sm mx-1">{lastCalculatedRunId}</span></span>
                 </div>
               ) : null}
@@ -776,7 +776,7 @@ export default function SalariesPage() {
           title="إضافة سجل جديد"
         >
           <div className="absolute inset-1.5 rounded-full border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
-          <Plus size={28} className="group-hover:animate-spin relative z-10" />
+          <Plus size={28} className="group-hover:animate-spin transition-all duration-300 relative z-10" />
         </button>
       )}
 

@@ -376,8 +376,8 @@ export default function InventoryPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 {/* أيقونة العنوان بهوية الماركة الكحلية والنحاسية مع الدرزة */}
-                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px]">
-                  <Sparkles size={22} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
+                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px] group">
+                  <Sparkles size={22} className="text-[#C89355] group-hover:animate-bounce transition-all duration-300" strokeWidth={2.5} />
                 </div>
                 <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">
                   مركز إدارة المخزون
@@ -433,7 +433,7 @@ export default function InventoryPage() {
               <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
               <div className="flex items-center gap-3 mb-4 relative z-10">
                 <div className="p-3 bg-[#1a2530] rounded-xl border border-[#C89355]/30 shadow-sm">
-                  <Boxes className="text-[#C89355] group-hover:animate-pulse" size={22}/>
+                  <Boxes className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" size={22}/>
                 </div>
                 <p className="font-black text-[#263544] text-sm">إجمالي الأصناف</p>
               </div>
@@ -444,7 +444,7 @@ export default function InventoryPage() {
               <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
               <div className="flex items-center gap-3 mb-4 relative z-10">
                 <div className="p-3 bg-white/80 backdrop-blur-md rounded-xl border border-white shadow-sm">
-                  <Package2 className="text-[#263544] group-hover:animate-pulse" size={22}/>
+                  <Package2 className="text-[#263544] group-hover:animate-pulse transition-all duration-300" size={22}/>
                 </div>
                 <p className="font-black text-[#263544] text-sm">إجمالي الكمية المتاحة</p>
               </div>
@@ -455,7 +455,7 @@ export default function InventoryPage() {
               <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-rose-300" />
               <div className="flex items-center gap-3 mb-4 relative z-10">
                 <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20 shadow-sm">
-                  <AlertTriangle className="text-rose-600 group-hover:animate-pulse" size={22}/>
+                  <AlertTriangle className="text-rose-600 group-hover:animate-pulse transition-all duration-300" size={22}/>
                 </div>
                 <p className="font-black text-rose-600 text-sm">تنبيهات المخزون المنخفض</p>
               </div>
@@ -468,7 +468,7 @@ export default function InventoryPage() {
             <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover/search:border-[#C89355]/50 z-0" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
               <div className="relative group focus-within:ring-2 focus-within:ring-[#C89355]/50 focus-within:border-[#C89355] rounded-2xl transition-all">
-                <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#C89355] group-hover:animate-pulse z-10" size={18} />
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#C89355] group-hover:animate-pulse transition-all duration-300 z-10" size={18} />
                 <input
                   type="text"
                   value={searchInput}
@@ -577,7 +577,7 @@ export default function InventoryPage() {
             <div className="relative z-10">
               <div className="p-6 border-b border-white/80 flex flex-col md:flex-row items-center justify-between gap-4 bg-white/40">
                 <h2 className="text-lg font-black text-[#263544] flex items-center gap-3">
-                  <History size={20} className="text-[#C89355] animate-pulse" />
+                  <History size={20} className="text-[#C89355] group-hover/log:animate-pulse transition-all duration-300" />
                   آخر حركات المخزون
                 </h2>
                 <span className="text-xs font-black text-[#C89355] bg-[#1a2530] px-4 py-1.5 rounded-xl shadow-sm border border-[#C89355]/30">{movementHistory.length} حركة مسجلة</span>
@@ -634,7 +634,7 @@ export default function InventoryPage() {
             title="إضافة صنف جديد"
           >
             <div className="absolute inset-1.5 rounded-full border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
-            <Plus size={28} className="group-hover:animate-spin relative z-10" />
+            <Plus size={28} className="group-hover:animate-spin transition-all duration-300 relative z-10" />
           </button>
 
           {isItemModalOpen ? (
