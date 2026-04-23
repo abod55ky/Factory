@@ -2,10 +2,10 @@ import axios from 'axios';
 import { clearAuthAccessToken, clearAuthSession, getAuthAccessToken } from '@/lib/auth-session';
 import { resetAuthVerificationCache } from '@/lib/auth-verify';
 import { useAuthStore } from '@/stores/auth-store';
+import { resolveApiUrl } from '@/lib/api-url';
 
-const DEFAULT_API_URL = 'https://werehouse-production-f4f4.up.railway.app/api';
 const isBrowser = typeof window !== 'undefined';
-const serverApiUrl = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, '');
+const serverApiUrl = resolveApiUrl(process.env.NEXT_PUBLIC_API_URL);
 const BASE_URL = isBrowser ? '/api' : serverApiUrl;
 const LOGIN_REDIRECT_COOLDOWN_MS = 1500;
 let lastLoginRedirectAt = 0;
@@ -22,7 +22,7 @@ const getRequestPathname = (url?: string) => {
       ? window.location.origin
       : serverApiUrl.startsWith('http')
         ? serverApiUrl
-        : DEFAULT_API_URL;
+        : resolveApiUrl();
 
     return new URL(url, base).pathname;
   } catch {

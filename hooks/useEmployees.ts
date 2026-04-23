@@ -131,8 +131,6 @@ import axios from "axios";
 import type { Employee } from "@/types/employee";
 import { QUERY_GC_TIME, QUERY_STALE_TIME } from "@/lib/query-cache";
 
-export const MAX_HOURLY_RATE = 99_999_999.99;
-
 export type UseEmployeesOptions = {
   status?: Employee["status"];
   includeTerminated?: boolean;
@@ -184,12 +182,8 @@ export const toHourlyRateNumber = (value: Employee["hourlyRate"]) => {
 };
 
 export const assertHourlyRate = (hourlyRate: number) => {
-  if (!Number.isFinite(hourlyRate) || hourlyRate <= 0) {
-    throw new Error("أجر الساعة يجب أن يكون رقمًا موجبًا أكبر من الصفر");
-  }
-
-  if (hourlyRate > MAX_HOURLY_RATE) {
-    throw new Error(`أجر الساعة كبير جدًا (الحد الأقصى ${MAX_HOURLY_RATE})`);
+  if (!Number.isFinite(hourlyRate)) {
+    throw new Error("أجر الساعة يجب أن يكون رقمًا صالحًا");
   }
 };
 
@@ -241,18 +235,30 @@ export const useEmployees = (options?: UseEmployeesOptions) => {
       const firstPage = options?.page || 1;
       const response = await requestEmployees(firstPage);
 
-      let employeesData: Employee[] = Array.isArray(response.data?.employees)
-        ? response.data.employees
-        : [];
+      const resolveEmployees = (payload: unknown): Employee[] => {
+        if (Array.isArray(payload)) {
+          return payload as Employee[];
+        }
+
+        if (
+          payload &&
+          typeof payload === "object" &&
+          Array.isArray((payload as { employees?: unknown }).employees)
+        ) {
+          return (payload as { employees: Employee[] }).employees;
+        }
+
+        return [];
+      };
+
+      let employeesData: Employee[] = resolveEmployees(response.data);
 
       const pagination = response.data?.pagination;
 
       if (!options?.page && pagination?.pages && pagination.pages > firstPage) {
         for (let page = firstPage + 1; page <= pagination.pages; page += 1) {
           const pageResponse = await requestEmployees(page);
-          const pageEmployees: Employee[] = Array.isArray(pageResponse.data?.employees)
-            ? pageResponse.data.employees
-            : [];
+          const pageEmployees: Employee[] = resolveEmployees(pageResponse.data);
           employeesData = employeesData.concat(pageEmployees);
         }
       }

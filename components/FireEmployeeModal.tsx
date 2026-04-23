@@ -1,0 +1,214 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { X, UserMinus, ChevronLeft, ChevronRight, AlertTriangle, Calendar, FileText, Calculator, Coins, AlertOctagon } from "lucide-react";
+import type { Employee } from "@/types/employee";
+
+type EmployeeWithCompensation = Employee & {
+  monthlySalary?: number | string;
+};
+
+export type FireEmployeePayload = {
+  employeeId: string;
+  fireDate: string;
+  reason: string;
+  notes: string;
+  dueSalary: number;
+  bonus: number;
+  totalDues: number;
+};
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  employee: Employee | null;
+  onConfirm: (data: FireEmployeePayload) => void;
+  isPending: boolean;
+}
+
+const getToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm, isPending }: Props) {
+  const [mounted, setMounted] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
+  
+  // بيانات الإقالة
+  const [fireDate, setFireDate] = useState(getToday());
+  const [reason, setReason] = useState("");
+  const [notes, setNotes] = useState("");
+  const [bonus, setBonus] = useState<string>("");
+
+  useEffect(() => {
+    setMounted(true);
+    if (isOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "unset";
+    return () => { document.body.style.overflow = "unset"; };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted || !employee) return null;
+
+  const employeeWithCompensation = employee as EmployeeWithCompensation;
+
+  const toNumber = (value: unknown) => {
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    if (typeof value === "string") {
+      const normalized = value.replace(/,/g, "").trim();
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    if (value && typeof value === "object" && "$numberDecimal" in value) {
+      const parsed = Number((value as { $numberDecimal?: string }).$numberDecimal || 0);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    return 0;
+  };
+
+  // --- حسابات وهمية مبدئية للمستحقات (تُستبدل لاحقاً ببيانات الباك إند) ---
+  const monthlySalary =
+    toNumber(employeeWithCompensation.monthlySalary) ||
+    Math.round(toNumber(employee.hourlyRate) * 8 * 30);
+  const daysWorkedThisMonth = new Date(fireDate).getDate(); // بافتراض أنه داوم من أول الشهر حتى تاريخ الإقالة
+  const dueSalary = Math.round((monthlySalary / 30) * daysWorkedThisMonth);
+  const totalDues = dueSalary + (Number(bonus) || 0);
+
+  const handleNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reason.trim()) {
+      alert("الرجاء كتابة سبب الإقالة");
+      return;
+    }
+    setStep(2);
+  };
+
+  const handleConfirm = () => {
+    onConfirm({
+      employeeId: employee.employeeId,
+      fireDate,
+      reason,
+      notes,
+      dueSalary,
+      bonus: Number(bonus) || 0,
+      totalDues
+    });
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-999999 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md transition-all duration-300" dir="rtl">
+      <div className="bg-[#101720] rounded-[2.5rem] shadow-[0_30px_90px_-15px_rgba(225,29,72,0.15)] w-full max-w-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 border border-rose-500/20 outline-dashed outline-1 outline-rose-500/30 -outline-offset-8">
+        
+        {/* الترويسة */}
+        <div className="p-6 sm:p-8 border-b border-white/5 flex justify-between items-center bg-[#1a2530]/80 shrink-0 relative z-10">
+          <div className="flex items-center gap-4">
+            <div className="bg-rose-500/10 p-3 rounded-2xl border border-rose-500/20 shadow-[0_0_20px_rgba(225,29,72,0.2)]">
+               <UserMinus className="text-rose-500" size={28} />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-white tracking-wide">إقالة موظف وتصفية حساب</h2>
+              <p className="text-sm font-bold text-rose-400 mt-1">{employee.name} - {employee.employeeId}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-white bg-[#263544] p-2.5 rounded-2xl transition-all active:scale-90">
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* جسم المودال */}
+        <div className="p-8 sm:p-10 relative">
+          
+          {/* الخطوة الأولى: الأسباب والتاريخ */}
+          <form onSubmit={handleNext} className={`grid grid-cols-1 gap-6 transition-all duration-500 ${step === 1 ? 'block animate-in slide-in-from-right-10' : 'hidden'}`}>
+            <div className="bg-rose-500/5 border border-rose-500/10 p-4 rounded-2xl flex items-start gap-3 mb-2">
+              <AlertOctagon size={20} className="text-rose-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-rose-200 leading-relaxed font-bold">
+                أنت على وشك إنهاء خدمة الموظف المختار. يرجى إدخال تفاصيل الإقالة بدقة ليتم حفظها في الأرشيف وحساب المستحقات النهائية.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-[#E7C873] mb-2 uppercase">تاريخ ترك العمل</label>
+              <div className="relative group">
+                <input type="date" required className="w-full p-4 bg-[#1a2530] border border-[#263544] rounded-2xl focus:ring-2 focus:ring-[#E7C873]/30 focus:border-[#E7C873] outline-none text-white font-mono font-bold pr-12 scheme:dark" value={fireDate} onChange={(e) => setFireDate(e.target.value)} />
+                <Calendar className="absolute right-4 top-4 text-slate-500" size={22} />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-[#E7C873] mb-2 uppercase">سبب الإقالة / الاستقالة</label>
+              <div className="relative group">
+                <input type="text" required placeholder="مثال: انتهاء العقد، غياب متكرر، استقالة طوعية..." className="w-full p-4 bg-[#1a2530] border border-[#263544] rounded-2xl focus:ring-2 focus:ring-[#E7C873]/30 focus:border-[#E7C873] outline-none text-white font-bold pr-12 placeholder:text-slate-600" value={reason} onChange={(e) => setReason(e.target.value)} />
+                <AlertTriangle className="absolute right-4 top-4 text-slate-500" size={22} />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-[#E7C873] mb-2 uppercase">ملاحظات إضافية (اختياري)</label>
+              <div className="relative group">
+                <textarea rows={3} placeholder="أي تفاصيل أخرى حول أداء الموظف أو أسباب تركه..." className="w-full p-4 bg-[#1a2530] border border-[#263544] rounded-2xl focus:ring-2 focus:ring-[#E7C873]/30 focus:border-[#E7C873] outline-none text-white font-bold pr-12 placeholder:text-slate-600 resize-none" value={notes} onChange={(e) => setNotes(e.target.value)} />
+                <FileText className="absolute right-4 top-4 text-slate-500" size={22} />
+              </div>
+            </div>
+          </form>
+
+          {/* الخطوة الثانية: المستحقات */}
+          <div className={`grid grid-cols-1 gap-6 transition-all duration-500 ${step === 2 ? 'block animate-in slide-in-from-left-10' : 'hidden'}`}>
+            <div className="flex items-center gap-3 mb-2 border-b border-white/5 pb-4">
+              <Calculator className="text-[#E7C873]" size={24} />
+              <h3 className="text-lg font-black text-white">تصفية المستحقات المالية</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-[#1a2530] p-4 rounded-2xl border border-[#263544]">
+                <p className="text-xs font-bold text-[#E7C873] mb-1">أيام الدوام المحتسبة</p>
+                <p className="text-xl font-black text-white">{daysWorkedThisMonth} <span className="text-xs text-slate-500">يوم</span></p>
+              </div>
+              <div className="bg-[#1a2530] p-4 rounded-2xl border border-[#263544]">
+                <p className="text-xs font-bold text-[#E7C873] mb-1">الراتب المستحق</p>
+                <p className="text-xl font-mono font-black text-[#E7C873]">{dueSalary.toLocaleString()} <span className="text-xs text-slate-500">ل.س</span></p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-[#E7C873] mb-2 uppercase">مكافأة نهاية الخدمة (إن وُجدت)</label>
+              <div className="relative group">
+                <input type="number" placeholder="0" className="w-full p-4 bg-[#1a2530] border border-[#263544] rounded-2xl focus:ring-2 focus:ring-[#E7C873]/30 focus:border-[#E7C873] outline-none text-white font-mono text-lg font-bold pr-12 placeholder:text-slate-600" value={bonus} onChange={(e) => setBonus(e.target.value)} />
+                <Coins className="absolute right-4 top-4 text-slate-500" size={22} />
+              </div>
+            </div>
+
+            <div className="bg-rose-500/10 p-6 rounded-2xl border border-rose-500/30 text-center mt-2 shadow-inner">
+              <p className="text-xs font-black text-rose-300 mb-1 uppercase tracking-widest">إجمالي المستحقات النهائية للصرف</p>
+              <p className="text-4xl font-mono font-black text-rose-500">{totalDues.toLocaleString()} <span className="text-sm font-bold text-rose-500/50">ل.س</span></p>
+            </div>
+          </div>
+        </div>
+
+        {/* أزرار الإجراءات */}
+        <div className="p-6 sm:p-8 bg-[#1a2530]/80 border-t border-white/5 flex justify-between shrink-0 relative z-10">
+          <button type="button" onClick={step === 1 ? onClose : () => setStep(1)} className="px-6 py-3.5 rounded-xl font-bold text-slate-400 bg-[#263544] hover:text-white transition-all active:scale-95 flex items-center gap-2">
+            {step === 2 && <ChevronRight size={18}/>} {step === 1 ? "إلغاء" : "رجوع للأسباب"}
+          </button>
+
+          {step === 1 ? (
+            <button type="submit" onClick={handleNext} className="bg-[#E7C873] text-[#101720] px-8 py-3.5 rounded-xl font-black flex items-center gap-2 hover:bg-[#d0b468] active:scale-95 transition-all">
+               المستحقات <ChevronLeft size={18}/>
+            </button>
+          ) : (
+            <button disabled={isPending} onClick={handleConfirm} className="bg-rose-600 text-white px-10 py-3.5 rounded-xl font-black flex items-center gap-3 hover:bg-rose-700 active:scale-95 transition-all shadow-[0_0_20px_rgba(225,29,72,0.4)] disabled:opacity-50">
+              <UserMinus size={20}/> تأكيد الإقالة نهائياً
+            </button>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
