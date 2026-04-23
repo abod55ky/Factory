@@ -107,8 +107,8 @@ export default function Sidebar() {
   };
 
   return (
-    // أضفنا z-[9999] هنا للتأكد من أن مساحة السايد بار بالكامل فوق محتوى الصفحة
-    <div className="h-screen sticky top-0 flex font-sans z-[9999]" dir="rtl">
+    // أضفنا z-9999 هنا للتأكد من أن مساحة السايد بار بالكامل فوق محتوى الصفحة
+    <div className="h-screen sticky top-0 flex font-sans z-9999" dir="rtl">
       {/* الحاوية الوهمية */}
       <div 
         className={`shrink-0 transition-all duration-500 ease-out h-screen ${isCollapsed ? 'w-24' : 'w-72'}`} 
@@ -117,14 +117,14 @@ export default function Sidebar() {
 
       <aside
         // تم تغيير الخلفية لتكون داكنة وزجاجية (Dark Frosted Glass) تليق بالهوية الجديدة
-        className={`fixed top-0 right-0 h-full bg-[#101720]/80 backdrop-blur-3xl border-y border-l border-white/5 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] rounded-l-[2.5rem] flex flex-col transition-all duration-500 ease-out z-[9999]
+        className={`fixed top-0 right-0 h-full bg-[#101720]/80 backdrop-blur-3xl border-y border-l border-white/5 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] rounded-l-[2.5rem] flex flex-col transition-all duration-500 ease-out z-9999
           ${isCollapsed ? 'w-24' : 'w-72'}
         `}
       >
         {/* زر الطي العائم - بألوان الجلد النحاسي والكحلي */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -left-4 top-10 bg-[#1a2530] border border-[#C89355]/30 shadow-[0_0_15px_rgba(200,147,85,0.15)] p-2.5 rounded-full text-slate-400 hover:text-[#C89355] hover:scale-110 transition-all duration-300 z-[99999] group"
+          className="absolute -left-4 top-10 bg-[#1a2530] border border-[#C89355]/30 shadow-[0_0_15px_rgba(200,147,85,0.15)] p-2.5 rounded-full text-slate-400 hover:text-[#C89355] hover:scale-110 transition-all duration-300 z-9999 group"
           aria-label="Toggle Sidebar"
         >
           <ChevronsRight size={18} className={`transition-transform duration-500 ease-out ${isCollapsed ? 'rotate-180 text-[#C89355]' : ''}`} />
@@ -135,7 +135,7 @@ export default function Sidebar() {
           <div className="relative group shrink-0">
             <div className="absolute inset-0 bg-[#C89355] blur-md opacity-20 group-hover:opacity-40 transition-opacity duration-300 rounded-xl" />
             {/* الشعار بتأثير رقعة الجينز المحاكة */}
-            <div className="relative bg-[#1a2530] p-2.5 rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-[#C89355]/40 outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px]">
+            <div className="relative bg-[#1a2530] p-2.5 rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-[#C89355]/40  outline-dashed outline-1 outline-[#C89355]/50 -outline-offset-4">
               <Shield size={24} className="text-[#C89355]" strokeWidth={2} />
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function Sidebar() {
                   <button
                     onClick={() => toggleSubMenu(item.name)}
                     className={`w-full flex items-center justify-between py-2.5 px-3 rounded-xl transition-all duration-300 group relative overflow-hidden
-                      ${isMainActive || isOpen ? 'bg-gradient-to-l from-[#C89355]/10 to-transparent' : 'hover:bg-[#263544]/50'}
+                      ${isMainActive || isOpen ? 'bg-linear-to-l from-[#C89355]/10 to-transparent' : 'hover:bg-[#263544]/50'}
                     `}
                   >
                     <div className="flex items-center gap-3 relative z-10">
@@ -199,7 +199,7 @@ export default function Sidebar() {
                     href={item.href || '#'}
                     onClick={() => setOpenMenu(null)}
                     className={`flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-300 group relative overflow-hidden
-                      ${isMainActive ? 'bg-gradient-to-l from-[#C89355]/10 to-transparent' : 'hover:bg-[#263544]/50'}
+                      ${isMainActive ? 'bg-linear-to-l from-[#C89355]/10 to-transparent' : 'hover:bg-[#263544]/50'}
                     `}
                   >
                     <div className={`p-2 rounded-xl transition-all duration-300 flex items-center justify-center relative
@@ -224,7 +224,7 @@ export default function Sidebar() {
                 {hasSubItems && !isCollapsed && (
                   <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-60 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col gap-1 pr-12 pl-2 relative">
-                      <div className="absolute right-6 top-2 bottom-2 w-[2px] bg-gradient-to-b from-transparent via-[#263544] to-transparent rounded-full" />
+                      <div className="absolute right-6 top-2 bottom-2 w-0.5 bg-linear-to-b from-transparent via-[#263544] to-transparent rounded-full" />
                       
                       {item.subItems?.map((sub) => {
                         const isSubActive = isHrefActive(sub.href);
@@ -237,7 +237,7 @@ export default function Sidebar() {
                               ${isSubActive ? 'font-bold text-[#C89355] bg-[#1a2530] shadow-sm ring-1 ring-[#C89355]/30' : 'font-medium text-slate-500 hover:text-white hover:bg-[#263544]/60 hover:-translate-x-1'}
                             `}
                           >
-                            <div className="absolute -right-[26px] flex items-center justify-center">
+                            <div className="absolute -right-6.5 flex items-center justify-center">
                               <div className={`absolute w-4 h-4 bg-[#C89355]/20 rounded-full blur-sm transition-all duration-300 ${isSubActive ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`} />
                               <div className={`w-2.5 h-2.5 rounded-full border-2 transition-all duration-300 ${isSubActive ? 'bg-[#C89355] border-[#1a2530] scale-100' : 'bg-[#263544] border-transparent scale-50 group-hover:scale-100 group-hover:bg-slate-400'}`} />
                             </div>
@@ -255,7 +255,7 @@ export default function Sidebar() {
 
         {/* بطاقة المستخدم السفلية بتصميم الجلد (Leather Tag Style) */}
         <div className="p-4 mt-auto shrink-0 relative z-20">
-          <div className={`relative overflow-hidden bg-[#1a2530] rounded-2xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] border border-[#C89355]/20 outline outline-dashed outline-1 outline-[#C89355]/30 outline-offset-[-6px] transition-all duration-500 ${isCollapsed ? 'p-2' : 'p-4'} group`}>
+          <div className={`relative overflow-hidden bg-[#1a2530] rounded-2xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] border border-[#C89355]/20 outline-dashed outline-1 outline-[#C89355]/30 outline-offset-[-6px] transition-all duration-500 ${isCollapsed ? 'p-2' : 'p-4'} group`}>
             
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} relative z-10`}>
               <div className={`flex items-center gap-3 overflow-hidden transition-all duration-500 ${isCollapsed ? 'w-0 opacity-0 hidden' : 'w-[70%] opacity-100'}`}>

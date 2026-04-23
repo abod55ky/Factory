@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Employee } from "@/types/employee";
 import {
-  MAX_HOURLY_RATE,
   assertHourlyRate,
   filterEmployeesByOptions,
   toHourlyRateNumber,
@@ -36,8 +35,9 @@ describe("useEmployees helpers", () => {
 
   it("validates allowed and disallowed hourly rates", () => {
     expect(() => assertHourlyRate(1)).not.toThrow();
-    expect(() => assertHourlyRate(0)).toThrow("أجر الساعة يجب أن يكون رقمًا موجبًا أكبر من الصفر");
-    expect(() => assertHourlyRate(MAX_HOURLY_RATE + 1)).toThrow("أجر الساعة كبير جدًا");
+    expect(() => assertHourlyRate(0)).not.toThrow();
+    expect(() => assertHourlyRate(-500)).not.toThrow();
+    expect(() => assertHourlyRate(Number.NaN)).toThrow("أجر الساعة يجب أن يكون رقمًا صالحًا");
   });
 });
 

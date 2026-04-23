@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import { resolveApiUrl } from "./lib/api-url";
 
 const isProduction = process.env.NODE_ENV === "production";
-const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "").trim();
+const upstreamApiBase = resolveApiUrl(process.env.NEXT_PUBLIC_API_URL);
+const apiUrl = upstreamApiBase;
 const apiOrigin = (() => {
   if (!apiUrl) return "";
   try {
@@ -81,11 +83,6 @@ const securityHeaders = [
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
-
-const upstreamApiBase = (
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://werehouse-production-f4f4.up.railway.app/api"
-).replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,

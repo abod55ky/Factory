@@ -90,10 +90,15 @@ export default function LoginPage() {
 
      } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: string }>(error) && error.response) {
+        const status = error.response.status;
         const serverMessage = error.response.data?.message;
-        setErrorMessage(typeof serverMessage === "string" && serverMessage.trim()
-          ? serverMessage
-          : "بيانات الدخول غير صحيحة");
+        if (status >= 500) {
+          setErrorMessage("خادم المصادقة يواجه مشكلة حالياً (500). تأكد من تشغيل الـ Backend وصحة إعداد NEXT_PUBLIC_API_URL.");
+        } else {
+          setErrorMessage(typeof serverMessage === "string" && serverMessage.trim()
+            ? serverMessage
+            : "بيانات الدخول غير صحيحة");
+        }
       } else if (axios.isAxiosError(error) && error.request) {
           setErrorMessage("تعذر الوصول لخادم المصادقة. تحقق من تشغيل الخادم الخلفي وإعدادات CORS/Proxy.");
       } else if (error instanceof Error) {
