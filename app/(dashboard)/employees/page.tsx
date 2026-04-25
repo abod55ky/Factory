@@ -662,6 +662,8 @@ export default function EmployeesPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isFireModalOpen, setIsFireModalOpen] = useState(false);
+  const [employeeToFire, setEmployeeToFire] = useState<Employee | null>(null);
   
   // حالات مودال الإقالة
   const [isFireModalOpen, setIsFireModalOpen] = useState(false);
@@ -682,9 +684,9 @@ export default function EmployeesPage() {
   }, [visibleEmployees]);
 
   const filteredEmployees = useMemo(() => {
-    if (!visibleEmployees.length) return [];
     return visibleEmployees.filter(emp => {
-      const matchesSearch = emp.name.includes(searchTerm) || emp.employeeId.includes(searchTerm);
+      const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           emp.employeeId.includes(searchTerm);
       const matchesDept = selectedDept === "الكل" || emp.department === selectedDept;
       return matchesSearch && matchesDept;
     });
@@ -717,7 +719,26 @@ export default function EmployeesPage() {
       }
       setIsModalOpen(false);
       setSelectedEmployee(null);
-    } catch {}
+    } catch (err) {
+      console.error("Error saving employee:", err);
+    }
+  };
+
+  const handleConfirmFire = async (fireData: FireEmployeePayload) => {
+    try {
+      await updateEmployee.mutateAsync({
+        id: fireData.employeeId,
+        data: {
+          status: "terminated",
+          // نرسل التاريخ كأيزو أو نص حسب واجهة البرمجية لديك
+          terminationDate: fireData.fireDate as any, 
+        },
+      });
+      setIsFireModalOpen(false);
+      setEmployeeToFire(null);
+    } catch (err) {
+      console.error("Error firing employee:", err);
+    }
   };
 
   const handleConfirmFire = async (fireData: FireEmployeePayload) => {

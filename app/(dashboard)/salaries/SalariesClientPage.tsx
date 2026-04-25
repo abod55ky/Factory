@@ -383,8 +383,8 @@ export default function SalariesPage() {
           <header className="mb-10 flex flex-col xl:flex-row xl:items-end justify-between gap-6 border-b border-black/5 pb-8 relative">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2.5 bg-gradient-to-br from-[#101720] to-[#008275] rounded-2xl shadow-lg shadow-[#101720]/20 border border-[#101720]/20">
-                  <Sparkles size={24} className="text-white animate-bounce" />
+                <div className="p-2.5 bg-linear-to-br from-[#101720] to-[#008275] rounded-2xl shadow-lg shadow-[#101720]/20 border border-[#101720]/20 group">
+                  <Sparkles size={24} className="text-white group-hover:animate-bounce transition-all duration-300" />
                 </div>
                 <h1 className="text-3xl font-black text-slate-800 tracking-tight">
                   المركز المالي الذكي
@@ -394,25 +394,25 @@ export default function SalariesPage() {
             </div>
 
             <div className="mt-4 xl:mt-0 flex flex-wrap items-center gap-4 w-full xl:w-auto">
-              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
+              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-35">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <HandCoins size={14} className="text-[#C89355] group-hover:animate-pulse" />
+                  <HandCoins size={14} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" />
                   <p className="text-[11px] font-bold text-slate-500">إجمالي السلف المتبقية</p>
                 </div>
                 <p className="font-black text-xl text-slate-800">{tabStats.totalAdvances.toLocaleString()}</p>
               </div>
               
-              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
+              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group ">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Gift size={14} className="text-[#101720] group-hover:animate-pulse" />
+                  <Gift size={14} className="text-[#101720] group-hover:animate-pulse transition-all duration-300" />
                   <p className="text-[11px] font-bold text-slate-500">إجمالي المكافآت</p>
                 </div>
                 <p className="font-black text-xl text-[#101720]">{tabStats.totalBonus.toLocaleString()}</p>
               </div>
 
-              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group min-w-[140px]">
+              <div className="bg-white/80 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 xl:flex-none hover:shadow-md transition-all group ">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Wallet size={14} className="text-rose-500 group-hover:animate-pulse" />
+                  <Wallet size={14} className="text-rose-500 group-hover:animate-pulse transition-all duration-300" />
                   <p className="text-[11px] font-bold text-slate-500">إجمالي الخصومات</p>
                 </div>
                 <p className="font-black text-xl text-rose-600">{tabStats.totalDeductions.toLocaleString()}</p>
@@ -453,7 +453,7 @@ export default function SalariesPage() {
                             const monthlyFixedTotal = baseFromEmployee;
 
                             return (
-                              <tr key={id} className="hover:bg-[#101720]/[0.02] transition-colors group">
+                              <tr key={id} className="hover:bg-[#101720]/2 transition-colors group">
                                 <td className="p-4 font-mono text-center text-sm text-slate-500">{id}</td>
                                 <td className="p-4 text-center font-bold text-slate-800">{employeesLoading ? "جارٍ التحميل..." : (emp?.name ?? "موظف محذوف")}</td>
                                 <td className="p-4 text-center text-sm text-slate-600 font-medium">{emp?.profession ?? emp?.department ?? "—"}</td>
@@ -480,7 +480,7 @@ export default function SalariesPage() {
                           const employeeName = employeeNameMap[s.employeeId];
 
                           return (
-                            <tr key={s.employeeId} className="hover:bg-[#101720]/[0.02] transition-colors group">
+                            <tr key={s.employeeId} className="hover:bg-[#101720]/2 transition-colors group">
                               <td className="p-4 font-mono text-center text-sm text-slate-500">{s.employeeId}</td>
                               <td className="p-4 text-center font-bold text-slate-800">{employeesLoading ? "جارٍ التحميل..." : (employeeName ?? "موظف محذوف")}</td>
                               <td className="p-4 text-center text-sm text-slate-600 font-medium">{s.profession}</td>
@@ -530,7 +530,7 @@ export default function SalariesPage() {
                       (advances || []).map((item: Advance) => {
                         const remaining = toNumber(item.remainingAmount);
                         return (
-                          <tr key={item.id} className="hover:bg-[#101720]/[0.02] transition-colors group">
+                          <tr key={item.id} className="hover:bg-[#101720]/2 transition-colors group">
                             <td className="p-4 text-center font-bold text-slate-800">{employeeNameMap[item.employeeId] || item.employeeId}</td>
                             <td className="p-4 text-center font-mono font-bold text-slate-700">{toNumber(item.totalAmount).toLocaleString()}</td>
                             <td className="p-4 text-center font-mono font-bold text-[#C89355]">{toNumber(item.installmentAmount).toLocaleString()}</td>
@@ -604,7 +604,7 @@ export default function SalariesPage() {
                         <tr><td colSpan={6} className="p-16 text-center text-slate-500 font-medium">لا توجد سجلات في هذه الفترة.</td></tr>
                       ) : (
                         (bonuses || []).map((item: Bonus) => (
-                          <tr key={item.id} className="hover:bg-[#101720]/[0.02] transition-colors group">
+                          <tr key={item.id} className="hover:bg-[#101720]/2 transition-colors group">
                             <td className="p-4 text-center font-bold text-slate-800">{employeeNameMap[item.employeeId] || item.employeeId}</td>
                             <td className="p-4 text-center font-mono text-sm text-slate-500">{item.period || "—"}</td>
                             <td className="p-4 text-center text-[#101720] font-black">{toNumber(item.bonusAmount).toLocaleString()}</td>
@@ -664,7 +664,7 @@ export default function SalariesPage() {
                     type="button"
                     onClick={handleRunPayroll}
                     disabled={calculatePayroll.isPending}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#101720] to-[#008275] hover:from-[#00a392] hover:to-[#006e63] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_20px_rgba(0,187,167,0.3)] transition-all active:scale-95 border border-[#101720]/50 disabled:opacity-60 disabled:cursor-not-allowed group"
+                    className="inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-[#101720] to-[#008275] hover:from-[#00a392] hover:to-[#006e63] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_20px_rgba(0,187,167,0.3)] transition-all active:scale-95 border border-[#101720]/50 disabled:opacity-60 disabled:cursor-not-allowed group"
                   >
                     {calculatePayroll.isPending ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} className="group-hover:animate-bounce" />}
                     تشغيل المسير
@@ -698,7 +698,7 @@ export default function SalariesPage() {
                         <tr><td colSpan={8} className="p-16 text-center text-slate-500 font-medium">لا توجد بيانات كافية لحساب المسير.</td></tr>
                       ) : (
                         finalPayrollRows.map((row) => (
-                          <tr key={row.employeeId} className="hover:bg-[#101720]/[0.02] transition-colors group">
+                          <tr key={row.employeeId} className="hover:bg-[#101720]/2 transition-colors group">
                             <td className="p-4 text-center font-bold text-slate-800">{row.employeeName}</td>
                             <td className="p-4 text-center font-mono font-bold text-slate-600">{row.attendanceDays}</td>
                             <td className="p-4 text-center font-mono font-bold text-slate-700">{row.proratedBase.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
@@ -728,7 +728,7 @@ export default function SalariesPage() {
       {isFloatingActionVisible && (
         <button
           onClick={openFloatingAction}
-          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-gradient-to-br from-[#101720] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#101720]/50 group"
+          className="fixed bottom-8 left-8 z-40 rounded-full w-14 h-14 bg-linear-to-br from-[#101720] to-[#008275] text-white shadow-[0_10px_30px_rgba(0,187,167,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-[#101720]/50 group"
           title="إضافة سجل جديد"
         >
           <Plus size={26} className="group-hover:animate-spin" />

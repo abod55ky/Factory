@@ -82,7 +82,7 @@ export default function SettingsPage() {
                             ? 'bg-[#263544] text-[#C89355] border-[#C89355]/30 shadow-inner' 
                             : 'bg-white text-slate-400 group-hover/tab:text-[#C89355] border-slate-100 group-hover/tab:border-[#C89355]/30'
                         }`}>
-                          <tab.icon size={18} className={isActive ? "animate-pulse" : "group-hover/tab:scale-110 transition-transform"} />
+                          <tab.icon size={18} className={`transition-all duration-300 group-hover/tab:animate-pulse ${isActive ? "" : "group-hover/tab:scale-110"}`} />
                         </div>
                         <span className={`text-sm relative z-10 transition-colors ${
                           isActive ? 'font-black text-[#C89355]' : 'font-bold text-[#263544]/70 group-hover/tab:text-[#263544]'
@@ -110,7 +110,7 @@ export default function SettingsPage() {
                     <div className="relative z-10">
                       <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 border-b border-white/80 pb-6">
                         <div className="p-2.5 bg-[#C89355]/10 rounded-xl border border-[#C89355]/30 shadow-inner">
-                          <ClockIcon className="text-[#C89355] group-hover/card:animate-[spin_6s_linear_infinite]" />
+                          <ClockIcon className="text-[#C89355] group-hover/card:animate-[spin_6s_linear_infinite] transition-all duration-300" />
                         </div>
                         قواعد التأخير والانصراف
                       </h2>
@@ -156,7 +156,7 @@ export default function SettingsPage() {
                     <div className="relative z-10">
                       <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 border-b border-white/80 pb-6">
                         <div className="p-2.5 bg-[#1a2530] rounded-xl border border-[#C89355]/40 shadow-inner">
-                          <CalculatorIcon className="text-[#C89355] group-hover/card:animate-bounce" />
+                          <CalculatorIcon className="text-[#C89355] group-hover/card:animate-bounce transition-all duration-300" />
                         </div>
                         حساب الأجر الإضافي
                       </h2>
@@ -204,7 +204,7 @@ export default function SettingsPage() {
                     <div className="relative z-10">
                       <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 border-b border-white/80 pb-6">
                         <div className="p-2.5 bg-[#1a2530] rounded-xl border border-[#C89355]/40 shadow-inner">
-                          <Server className="text-[#C89355] group-hover/card:animate-pulse" />
+                          <Server className="text-[#C89355] group-hover/card:animate-pulse transition-all duration-300" />
                         </div>
                         إعدادات جهاز البصمة الأساسي
                       </h2>
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                   <div className="relative z-10">
                     <h2 className="text-xl font-black text-[#263544] mb-8 flex items-center gap-3 border-b border-white/80 pb-6">
                       <div className="p-2.5 bg-[#C89355]/20 rounded-xl border border-[#C89355]/30 shadow-inner">
-                        <Building2 className="text-[#1a2530] group-hover/card:animate-pulse" />
+                        <Building2 className="text-[#1a2530] group-hover/card:animate-pulse transition-all duration-300" />
                       </div>
                       بيانات المنشأة
                     </h2>
@@ -281,9 +281,9 @@ export default function SettingsPage() {
 
               {/* أقسام قيد التطوير */}
               {(activeTab === "inventory" || activeTab === "security") && (
-                <div className="relative bg-white/40 backdrop-blur-2xl rounded-[2.5rem] border-2 border-dashed border-[#C89355]/40 p-16 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500 shadow-[0_15px_40px_rgba(38,53,68,0.05)] overflow-hidden">
+                <div className="relative bg-white/40 backdrop-blur-2xl rounded-[2.5rem] border-2 border-dashed border-[#C89355]/40 p-16 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500 shadow-[0_15px_40px_rgba(38,53,68,0.05)] overflow-hidden group">
                   <div className="relative z-10 w-20 h-20 bg-white/80 backdrop-blur-md rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-white">
-                    <Bell size={40} className="text-[#C89355] animate-pulse" />
+                    <Bell size={40} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" />
                   </div>
                   <h3 className="relative z-10 text-2xl text-[#263544] font-black mb-3">هذا القسم قيد التطوير</h3>
                   <p className="relative z-10 text-[#263544]/60 text-sm font-bold">يمكنك إضافة إعدادات التنبيهات والصلاحيات المخصصة هنا قريباً.</p>

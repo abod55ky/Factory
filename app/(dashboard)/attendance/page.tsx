@@ -277,8 +277,8 @@ export default function AttendancePage() {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   {/* أيقونة العنوان بهوية الماركة مع الدرزة */}
-                  <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline-dashed outline-1 outline-[#C89355]/50 -outline-offset-4">
-                    <ClipboardCheck size={22} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
+                  <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline-dashed outline-1 outline-[#C89355]/50 -outline-offset-4 group">
+                    <ClipboardCheck size={22} className="text-[#C89355] group-hover:animate-bounce transition-all duration-300" strokeWidth={2.5} />
                   </div>
                   <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">سجل الحضور والانصراف</h1>
                 </div>
@@ -293,7 +293,7 @@ export default function AttendancePage() {
                     <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none" />
                     <div className="flex items-start gap-3 relative z-10">
                       <div className="p-2 bg-[#263544] rounded-xl shadow-inner border border-[#C89355]/30">
-                        <Fingerprint size={18} className="text-[#C89355] animate-pulse" />
+                        <Fingerprint size={18} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" />
                       </div>
                       <div>
                         <p className="text-sm font-black text-[#263544]">{liveAttendanceEvent.message}</p>
@@ -319,7 +319,7 @@ export default function AttendancePage() {
                 <div className="relative overflow-hidden bg-white/60 backdrop-blur-2xl border border-white/80 rounded-2xl p-4 shadow-sm flex-1 xl:flex-none hover:shadow-md transition-all group">
                   <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
                   <label className="flex items-center gap-2 text-xs font-black text-[#263544] mb-2 relative z-10">
-                    <CalendarIcon size={14} className="text-[#C89355] group-hover:animate-pulse" />
+                    <CalendarIcon size={14} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" />
                     التاريخ
                   </label>
                   <input
@@ -405,12 +405,12 @@ export default function AttendancePage() {
                             <span className="inline-flex items-center justify-center gap-2 text-xs font-black">
                               {row.source === "device" ? (
                                 <>
-                                  <Fingerprint size={16} className="text-[#263544] group-hover/row:animate-pulse" />
+                                  <Fingerprint size={16} className="text-[#263544] group-hover/row:animate-pulse transition-all duration-300" />
                                   <span className="text-[#263544]">جهاز</span>
                                 </>
                               ) : (
                                 <>
-                                  <PencilLine size={16} className="text-[#C89355] group-hover/row:animate-pulse" />
+                                  <PencilLine size={16} className="text-[#C89355] group-hover/row:animate-pulse transition-all duration-300" />
                                   <span className="text-[#C89355]">يدوي</span>
                                 </>
                               )}
@@ -457,11 +457,11 @@ export default function AttendancePage() {
           <div className="mt-8 relative overflow-hidden bg-white/60 backdrop-blur-xl p-5 rounded-4xl border border-white/80 shadow-[0_8px_30px_rgba(38,53,68,0.05)] flex flex-col md:flex-row gap-4 justify-between items-start md:items-center group">
             <div className="absolute inset-1 rounded-[1.8rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
             <div className="text-xs text-[#263544] font-black flex items-center gap-2.5 relative z-10">
-              <Clock3 size={16} className="text-[#C89355] animate-pulse" />
+              <Clock3 size={16} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" />
               يعتبر الموظف متأخراً إذا تجاوز وقت الدخول وقت الدوام المجدول + 15 دقيقة.
             </div>
             <div className="text-xs text-[#263544] font-black flex items-center gap-2.5 relative z-10">
-              <Fingerprint size={16} className="text-[#C89355] animate-pulse" />
+              <Fingerprint size={16} className="text-[#C89355] group-hover:animate-pulse transition-all duration-300" />
               تحديثات فورية من أجهزة البصمة، تأكد من صحة رمز الموظف.
             </div>
           </div>
@@ -515,8 +515,8 @@ export default function AttendancePage() {
                 </div>
 
                 {/* الحاوية اليسرى: عرض التاريخ واسم الموظف */}
-                <div className="bg-[#263544]/5 p-8 md:w-2/5 border-b md:border-b-0 md:border-r border-[#C89355]/20 flex flex-col justify-center items-center text-center order-1 md:order-2 relative z-10">
-                   <CalendarIcon size={40} className="text-[#C89355] mb-4 drop-shadow-md animate-bounce" />
+                <div className="bg-[#263544]/5 p-8 md:w-2/5 border-b md:border-b-0 md:border-r border-[#C89355]/20 flex flex-col justify-center items-center text-center order-1 md:order-2 relative z-10 group">
+                   <CalendarIcon size={40} className="text-[#C89355] mb-4 drop-shadow-md group-hover:animate-bounce transition-all duration-300" />
                    <p className="text-[10px] text-[#263544]/60 font-black uppercase tracking-wider mb-1">تاريخ السجل</p>
                    <p className="text-xl font-black text-[#263544] font-mono mb-6 bg-white/80 px-3 py-1 rounded-xl shadow-sm border border-white">{timeModal.row.date}</p>
                    <p className="text-sm font-black text-[#263544] line-clamp-2 leading-relaxed bg-[#C89355]/10 px-3 py-2 rounded-xl border border-[#C89355]/20">{timeModal.row.employeeName}</p>
