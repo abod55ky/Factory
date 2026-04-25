@@ -607,8 +607,7 @@
   //     </div>
   //   );
   // }
-
-  "use client";
+"use client";
 
 import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
@@ -662,10 +661,8 @@ export default function EmployeesPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [isFireModalOpen, setIsFireModalOpen] = useState(false);
-  const [employeeToFire, setEmployeeToFire] = useState<Employee | null>(null);
   
-  // حالات مودال الإقالة
+  // تم إبقاء تعريف واحد فقط لحالات الإقالة
   const [isFireModalOpen, setIsFireModalOpen] = useState(false);
   const [employeeToFire, setEmployeeToFire] = useState<Employee | null>(null);
   
@@ -686,7 +683,7 @@ export default function EmployeesPage() {
   const filteredEmployees = useMemo(() => {
     return visibleEmployees.filter(emp => {
       const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           emp.employeeId.includes(searchTerm);
+                            emp.employeeId.includes(searchTerm);
       const matchesDept = selectedDept === "الكل" || emp.department === selectedDept;
       return matchesSearch && matchesDept;
     });
@@ -724,6 +721,7 @@ export default function EmployeesPage() {
     }
   };
 
+  // تم إبقاء تعريف واحد فقط لدالة الإقالة (النسخة التي تدعم التعامل مع التاريخ بشكل أأمن)
   const handleConfirmFire = async (fireData: FireEmployeePayload) => {
     try {
       await updateEmployee.mutateAsync({
@@ -731,7 +729,7 @@ export default function EmployeesPage() {
         data: {
           status: "terminated",
           // نرسل التاريخ كأيزو أو نص حسب واجهة البرمجية لديك
-          terminationDate: fireData.fireDate as any, 
+          terminationDate: fireData.fireDate,
         },
       });
       setIsFireModalOpen(false);
@@ -739,20 +737,6 @@ export default function EmployeesPage() {
     } catch (err) {
       console.error("Error firing employee:", err);
     }
-  };
-
-  const handleConfirmFire = async (fireData: FireEmployeePayload) => {
-    try {
-      await updateEmployee.mutateAsync({
-        id: fireData.employeeId,
-        data: {
-          status: "terminated",
-          terminationDate: fireData.fireDate,
-        },
-      });
-      setIsFireModalOpen(false);
-      setEmployeeToFire(null);
-    } catch {}
   };
 
   return (

@@ -298,6 +298,40 @@ interface RoleOption {
   name: string;
 }
 
+type EmployeeIdSeed = {
+  employeeId?: string;
+};
+
+const extractEmployees = (payload: unknown): EmployeeIdSeed[] => {
+  if (Array.isArray(payload)) return payload as EmployeeIdSeed[];
+
+  if (payload && typeof payload === "object") {
+    const asObject = payload as { employees?: unknown; data?: unknown };
+
+    if (Array.isArray(asObject.employees)) {
+      return asObject.employees as EmployeeIdSeed[];
+    }
+
+    if (Array.isArray(asObject.data)) {
+      return asObject.data as EmployeeIdSeed[];
+    }
+  }
+
+  return [];
+};
+
+const getNextEmployeeCode = (employees: EmployeeIdSeed[]): string => {
+  const maxCode = employees.reduce((max, employee) => {
+    const match = employee.employeeId?.match(/^EMP(\d+)$/i);
+    if (!match) return max;
+
+    const numericPart = Number(match[1]);
+    return Number.isFinite(numericPart) ? Math.max(max, numericPart) : max;
+  }, 0);
+
+  return `EMP${String(maxCode + 1).padStart(3, "0")}`;
+};
+
 const defaultFormState = {
   employeeId: "",
   name: "",
@@ -356,6 +390,18 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
     enabled: isOpen,
   });
 
+  const { data: employeesSeed = [] } = useQuery<EmployeeIdSeed[]>({
+    queryKey: ["employees", "employee-id-seed"],
+    queryFn: async () => {
+      const response = await apiClient.get("/employees");
+      return extractEmployees(response.data);
+    },
+    enabled: isOpen && !initialData,
+  });
+
+  const nextEmployeeCode = getNextEmployeeCode(employeesSeed);
+  const effectiveEmployeeId = initialData ? formData.employeeId : (formData.employeeId || nextEmployeeCode);
+
   const resolvedRoleId = formData.roleId || initialData?.roleId || roles[0]?.id || "";
 
   // التأكد من عدم التصيير إلا بعد تحميل المتصفح
@@ -388,6 +434,7 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
     } else {
       onSave({
         ...formData,
+        employeeId: effectiveEmployeeId,
         age: Number(formData.age),
         roleId: resolvedRoleId,
       });
@@ -474,8 +521,8 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
                   disabled={!!initialData}
                   className="w-full p-3.5 bg-[#1a2530] border border-[#263544] rounded-xl focus:ring-2 focus:ring-[#C89355]/30 focus:border-[#C89355] outline-none transition-all text-left font-mono font-bold text-white disabled:opacity-50 disabled:bg-[#101720] shadow-inner placeholder:text-slate-500"
                   dir="ltr"
-                  value={formData.employeeId}
-                  onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
+                  value={effectiveEmployeeId}
+                  onChange={(e) => setFormData({...formData, employeeId: e.target.value.toUpperCase()})}
                 />
               </div>
 
