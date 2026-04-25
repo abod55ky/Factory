@@ -314,13 +314,11 @@ const defaultFormState = {
 };
 
 export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, initialData }: Props) {
-  const [mounted, setMounted] = useState(false); // حالة للتأكد من تحميل المتصفح
   const [step, setStep] = useState<1 | 2>(1);
   const [mobileError, setMobileError] = useState("");
 
   // تفعيل قفل التمرير (Scroll Lock) في الخلفية عند فتح المودال
   useEffect(() => {
-    setMounted(true);
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -361,7 +359,8 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
   const resolvedRoleId = formData.roleId || initialData?.roleId || roles[0]?.id || "";
 
   // التأكد من عدم التصيير إلا بعد تحميل المتصفح
-  if (!isOpen || !mounted) return null;
+  if (!isOpen) return null;
+  if (typeof document === "undefined") return null;
 
   const validateMobile = (number: string) => {
     const isValid = /^09[0-9]{8}$/.test(number);

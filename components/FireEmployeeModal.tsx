@@ -33,7 +33,6 @@ const getToday = () => {
 };
 
 export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm, isPending }: Props) {
-  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   
   // بيانات الإقالة
@@ -43,13 +42,13 @@ export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm
   const [bonus, setBonus] = useState<string>("");
 
   useEffect(() => {
-    setMounted(true);
     if (isOpen) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "unset";
     return () => { document.body.style.overflow = "unset"; };
   }, [isOpen]);
 
-  if (!isOpen || !mounted || !employee) return null;
+  if (!isOpen || !employee) return null;
+  if (typeof document === "undefined") return null;
 
   const employeeWithCompensation = employee as EmployeeWithCompensation;
 

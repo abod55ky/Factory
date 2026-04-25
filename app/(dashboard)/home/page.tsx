@@ -51,7 +51,7 @@ export default function DashboardPage() {
     /* 1. الحاوية الرئيسية: تأثير زجاجي مضاعف (backdrop-blur-3xl + bg-white/50) 
       مع نقشة نسيج قماش ثابتة تماماً بالخلفية لتعطي ملمس الألبسة 
     */
-    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/50 backdrop-blur-[40px] rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(38,53,68,0.2)] border-2 border-white/80 flex flex-col overflow-hidden" dir="rtl">
+    <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/50 backdrop-blur-2px rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(38,53,68,0.2)] border-2 border-white/80 flex flex-col overflow-hidden" dir="rtl">
         
         {/* نقشة الفايبر (القماش) الثابتة والشفافة */}
         <div 
@@ -69,7 +69,7 @@ export default function DashboardPage() {
           <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#263544]/10 pb-6 relative">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline outline-dashed outline-1 outline-[#C89355]/50 outline-offset-[-4px]">
+                <div className="p-3 bg-[#1a2530] rounded-2xl shadow-[0_15px_25px_rgba(38,53,68,0.4)] border border-[#C89355]/40 relative outline-dashed outline-1 outline-[#C89355]/50 -outline-offset-4">
                   <TrendingUp size={22} className="text-[#C89355] animate-bounce" strokeWidth={2.5} />
                 </div>
                 <h1 className="text-3xl font-black text-[#263544] tracking-tight drop-shadow-sm">
@@ -88,12 +88,12 @@ export default function DashboardPage() {
             {stats.map((stat, index) => (
               <div 
                 key={index} 
-                className="relative bg-white/60 backdrop-blur-xl p-7 rounded-[2rem] border-2 border-white/90 shadow-[0_10px_30px_rgba(38,53,68,0.08)] hover:shadow-[0_25px_50px_rgba(200,147,85,0.2)] hover:-translate-y-2 transition-all duration-500 group overflow-hidden"
+                className="relative bg-white/60 backdrop-blur-xl p-7 rounded-4xl border-2 border-white/90 shadow-[0_10px_30px_rgba(38,53,68,0.08)] hover:shadow-[0_25px_50px_rgba(200,147,85,0.2)] hover:-translate-y-2 transition-all duration-500 group overflow-hidden"
               >
                 {/* درزة خياطة (Stitching) خفيفة لتأكيد هوية معمل الألبسة */}
                 <div className="absolute inset-1.5 rounded-[1.7rem] border border-dashed border-[#263544]/10 pointer-events-none group-hover:border-[#C89355]/30 transition-colors duration-500" />
 
-                <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-[#263544] to-[#C89355] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-[#263544] to-[#C89355] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 <div className="flex items-center justify-between mb-4 relative z-10">
                   <p className="text-[#263544]/80 text-sm font-black group-hover:text-[#263544] transition-colors">{stat.title}</p>
@@ -115,7 +115,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-4">
             
             {/* بطاقة كفاءة الأقسام */}
-            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-8 border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] flex flex-col h-[500px] hover:shadow-[0_25px_60px_rgba(38,53,68,0.12)] transition-all duration-500 relative">
+            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-8 border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] flex flex-col h-125 hover:shadow-[0_25px_60px_rgba(38,53,68,0.12)] transition-all duration-500 relative">
               <div className="flex items-center gap-3 mb-8 relative z-10">
                 <div className="p-2.5 bg-[#C89355]/10 rounded-xl border border-[#C89355]/30 shadow-sm">
                   <Building2 className="text-[#C89355] animate-pulse" size={22} />
@@ -141,7 +141,7 @@ export default function DashboardPage() {
             </div>
 
             {/* بطاقة سجل الحضور والتنبيهات */}
-            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-8 border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] flex flex-col h-[500px] hover:shadow-[0_25px_60px_rgba(38,53,68,0.12)] transition-all duration-500 relative">
+            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-8 border-2 border-white/90 shadow-[0_15px_40px_rgba(38,53,68,0.08)] flex flex-col h-125 hover:shadow-[0_25px_60px_rgba(38,53,68,0.12)] transition-all duration-500 relative">
               <div className="flex items-center gap-3 mb-8 relative z-10">
                 <div className="p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/20 shadow-sm">
                   <AlertTriangle className="text-rose-600 animate-pulse" size={22} />
