@@ -196,7 +196,7 @@ export default function EmployeesPage() {
           <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(38,53,68,0.08)] border-2 border-white/90 overflow-hidden group">
             <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50 z-0" />
             <div className="w-full overflow-x-auto custom-scrollbar relative z-10">
-              <table className="w-full text-right min-w-[900px]">
+              <table className="w-full text-right min-w-225">
                 <thead className="bg-white/40 border-b border-white/80">
                   <tr>
                     <th className="p-5 text-[#263544] font-black text-xs uppercase tracking-wider text-center w-24">كود الموظف</th>

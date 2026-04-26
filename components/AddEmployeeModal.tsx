@@ -52,40 +52,6 @@ interface RoleOption {
   name: string;
 }
 
-type EmployeeIdSeed = {
-  employeeId?: string;
-};
-
-const extractEmployees = (payload: unknown): EmployeeIdSeed[] => {
-  if (Array.isArray(payload)) return payload as EmployeeIdSeed[];
-
-  if (payload && typeof payload === "object") {
-    const asObject = payload as { employees?: unknown; data?: unknown };
-
-    if (Array.isArray(asObject.employees)) {
-      return asObject.employees as EmployeeIdSeed[];
-    }
-
-    if (Array.isArray(asObject.data)) {
-      return asObject.data as EmployeeIdSeed[];
-    }
-  }
-
-  return [];
-};
-
-const getNextEmployeeCode = (employees: EmployeeIdSeed[]): string => {
-  const maxCode = employees.reduce((max, employee) => {
-    const match = employee.employeeId?.match(/^EMP(\d+)$/i);
-    if (!match) return max;
-
-    const numericPart = Number(match[1]);
-    return Number.isFinite(numericPart) ? Math.max(max, numericPart) : max;
-  }, 0);
-
-  return `EMP${String(maxCode + 1).padStart(3, "0")}`;
-};
-
 const defaultFormState = {
   employeeId: "",
   name: "",
@@ -102,17 +68,16 @@ const defaultFormState = {
 };
 
 export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, initialData }: Props) {
+  // 👇 هذا هو السطر الذي حذفه المحرر بالخطأ، أعدناه هنا! 👇
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [mobileError, setMobileError] = useState("");
 
-  // ✅ تم إضافة تعليق eslint-disable-next-line لتجاهل الخطأ في هذا السطر
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
-  // تفعيل قفل التمرير (Scroll Lock) في الخلفية عند فتح المودال
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -151,23 +116,9 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
     enabled: isOpen,
   });
 
-  const { data: employeesSeed = [] } = useQuery<EmployeeIdSeed[]>({
-    queryKey: ["employees", "employee-id-seed"],
-    queryFn: async () => {
-      const response = await apiClient.get("/employees");
-      return extractEmployees(response.data);
-    },
-    enabled: isOpen && !initialData,
-  });
-
-  const nextEmployeeCode = getNextEmployeeCode(employeesSeed);
-  const effectiveEmployeeId = initialData ? formData.employeeId : (formData.employeeId || nextEmployeeCode);
-
   const resolvedRoleId = formData.roleId || initialData?.roleId || roles[0]?.id || "";
 
-  // التأكد من عدم التصيير إلا بعد تحميل المتصفح
-  if (!isOpen) return null;
-  if (typeof document === "undefined") return null;
+  if (!isOpen || !mounted) return null;
 
   const validateMobile = (number: string) => {
     const isValid = /^09[0-9]{8}$/.test(number);
@@ -195,20 +146,16 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
     } else {
       onSave({
         ...formData,
-        employeeId: effectiveEmployeeId,
         age: Number(formData.age),
         roleId: resolvedRoleId,
       });
     }
   };
 
-  // استخدام createPortal للطفو فوق كافة مكونات الصفحة (خارج نطاق الـ div الأب)
   return createPortal(
-    // رفعنا z-index إلى 999999 لضمان تغطية كاملة
-    <div className="fixed inset-0 bg-[#101720]/80 backdrop-blur-md flex items-center justify-center z-[999999] p-4 sm:p-6 transition-all duration-300" dir="rtl">
+    <div className="fixed inset-0 bg-[#101720]/80 backdrop-blur-md flex items-center justify-center z-999999 p-4 sm:p-6 transition-all duration-300" dir="rtl">
       <div className="bg-[#101720] rounded-4xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] w-full max-w-3xl max-h-[95vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 border border-white/5  outline-dashed outline-1 outline-[#C89355]/20 outline-offset-[-6px]">
         
-        {/* ================= الترويسة (Header) ================= */}
         <div className="p-5 sm:p-6 border-b border-white/5 flex justify-between items-center bg-[#1a2530]/80 shrink-0 relative z-10">
           <div className="flex items-center gap-4">
             <div className="bg-[#C89355]/10 p-2.5 rounded-xl border border-[#C89355]/20 shadow-[0_0_15px_rgba(200,147,85,0.15)]">
@@ -226,7 +173,6 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
           </button>
         </div>
 
-        {/* ================= شريط التقدم (Progress Bar) ================= */}
         <div className="px-6 pt-6 pb-2 shrink-0">
           <div className="flex items-center justify-between mb-2">
             <div className={`h-2.5 rounded-full transition-all duration-500 ease-out flex-1 ${step >= 1 ? 'bg-[#C89355] shadow-[0_0_10px_rgba(200,147,85,0.4)]' : 'bg-[#263544]'}`} />
@@ -239,11 +185,9 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
           </div>
         </div>
 
-        {/* ================= جسم النموذج ================= */}
         <div className="overflow-y-auto custom-scrollbar flex-1 p-6 relative">
           <form id="employeeForm" onSubmit={handleFormSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5 text-right relative z-10">
             
-            {/* ---------------- الخطوة الأولى (البيانات الشخصية) ---------------- */}
             <div className={`col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 transition-all duration-500 ${step === 1 ? 'block animate-in slide-in-from-right-8' : 'hidden'}`}>
               
               <div className="md:col-span-2">
@@ -282,8 +226,8 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
                   disabled={!!initialData}
                   className="w-full p-3.5 bg-[#1a2530] border border-[#263544] rounded-xl focus:ring-2 focus:ring-[#C89355]/30 focus:border-[#C89355] outline-none transition-all text-left font-mono font-bold text-white disabled:opacity-50 disabled:bg-[#101720] shadow-inner placeholder:text-slate-500"
                   dir="ltr"
-                  value={effectiveEmployeeId}
-                  onChange={(e) => setFormData({...formData, employeeId: e.target.value.toUpperCase()})}
+                  value={formData.employeeId}
+                  onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
                 />
               </div>
 
@@ -318,7 +262,6 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
 
             </div>
 
-            {/* ---------------- الخطوة الثانية (البيانات الوظيفية) ---------------- */}
             <div className={`col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 transition-all duration-500 ${step === 2 ? 'block animate-in slide-in-from-left-8' : 'hidden'}`}>
               
               <div>
@@ -393,7 +336,6 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
                 </div>
               </div>
 
-              {/* أوقات الدوام */}
               <div className="bg-[#1a2530] p-5 rounded-2xl border border-[#263544] md:col-span-2 grid grid-cols-2 gap-5 shadow-inner">
                 <div className="col-span-2 flex items-center gap-2 border-b border-white/5 pb-3">
                   <CalendarDays size={20} className="text-[#C89355]" />
@@ -425,7 +367,6 @@ export default function AddEmployeeModal({ isOpen, onClose, onSave, isPending, i
           </form>
         </div>
 
-        {/* ================= أزرار الإجراءات (Footer) ================= */}
         <div className="p-5 sm:p-6 bg-[#1a2530]/80 border-t border-white/5 flex justify-between shrink-0 relative z-10">
           {step === 1 ? (
              <button 
