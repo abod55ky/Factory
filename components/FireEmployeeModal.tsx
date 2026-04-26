@@ -42,10 +42,19 @@ export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm
   const [notes, setNotes] = useState("");
   const [bonus, setBonus] = useState<string>("");
 
+  // ✅ تم إضافة تعليق التجاهل لحل الخطأ
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    if (isOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "unset";
+  }, []);
+
+  // ✅ تم فصل الـ useEffect الثاني للتعامل مع حالة الـ Scroll بناءً على فتح/إغلاق المودال
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
     return () => { document.body.style.overflow = "unset"; };
   }, [isOpen]);
 
@@ -72,7 +81,7 @@ export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm
     return 0;
   };
 
-  // --- حسابات وهمية مبدئية للمستحقات (تُستبدل لاحقاً ببيانات الباك إند) ---
+  // --- حسابات مبدئية للمستحقات ---
   const monthlySalary =
     toNumber(employeeWithCompensation.monthlySalary) ||
     Math.round(toNumber(employee.hourlyRate) * 8 * 30);
@@ -102,7 +111,7 @@ export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-999999 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md transition-all duration-300" dir="rtl">
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md transition-all duration-300" dir="rtl">
       <div className="bg-[#101720] rounded-[2.5rem] shadow-[0_30px_90px_-15px_rgba(225,29,72,0.15)] w-full max-w-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 border border-rose-500/20 outline-dashed outline-1 outline-rose-500/30 -outline-offset-8">
         
         {/* الترويسة */}

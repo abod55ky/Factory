@@ -7,7 +7,7 @@ import { useEmployees } from "@/hooks/useEmployees";
 import type { Employee } from "@/types/employee";
 import type { AddEmployeeFormData } from "@/components/AddEmployeeModal";
 import type { FireEmployeePayload } from "@/components/FireEmployeeModal";
-import { Plus, Edit2, Loader2, ChevronLeft, Users, Scissors, UserMinus } from "lucide-react";
+import { Plus, Edit2, Loader2, ChevronLeft, Users, Scissors, UserMinus, Eye } from "lucide-react";
 
 // استيراد المكونات المنفصلة
 import FilterComponent from "@/components/Filter";
@@ -53,7 +53,6 @@ export default function EmployeesPage() {
     [employees],
   );
   
-  // ✅ الحالات (تم حذف التكرار)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   
@@ -77,7 +76,7 @@ export default function EmployeesPage() {
   const filteredEmployees = useMemo(() => {
     return visibleEmployees.filter(emp => {
       const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           emp.employeeId.includes(searchTerm);
+                            emp.employeeId.includes(searchTerm);
       const matchesDept = selectedDept === "الكل" || emp.department === selectedDept;
       return matchesSearch && matchesDept;
     });
@@ -116,15 +115,16 @@ export default function EmployeesPage() {
     }
   };
 
-  // ✅ دالة الإقالة (تم حذف التكرار)
   const handleConfirmFire = async (fireData: FireEmployeePayload) => {
     try {
+      const updateData: Partial<Employee> & { terminationDate?: string } = {
+        status: "terminated",
+        terminationDate: fireData.fireDate, 
+      };
+
       await updateEmployee.mutateAsync({
         id: fireData.employeeId,
-        data: {
-          status: "terminated",
-          terminationDate: fireData.fireDate as any, 
-        },
+        data: updateData as Partial<Employee>,
       });
       setIsFireModalOpen(false);
       setEmployeeToFire(null);
@@ -136,7 +136,6 @@ export default function EmployeesPage() {
   return (
     <div className="relative z-10 w-full max-w-7xl min-h-[85vh] mx-auto bg-white/50 backdrop-blur-2xl rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(38,53,68,0.2)] border-2 border-dashed border-[#C89355]/60 flex flex-col overflow-hidden" dir="rtl">
         
-        {/* نقشة الفايبر */}
         <div 
           className="absolute inset-0 opacity-[0.04] pointer-events-none z-0"
           style={{
@@ -147,7 +146,6 @@ export default function EmployeesPage() {
 
         <div className="p-6 md:p-10 h-full overflow-y-auto custom-scrollbar relative z-10">
                 
-          {/* مسار التنقل */}
           <nav className="mb-6 relative overflow-hidden flex items-center gap-2 text-xs font-black text-slate-500 bg-white/60 backdrop-blur-xl w-fit px-4 py-2.5 rounded-2xl border border-white/80 shadow-[0_5px_15px_rgba(38,53,68,0.05)] group">
             <div className="absolute inset-1 rounded-xl border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50" />
             <span className="hover:text-[#263544] cursor-pointer transition-colors relative z-10">إدارة الموارد البشرية</span>
@@ -155,7 +153,6 @@ export default function EmployeesPage() {
             <span className="text-[#263544] relative z-10">قائمة الموظفين</span>
           </nav>
 
-          {/* الهيدر وأدوات التحكم */}
           <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#263544]/10 pb-6 relative">
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -173,7 +170,6 @@ export default function EmployeesPage() {
             </div>
             
             <div className="flex flex-wrap items-center justify-end gap-5 w-full md:w-auto">
-              
               <FilterComponent 
                 searchTerm={searchTerm} 
                 onSearchChange={setSearchTerm} 
@@ -195,7 +191,6 @@ export default function EmployeesPage() {
             </div>
           </header>
 
-          {/* الجدول */}
           <div className="relative bg-white/60 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(38,53,68,0.08)] border-2 border-white/90 overflow-hidden group">
             <div className="absolute inset-1.5 rounded-[2.2rem] border border-dashed border-[#C89355]/30 pointer-events-none transition-colors group-hover:border-[#C89355]/50 z-0" />
             <div className="w-full overflow-x-auto custom-scrollbar relative z-10">
@@ -236,8 +231,12 @@ export default function EmployeesPage() {
                           {emp.employeeId}
                         </td>
                         <td className="p-4 text-center">
-                          <Link href={`/employees/${emp.employeeId}`} className="font-black text-slate-800 hover:text-[#C89355] transition-colors text-base">
-                            {emp.name}
+                          <Link 
+                            href={`/employees/${emp.employeeId}`} 
+                            className="inline-flex items-center gap-1.5 font-black text-slate-800 hover:text-[#C89355] transition-all text-base group/link"
+                            title="عرض بروفايل الموظف"
+                          >
+                            <span className="group-hover/link:underline underline-offset-4 decoration-2 decoration-[#C89355]/40">{emp.name}</span>
                           </Link>
                         </td>
                         <td className="p-4 text-center font-bold text-[#263544] text-sm">
@@ -251,6 +250,15 @@ export default function EmployeesPage() {
                         </td>
                         <td className="p-4 text-center">
                           <div className="flex justify-center gap-2 opacity-60 group-hover/row:opacity-100 transition-opacity">
+                            
+                            <Link 
+                              href={`/employees/${emp.employeeId}`}
+                              className="text-[#1a2530] hover:bg-[#1a2530]/10 p-2.5 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm border border-transparent hover:border-[#1a2530]/30"
+                              title="عرض بروفايل الموظف"
+                            >
+                              <Eye size={16} />
+                            </Link>
+
                             <button 
                               onClick={() => handleEditClick(emp)}
                               className="text-[#C89355] hover:bg-[#C89355]/10 p-2.5 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm border border-transparent hover:border-[#C89355]/30"
@@ -258,6 +266,7 @@ export default function EmployeesPage() {
                             >
                               <Edit2 size={16} />
                             </button>
+
                             <button 
                               onClick={() => { setEmployeeToFire(emp); setIsFireModalOpen(true); }}
                               className="text-rose-500 hover:bg-rose-500/10 p-2.5 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm border border-transparent hover:border-rose-500/30"
@@ -265,6 +274,7 @@ export default function EmployeesPage() {
                             >
                               <UserMinus size={16} />
                             </button>
+
                           </div>
                         </td>
                       </tr>
@@ -276,7 +286,6 @@ export default function EmployeesPage() {
             </div>
           </div>
 
-          {/* نوافذ الـ Modals */}
           {isModalOpen && (
             <AddEmployeeModal 
               key={`${isModalOpen}-${selectedEmployee?.employeeId ?? "new"}`}
