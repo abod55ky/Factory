@@ -77,6 +77,7 @@ export default function EmployeesPage() {
     return visibleEmployees.filter(emp => {
       const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             emp.employeeId.includes(searchTerm);
+                            emp.employeeId.includes(searchTerm);
       const matchesDept = selectedDept === "الكل" || emp.department === selectedDept;
       return matchesSearch && matchesDept;
     });
@@ -115,6 +116,7 @@ export default function EmployeesPage() {
     }
   };
 
+  // تم إبقاء تعريف واحد فقط لدالة الإقالة (النسخة التي تدعم التعامل مع التاريخ بشكل أأمن)
   const handleConfirmFire = async (fireData: FireEmployeePayload) => {
     try {
       const updateData: Partial<Employee> & { terminationDate?: string } = {

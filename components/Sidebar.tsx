@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard, Users, ClipboardList,
-  Wallet, Box, FileInput, Settings, Fingerprint,
+  Wallet, Box,Bus, FileInput, Settings, Fingerprint,
   ChevronDown, LogOut, Shield,
   UserMinus, X, ChevronsRight // أعدنا استيراد السهم هنا
 } from 'lucide-react';
@@ -37,6 +37,7 @@ const menuItems = [
   },
   { name: 'بصمتي وحضوري', icon: Fingerprint, href: '/biometric' },
   { name: 'مخزن الشغل', icon: Box, href: '/inventory', roles: ['admin', 'warehouse', 'manager'] },
+  { name: 'الباص', icon: Bus, href: '/Transportation', roles: ['admin', 'warehouse', 'manager'] },
   { name: 'استيراد البيانات', icon: FileInput, href: '/importData', roles: ['admin', 'manager'] },
   { name: 'الإعدادات', icon: Settings, href: '/settings', roles: ['admin'] },
 ];
