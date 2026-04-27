@@ -1,5 +1,6 @@
 import axios from "axios";
 import apiClient from "@/lib/api-client";
+import { resolveApiUrl } from "@/lib/api-url";
 
 const SUCCESS_TTL_MS = 10_000;
 const FAILURE_TTL_MS = 1_500;
@@ -18,8 +19,29 @@ let cacheExpiresAt = 0;
 let blockedUntil = 0;
 let cacheGeneration = 0;
 let latestVerificationId = 0;
+const backendBaseUrl = resolveApiUrl(process.env.NEXT_PUBLIC_API_URL);
+const AUTH_COOKIE_CANDIDATES = [
+  process.env.NEXT_PUBLIC_AUTH_COOKIE_NAME,
+  "warehouse_access_token",
+  "auth_access_token",
+  "access_token",
+  "token",
+].filter((value): value is string => Boolean(value && value.trim()));
 
 const now = () => Date.now();
+
+const hasSessionHints = () => {
+  if (typeof document === "undefined") return false;
+
+  const cookie = document.cookie || "";
+  if (!cookie.trim()) return false;
+
+  return AUTH_COOKIE_CANDIDATES.some((cookieName) => {
+    const escaped = cookieName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(`(?:^|;\\s*)${escaped}=`);
+    return pattern.test(cookie);
+  });
+};
 
 const hasFreshCache = () => Boolean(cachedResult) && cacheExpiresAt > now();
 
@@ -34,6 +56,10 @@ export const resetAuthVerificationCache = () => {
 export const verifyAuthSession = async (options?: { force?: boolean }) => {
   const force = options?.force === true;
   const currentTime = now();
+
+  if (!force && !hasSessionHints()) {
+    return { authorized: false, status: 401, fromCache: true };
+  }
 
   if (!force && blockedUntil > currentTime) {
     return { authorized: false, status: 429, rateLimited: true, fromCache: true };
@@ -71,6 +97,30 @@ export const verifyAuthSession = async (options?: { force?: boolean }) => {
       return { authorized: true };
     } catch (error: unknown) {
       const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+
+      if (status && status >= 500) {
+        try {
+          await axios.get(`${backendBaseUrl}/auth/me`, {
+            withCredentials: true,
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+            },
+            timeout: 15_000,
+          });
+
+          if (generationAtStart === cacheGeneration) {
+            cachedResult = { authorized: true };
+            cacheExpiresAt = now() + SUCCESS_TTL_MS;
+            blockedUntil = 0;
+          }
+
+          return { authorized: true };
+        } catch {
+          // keep original failure handling below
+        }
+      }
+
 
       if (generationAtStart === cacheGeneration) {
         cachedResult = { authorized: false, status };

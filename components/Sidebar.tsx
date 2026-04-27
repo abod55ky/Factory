@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard, Users, ClipboardList,
-  Wallet, Box,Bus, FileInput, Settings, Fingerprint,
+  Wallet, Box, Bus, FileInput, Settings, Fingerprint,
   ChevronDown, LogOut, Shield,
   UserMinus, X, ChevronsRight // أعدنا استيراد السهم هنا
 } from 'lucide-react';
@@ -28,11 +28,11 @@ const menuItems = [
   {
     name: 'الرواتب', icon: Wallet, roles: ['admin', 'finance', 'manager'],
     subItems: [
-      { name: 'إعدادات الرواتب', href: '/salaries?tab=salary-config' },
-      { name: 'السلف', href: '/salaries?tab=advances' },
-      { name: 'المكافآت والخصومات', href: '/salaries?tab=bonuses' },
-      { name: 'إدارة المسير', href: '/salaries?tab=final-payroll' },
-      { name: 'تقارير الرواتب', href: '/payroll' }, 
+      { name: 'إعدادات الرواتب', href: '/salaries/salariesSetting' },
+      { name: 'الخصومات والسلف', href: '/salaries/discounts' },
+      { name: 'المكافآت والحوافز', href: '/salaries/rewards' },
+      { name: 'جدول الدوام', href: '/salaries/timeTable' },
+      { name: 'تقارير الرواتب', href: '/salaries/payroll' },
     ]
   },
   { name: 'بصمتي وحضوري', icon: Fingerprint, href: '/biometric' },
@@ -44,7 +44,7 @@ const menuItems = [
 
 function useIsHydrated() {
   return useSyncExternalStore(
-    () => () => {},
+    () => () => { },
     () => true,
     () => false,
   );
@@ -97,7 +97,7 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
   };
 
   const handleLogout = async () => {
-    try { await apiClient.post('/auth/logout'); } catch {}
+    try { await apiClient.post('/auth/logout'); } catch { }
     clear();
     resetAuthVerificationCache();
     router.replace('/login');
@@ -109,7 +109,7 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
       dir="rtl"
     >
       {/* زر إغلاق للموبايل فقط */}
-      <button 
+      <button
         onClick={onClose}
         className="lg:hidden absolute top-6 left-4 p-2 bg-[#1a2530] text-slate-400 hover:text-[#C89355] rounded-xl border border-[#C89355]/30 z-99999 transition-colors"
       >
@@ -145,7 +145,7 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
         {visibleMenuItems.map((item) => {
           const hasSubItems = !!item.subItems;
           const isMainActive = (item.href && isHrefActive(item.href)) ||
-                               (hasSubItems && item.subItems?.some(sub => isHrefActive(sub.href)));
+            (hasSubItems && item.subItems?.some(sub => isHrefActive(sub.href)));
           const isOpen = openMenu === item.name || activeSubMenu === item.name;
 
           return (
@@ -162,7 +162,7 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
               {hasSubItems ? (
                 <button
                   onClick={() => {
-                    if (isCollapsed && toggleCollapse) toggleCollapse(); 
+                    if (isCollapsed && toggleCollapse) toggleCollapse();
                     toggleSubMenu(item.name);
                   }}
                   className={`w-full flex items-center justify-between py-2.5 px-3 rounded-xl transition-all duration-300 group relative overflow-hidden
@@ -171,14 +171,14 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
                 >
                   <div className="flex items-center gap-3 relative z-10">
                     <div className={`p-2 rounded-xl transition-all duration-300 flex items-center justify-center relative
-                      ${isMainActive || isOpen 
-                        ? 'bg-[#C89355] text-[#1a2530] shadow-md shadow-[#C89355]/20' 
+                      ${isMainActive || isOpen
+                        ? 'bg-[#C89355] text-[#1a2530] shadow-md shadow-[#C89355]/20'
                         : 'bg-[#263544] text-slate-400 group-hover:bg-[#1a2530] group-hover:text-[#C89355] border border-transparent group-hover:border-[#C89355]/20'}
                     `}>
-                      <item.icon 
-                        size={20} 
-                        strokeWidth={isMainActive ? 2.5 : 2} 
-                        className="relative z-10 transition-transform duration-300 group-hover/nav:scale-110 group-hover/nav:-rotate-3" 
+                      <item.icon
+                        size={20}
+                        strokeWidth={isMainActive ? 2.5 : 2}
+                        className="relative z-10 transition-transform duration-300 group-hover/nav:scale-110 group-hover/nav:-rotate-3"
                       />
                     </div>
                     {!isCollapsed && (
@@ -196,21 +196,21 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
                   href={item.href || '#'}
                   onClick={() => {
                     setOpenMenu(null);
-                    if(onClose && window.innerWidth < 1024) onClose();
+                    if (onClose && window.innerWidth < 1024) onClose();
                   }}
                   className={`flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-300 group relative overflow-hidden
                     ${isMainActive ? 'bg-linear-to-l from-[#C89355]/10 to-transparent' : 'hover:bg-[#263544]/50'}
                   `}
                 >
                   <div className={`p-2 rounded-xl transition-all duration-300 flex items-center justify-center relative
-                    ${isMainActive 
-                      ? 'bg-[#C89355] text-[#1a2530] shadow-md shadow-[#C89355]/20' 
+                    ${isMainActive
+                      ? 'bg-[#C89355] text-[#1a2530] shadow-md shadow-[#C89355]/20'
                       : 'bg-[#263544] text-slate-400 group-hover:bg-[#1a2530] group-hover:text-[#C89355] border border-transparent group-hover:border-[#C89355]/20'}
                   `}>
-                    <item.icon 
-                      size={20} 
-                      strokeWidth={isMainActive ? 2.5 : 2} 
-                      className="relative z-10 transition-transform duration-300 group-hover/nav:scale-110 group-hover/nav:-rotate-3" 
+                    <item.icon
+                      size={20}
+                      strokeWidth={isMainActive ? 2.5 : 2}
+                      className="relative z-10 transition-transform duration-300 group-hover/nav:scale-110 group-hover/nav:-rotate-3"
                     />
                   </div>
                   {!isCollapsed && (
@@ -225,7 +225,7 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-60 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
                   <div className="flex flex-col gap-1 pr-12 pl-2 relative">
                     <div className="absolute right-6 top-2 bottom-2 w-0.5 bg-linear-to-b from-transparent via-[#263544] to-transparent rounded-full" />
-                    
+
                     {item.subItems?.map((sub) => {
                       const isSubActive = isHrefActive(sub.href);
                       return (
@@ -234,7 +234,7 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
                           href={sub.href}
                           prefetch={false}
                           onClick={() => {
-                            if(onClose && window.innerWidth < 1024) onClose();
+                            if (onClose && window.innerWidth < 1024) onClose();
                           }}
                           className={`relative text-sm py-2 px-3 rounded-xl transition-all duration-300 flex items-center gap-3
                             ${isSubActive ? 'font-bold text-[#C89355] bg-[#1a2530] shadow-sm ring-1 ring-[#C89355]/30' : 'font-medium text-slate-500 hover:text-white hover:bg-[#263544]/60 hover:-translate-x-1'}
@@ -259,7 +259,7 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
       {/* بطاقة المستخدم السفلية */}
       <div className="p-3 mt-auto shrink-0 relative z-20 mb-2 mx-2">
         <div className={`relative overflow-hidden bg-[#1a2530] rounded-2xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] border border-[#C89355]/20 outline outline-dashed outline-[#C89355]/30 -outline-offset-4 transition-all duration-300 ${isCollapsed ? 'p-2' : 'p-3'} group`}>
-          
+
           <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} relative z-10`}>
             <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 hidden' : 'w-[70%] opacity-100'}`}>
               <div className="relative">
@@ -281,10 +281,10 @@ export default function Sidebar({ isCollapsed = false, onClose, toggleCollapse }
               `}
               title="تسجيل الخروج"
             >
-              <LogOut 
-                size={18} 
+              <LogOut
+                size={18}
                 strokeWidth={2}
-                className={`transition-all duration-300 group-hover/logout:scale-110 group-hover/logout:-translate-x-1 ${isCollapsed ? 'rotate-180' : ''}`} 
+                className={`transition-all duration-300 group-hover/logout:scale-110 group-hover/logout:-translate-x-1 ${isCollapsed ? 'rotate-180' : ''}`}
               />
             </button>
           </div>

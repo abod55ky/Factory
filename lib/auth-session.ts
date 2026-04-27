@@ -2,6 +2,41 @@ const USER_KEY = "auth_user_profile";
 const ACCESS_TOKEN_KEY = "auth_access_token";
 
 const isBrowser = () => typeof window !== "undefined";
+const ACCESS_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 8; // 8 hours
+
+const getCookieValue = (name: string) => {
+  if (!isBrowser()) return "";
+
+  const encodedName = encodeURIComponent(name);
+  const parts = document.cookie ? document.cookie.split("; ") : [];
+
+  for (const part of parts) {
+    if (!part.startsWith(`${encodedName}=`)) continue;
+    return decodeURIComponent(part.slice(encodedName.length + 1));
+  }
+
+  return "";
+};
+
+const writeCookie = (name: string, value: string, maxAgeSeconds: number) => {
+  if (!isBrowser()) return;
+
+  const isHttps = window.location.protocol === "https:";
+  const secureFlag = isHttps ? "; Secure" : "";
+  const encodedName = encodeURIComponent(name);
+  const encodedValue = encodeURIComponent(value);
+
+  document.cookie = `${encodedName}=${encodedValue}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Strict${secureFlag}`;
+};
+
+const removeCookie = (name: string) => {
+  if (!isBrowser()) return;
+
+  const isHttps = window.location.protocol === "https:";
+  const secureFlag = isHttps ? "; Secure" : "";
+  const encodedName = encodeURIComponent(name);
+  document.cookie = `${encodedName}=; Path=/; Max-Age=0; SameSite=Strict${secureFlag}`;
+};
 // Cookie session is handled by the backend (HttpOnly); only non-sensitive user profile is cached for UI.
 export const setAuthSession = (user?: unknown) => {
   if (!isBrowser()) return;
@@ -15,26 +50,24 @@ export const setAuthSession = (user?: unknown) => {
 export const clearAuthSession = () => {
   if (!isBrowser()) return;
   localStorage.removeItem(USER_KEY);
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  removeCookie(ACCESS_TOKEN_KEY);
 };
 
 export const setAuthAccessToken = (token?: string | null) => {
   if (!isBrowser()) return;
   if (!token || !token.trim()) {
-    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    removeCookie(ACCESS_TOKEN_KEY);
     return;
   }
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, token.trim());
+  writeCookie(ACCESS_TOKEN_KEY, token.trim(), ACCESS_TOKEN_COOKIE_MAX_AGE);
 };
 
 export const getAuthAccessToken = () => {
-  if (!isBrowser()) return "";
-  return sessionStorage.getItem(ACCESS_TOKEN_KEY) || "";
+  return getCookieValue(ACCESS_TOKEN_KEY);
 };
 
 export const clearAuthAccessToken = () => {
-  if (!isBrowser()) return;
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  removeCookie(ACCESS_TOKEN_KEY);
 };
 
 export const getStoredUser = <T>() => {

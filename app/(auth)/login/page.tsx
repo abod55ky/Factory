@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { User, Lock, Loader2, AlertCircle, Eye, EyeOff, Shield, Tag } from "lucide-react";
 import apiClient from "@/lib/api-client";
 import axios from "axios";
+import { resolveApiUrl } from "@/lib/api-url";
 import { resetAuthVerificationCache, verifyAuthSession } from "@/lib/auth-verify";
 import { useAuthStore } from "@/stores/auth-store";
 import { clearAuthAccessToken, setAuthAccessToken } from "@/lib/auth-session";
+
+const backendBaseUrl = resolveApiUrl(process.env.NEXT_PUBLIC_API_URL);
 
 export default function LoginPage() {
   const router = useRouter();
@@ -67,12 +70,33 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await apiClient.post("/auth/login", {
-        username: normalizedUsername,
-        password: normalizedPassword,
-      }, {
-        timeout: 15_000,
-      });
+      let response;
+
+      try {
+        response = await apiClient.post("/auth/login", {
+          username: normalizedUsername,
+          password: normalizedPassword,
+        }, {
+          timeout: 15_000,
+        });
+      } catch (proxyError: unknown) {
+        const proxyStatus = axios.isAxiosError(proxyError) ? proxyError.response?.status : undefined;
+
+        if (proxyStatus && proxyStatus >= 500) {
+          response = await axios.post(`${backendBaseUrl}/auth/login`, {
+            username: normalizedUsername,
+            password: normalizedPassword,
+          }, {
+            timeout: 15_000,
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        } else {
+          throw proxyError;
+        }
+      }
 
       const authResponse = response.data as {
         user?: unknown;
