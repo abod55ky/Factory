@@ -33,22 +33,30 @@ const getToday = () => {
 };
 
 export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm, isPending }: Props) {
+  // 👇 السطر المحذوف بواسطة المحرر، أعدناه هنا 👇
+  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   
-  // بيانات الإقالة
   const [fireDate, setFireDate] = useState(getToday());
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [bonus, setBonus] = useState<string>("");
 
   useEffect(() => {
-    if (isOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "unset";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
     return () => { document.body.style.overflow = "unset"; };
   }, [isOpen]);
 
-  if (!isOpen || !employee) return null;
-  if (typeof document === "undefined") return null;
+  if (!isOpen || !mounted || !employee) return null;
 
   const employeeWithCompensation = employee as EmployeeWithCompensation;
 
@@ -71,11 +79,10 @@ export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm
     return 0;
   };
 
-  // --- حسابات وهمية مبدئية للمستحقات (تُستبدل لاحقاً ببيانات الباك إند) ---
   const monthlySalary =
     toNumber(employeeWithCompensation.monthlySalary) ||
     Math.round(toNumber(employee.hourlyRate) * 8 * 30);
-  const daysWorkedThisMonth = new Date(fireDate).getDate(); // بافتراض أنه داوم من أول الشهر حتى تاريخ الإقالة
+  const daysWorkedThisMonth = new Date(fireDate).getDate();
   const dueSalary = Math.round((monthlySalary / 30) * daysWorkedThisMonth);
   const totalDues = dueSalary + (Number(bonus) || 0);
 
@@ -104,7 +111,6 @@ export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm
     <div className="fixed inset-0 z-999999 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md transition-all duration-300" dir="rtl">
       <div className="bg-[#101720] rounded-[2.5rem] shadow-[0_30px_90px_-15px_rgba(225,29,72,0.15)] w-full max-w-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 border border-rose-500/20 outline-dashed outline-1 outline-rose-500/30 -outline-offset-8">
         
-        {/* الترويسة */}
         <div className="p-6 sm:p-8 border-b border-white/5 flex justify-between items-center bg-[#1a2530]/80 shrink-0 relative z-10">
           <div className="flex items-center gap-4">
             <div className="bg-rose-500/10 p-3 rounded-2xl border border-rose-500/20 shadow-[0_0_20px_rgba(225,29,72,0.2)]">
@@ -120,10 +126,8 @@ export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm
           </button>
         </div>
 
-        {/* جسم المودال */}
         <div className="p-8 sm:p-10 relative">
           
-          {/* الخطوة الأولى: الأسباب والتاريخ */}
           <form onSubmit={handleNext} className={`grid grid-cols-1 gap-6 transition-all duration-500 ${step === 1 ? 'block animate-in slide-in-from-right-10' : 'hidden'}`}>
             <div className="bg-rose-500/5 border border-rose-500/10 p-4 rounded-2xl flex items-start gap-3 mb-2">
               <AlertOctagon size={20} className="text-rose-500 shrink-0 mt-0.5" />
@@ -157,7 +161,6 @@ export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm
             </div>
           </form>
 
-          {/* الخطوة الثانية: المستحقات */}
           <div className={`grid grid-cols-1 gap-6 transition-all duration-500 ${step === 2 ? 'block animate-in slide-in-from-left-10' : 'hidden'}`}>
             <div className="flex items-center gap-3 mb-2 border-b border-white/5 pb-4">
               <Calculator className="text-[#E7C873]" size={24} />
@@ -190,7 +193,6 @@ export default function FireEmployeeModal({ isOpen, onClose, employee, onConfirm
           </div>
         </div>
 
-        {/* أزرار الإجراءات */}
         <div className="p-6 sm:p-8 bg-[#1a2530]/80 border-t border-white/5 flex justify-between shrink-0 relative z-10">
           <button type="button" onClick={step === 1 ? onClose : () => setStep(1)} className="px-6 py-3.5 rounded-xl font-bold text-slate-400 bg-[#263544] hover:text-white transition-all active:scale-95 flex items-center gap-2">
             {step === 2 && <ChevronRight size={18}/>} {step === 1 ? "إلغاء" : "رجوع للأسباب"}

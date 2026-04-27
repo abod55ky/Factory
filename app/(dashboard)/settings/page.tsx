@@ -267,13 +267,6 @@ export default function SettingsPage() {
                           className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] shadow-inner transition-all" 
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-black text-[#263544] mb-3">العملة الافتراضية</label>
-                        <select className="w-full bg-white/80 backdrop-blur-sm border-2 border-white rounded-2xl px-5 py-3 text-xl font-black text-[#263544] focus:outline-none focus:ring-2 focus:ring-[#C89355]/40 focus:border-[#C89355] shadow-inner transition-all appearance-none cursor-pointer">
-                          <option>ليرة سورية (ل.س)</option>
-                          <option>دولار أمريكي ($)</option>
-                        </select>
-                      </div>
                     </div>
                   </div>
                 </div>
