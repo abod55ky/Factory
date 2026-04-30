@@ -9,9 +9,11 @@ import { DEFAULT_API_URL, normalizeApiUrl } from "@/lib/api-url";
 
 const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL, DEFAULT_API_URL);
 const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
-const SESSION_CHECK_TIMEOUT_MS = IS_DEVELOPMENT ? 600 : 2_500;
-const SESSION_SUCCESS_CACHE_TTL_MS = 10_000;
-const SESSION_FAILURE_CACHE_TTL_MS = 1_500;
+// في dev نعطي وقت كافي للباك المحلي، في production نعطي وقت أطول
+const SESSION_CHECK_TIMEOUT_MS = IS_DEVELOPMENT ? 3_000 : 5_000;
+// نزيد الـ cache بشكل كبير — المستخدم المسجل ما يحتاج نتحقق منه كل 10 ثواني
+const SESSION_SUCCESS_CACHE_TTL_MS = 5 * 60 * 1_000; // 5 دقائق
+const SESSION_FAILURE_CACHE_TTL_MS = 3_000;
 const SESSION_RATE_LIMIT_CACHE_TTL_MS = 15_000;
 const SESSION_CACHE_MAX_ENTRIES = 128;
 const AUTH_COOKIE_CANDIDATES = [
@@ -271,6 +273,27 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // ===== FAST PATH =====
+  // إذا المستخدم عنده session hints وعم يتنقل بين protected routes
+  // نتحقق من الـ cache أولاً — إذا موجود نمرره فوراً بدون fetch
+  if (isProtected && hasHints) {
+    const cacheKey = getSessionCacheKey(request);
+    const cachedResult = getCachedSessionResult(cacheKey);
+
+    if (cachedResult?.authorized) {
+      // الـ session محفوظة وصالحة — نمرر مباشرة بدون أي fetch
+      const requiredRoles = getRequiredRolesForPath(pathname);
+      if (requiredRoles && requiredRoles.length > 0) {
+        const hasRequiredRole = hasAnyRequiredRole(cachedResult.roles, requiredRoles);
+        if (!hasRequiredRole) {
+          return buildRedirectResponse(request, "/home", { forbidden: "true" });
+        }
+      }
+      return NextResponse.next();
+    }
+  }
+  // ===== END FAST PATH =====
+
   if (isRootRoute) {
     if (!hasHints) {
       return buildRedirectResponse(request, "/login");
@@ -309,7 +332,6 @@ export async function proxy(request: NextRequest) {
     const isTransientUpstreamFailure = status === 429 || status === 503 || status === 504;
 
     if (IS_DEVELOPMENT && hasHints && isTransientUpstreamFailure) {
-      // In local/dev, don't lock navigation on temporary backend slowdowns.
       return NextResponse.next();
     }
 

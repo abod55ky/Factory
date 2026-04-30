@@ -6,6 +6,8 @@ export interface Salary {
   responsibilityAllowance: number;
   productionIncentive: number;
   transportAllowance: number;
+  extraEffort?: number;
+  insurances?: number;
 }
 
 export type SalaryInput = Omit<Salary, "id">;

@@ -86,6 +86,15 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // تسريع compile time — يقلل الـ tree-shaking لمكتبات كبيرة في dev
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "@tanstack/react-query",
+      "@tanstack/react-table",
+    ],
+  },
   async rewrites() {
     return [
       {

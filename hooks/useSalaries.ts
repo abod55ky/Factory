@@ -151,19 +151,21 @@ export const useSalaries = () => {
 
   const updateSalary = useMutation({
     mutationFn: async ({ employeeId, data }: { employeeId: string; data: SalaryInput }) => {
-      
-      // 📝 التعديل الجوهري هنا:
-      // نستخرج الحقول المالية فقط ونستبعد employeeId من الجسم (Body)
+      // Include all numeric salary components the modal may send (including computed extras)
+      // `data` is a SalaryInput but form inputs may come as strings; coerce safely.
+      const safe = data as Partial<SalaryInput>;
       const payload = {
-        profession: data.profession,
-        baseSalary: Number(data.baseSalary),
-        responsibilityAllowance: Number(data.responsibilityAllowance),
-        productionIncentive: Number(data.productionIncentive),
-        transportAllowance: Number(data.transportAllowance),
+        profession: safe.profession ?? "",
+        baseSalary: Number(safe.baseSalary ?? 0),
+        responsibilityAllowance: Number(safe.responsibilityAllowance ?? 0),
+        productionIncentive: Number(safe.productionIncentive ?? 0),
+        transportAllowance: Number(safe.transportAllowance ?? 0),
+        extraEffort: Number(safe.extraEffort ?? 0),
+        insurances: Number(safe.insurances ?? 0),
       };
 
       console.log(`📤 [Put] Sending cleaned payload to /salary/${employeeId}`, payload);
-      
+
       return await apiClient.put(`/salary/${employeeId}`, payload);
     },
     onSuccess: (_data, variables) => {
