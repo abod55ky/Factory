@@ -9,9 +9,7 @@ import useSalaries from "@/hooks/useSalaries";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAdvances } from "@/hooks/useAdvances";
 import { useBonuses } from "@/hooks/useBonuses";
-import { useAttendance } from "@/hooks/useAttendance";
-import { usePayroll } from "@/hooks/usePayroll";
-import { Edit, Trash, Gift, Calculator, Plus, Sparkles, Loader2, HandCoins, Wallet, FileSpreadsheet, ChevronLeft } from "lucide-react";
+import { Edit, Trash, Gift, Plus, Sparkles, Loader2, HandCoins, Wallet, ChevronLeft } from "lucide-react";
 import { toast } from "react-hot-toast";
 import type { Salary } from "@/types/salary";
 import type { Employee } from "@/types/employee";
@@ -38,13 +36,6 @@ const getLocalMonth = () => {
   return `${y}-${m}`;
 };
 
-const getMonthBounds = (period: string) => {
-  const [y, m] = period.split("-").map(Number);
-  const start = `${y}-${String(m).padStart(2, "0")}-01`;
-  const endDate = new Date(y, m, 0);
-  const end = `${y}-${String(m).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`;
-  return { start, end };
-};
 
 const getTabFromQuery = (tabParam: string | null): FinancialTabKey => {
   if (tabParam === "advances") return "advances";
@@ -53,25 +44,6 @@ const getTabFromQuery = (tabParam: string | null): FinancialTabKey => {
   return "salary-config";
 };
 
-const WORKING_DAYS_PER_MONTH = 26;
-const DEFAULT_DAILY_WORK_MINUTES = 8 * 60;
-
-const toMinutes = (time?: string) => {
-  if (!time) return null;
-  const normalized = time.slice(0, 5);
-  const [h, m] = normalized.split(":").map(Number);
-  if (Number.isNaN(h) || Number.isNaN(m)) return null;
-  return h * 60 + m;
-};
-
-const getDailyWorkMinutes = (scheduledStart?: string, scheduledEnd?: string) => {
-  const startMinutes = toMinutes(scheduledStart || "08:00");
-  const endMinutes = toMinutes(scheduledEnd || "16:00");
-  if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
-    return DEFAULT_DAILY_WORK_MINUTES;
-  }
-  return endMinutes - startMinutes;
-};
 
 // تعديل الواجهة لتشمل الثوابت الجديدة
 type SalaryPayload = {
@@ -111,13 +83,10 @@ export default function SalariesPage() {
 
   const { data: salaries = [], isLoading, isError, error, updateSalary, deleteSalary } = useSalaries();
   const { data: employees = [], isLoading: employeesLoading } = useEmployees({ limit: 200, status: "active" });
-  const { data: advances = [], createAdvance, updateAdvance, deleteAdvance } = useAdvances();
-  const { calculatePayroll } = usePayroll();
+  const { data: advances = [] } = useAdvances();
 
-  const [period, setPeriod] = useState(getLocalMonth());
-  const { start: monthStart, end: monthEnd } = useMemo(() => getMonthBounds(period), [period]);
-  const { data: bonuses = [], createBonus, updateBonus, deleteBonus } = useBonuses({ period });
-  const { data: attendanceData } = useAttendance({ startDate: monthStart, endDate: monthEnd, limit: 2000 });
+  const period = useMemo(() => getLocalMonth(), []);
+  const { data: bonuses = [] } = useBonuses({ period });
 
   const employeeNameMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -133,10 +102,8 @@ export default function SalariesPage() {
   const [selected, setSelected] = useState<Salary | null>(null);
   const [preselectedEmployeeId, setPreselectedEmployeeId] = useState<string | undefined>(undefined);
   const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
-  const [selectedAdvance, setSelectedAdvance] = useState<Advance | null>(null);
   const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
-  const [selectedBonus, setSelectedBonus] = useState<Bonus | null>(null);
-  const [lastCalculatedRunId, setLastCalculatedRunId] = useState<string | null>(null);
+  
 
   const openFor = (salary: Salary | null = null, preselectId?: string) => {
     setSelected(salary);
@@ -168,27 +135,6 @@ export default function SalariesPage() {
     [employees],
   );
 
-  const attendanceDaysMap = useMemo(() => {
-    const map = new Map<string, number>();
-    const daily = attendanceData?.dailyRecords || [];
-    for (const rec of daily) {
-      if (!rec?.employeeId || !rec?.checkIn) continue;
-      map.set(rec.employeeId, (map.get(rec.employeeId) || 0) + 1);
-    }
-    return map;
-  }, [attendanceData?.dailyRecords]);
-
-  const dailyRecordsByEmployee = useMemo(() => {
-    const map = new Map<string, { checkIn?: string }[]>();
-    const daily = attendanceData?.dailyRecords || [];
-    for (const rec of daily) {
-      if (!rec?.employeeId) continue;
-      const current = map.get(rec.employeeId) || [];
-      current.push({ checkIn: rec.checkIn });
-      map.set(rec.employeeId, current);
-    }
-    return map;
-  }, [attendanceData?.dailyRecords]);
 
   const tabStats = useMemo(() => {
     const totalAdvances = (advances || []).reduce((sum: number, item: Advance) => sum + toNumber(item.remainingAmount), 0);
@@ -196,71 +142,6 @@ export default function SalariesPage() {
     const totalDeductions = (bonuses || []).reduce((sum: number, item: Bonus) => sum + toNumber(item.assistanceAmount), 0);
     return { totalAdvances, totalBonus, totalDeductions };
   }, [advances, bonuses]);
-
-  const finalPayrollRows = useMemo(() => {
-    return allIds.map((employeeId: string) => {
-      const salary = salaryMap.get(employeeId);
-      const employee = employeeMap.get(employeeId);
-      const attendanceDays = attendanceDaysMap.get(employeeId) || 0;
-      const employeeDailyRecords = dailyRecordsByEmployee.get(employeeId) || [];
-
-      // هنا يتم حساب الراتب الأساسي، إذا كان موجوداً نستخدمه، وإلا نستخدم hourlyRate المحسوب
-      const baseSalary = salary ? toNumber(salary.baseSalary) : toNumber(employee?.hourlyRate);
-      const proratedBase = (baseSalary / WORKING_DAYS_PER_MONTH) * attendanceDays;
-
-      const employeeBonuses = (bonuses || []).filter((b: Bonus) => b.employeeId === employeeId);
-      const totalBonus = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.bonusAmount), 0);
-      const totalDeductions = employeeBonuses.reduce((sum: number, b: Bonus) => sum + toNumber(b.assistanceAmount), 0);
-      
-      const employeeAdvances = (advances || []).filter((a: Advance) => a.employeeId === employeeId);
-      const advancesInstallments = employeeAdvances.reduce((sum: number, a: Advance) => sum + toNumber(a.installmentAmount), 0);
-
-      const scheduledStartMinutes = toMinutes(employee?.scheduledStart || "08:00");
-      let lateMinutes = 0;
-
-      for (const record of employeeDailyRecords) {
-        const checkInMinutes = toMinutes(record.checkIn);
-        if (checkInMinutes === null || scheduledStartMinutes === null) continue;
-        if (checkInMinutes <= scheduledStartMinutes) continue;
-        lateMinutes += checkInMinutes - scheduledStartMinutes;
-      }
-
-      const dailyWorkMinutes = getDailyWorkMinutes(employee?.scheduledStart, employee?.scheduledEnd);
-      const minuteRate = dailyWorkMinutes > 0
-        ? baseSalary / (WORKING_DAYS_PER_MONTH * dailyWorkMinutes)
-        : 0;
-      const lateDeduction = lateMinutes * minuteRate;
-
-      const net = proratedBase + totalBonus - totalDeductions - advancesInstallments - lateDeduction;
-
-      return {
-        employeeId,
-        employeeName: employeeNameMap[employeeId] || employeeId,
-        attendanceDays,
-        minuteRate,
-        lateMinutes,
-        lateDeduction,
-        hasLateDeduction: lateDeduction > 0,
-        proratedBase,
-        totalBonus,
-        totalDeductions,
-        advancesInstallments,
-        net,
-      };
-    });
-  }, [allIds, salaryMap, employeeMap, attendanceDaysMap, bonuses, advances, employeeNameMap, dailyRecordsByEmployee]);
-
-  const payrollTotals = useMemo(() => {
-    return finalPayrollRows.reduce(
-      (acc, row) => {
-        acc.totalLateMinutes += row.lateMinutes;
-        acc.totalLateDeduction += row.lateDeduction;
-        acc.employeesWithLateDeduction += row.hasLateDeduction ? 1 : 0;
-        return acc;
-      },
-      { totalLateMinutes: 0, totalLateDeduction: 0, employeesWithLateDeduction: 0 },
-    );
-  }, [finalPayrollRows]);
 
   const handleSave = (employeeId: string, payload: SalaryPayload) => {
     if (!employeeId) return toast.error("يرجى إدخال كود الموظف");
@@ -274,76 +155,11 @@ export default function SalariesPage() {
     deleteSalary.mutate(employeeId);
   };
 
-  const isSaving =
-    updateSalary.isPending || deleteSalary.isPending || createAdvance.isPending ||
-    updateAdvance.isPending || deleteAdvance.isPending || createBonus.isPending ||
-    updateBonus.isPending || deleteBonus.isPending || calculatePayroll.isPending;
-
-  const handleRunPayroll = () => {
-    calculatePayroll.mutate(
-      { periodStart: monthStart, periodEnd: monthEnd, gracePeriodMinutes: 15 },
-      {
-        onSuccess: (response) => {
-          const runId = (response as { data?: { payrollRun?: { runId?: string } } })?.data?.payrollRun?.runId;
-          if (runId) {
-            setLastCalculatedRunId(runId);
-            toast.success(`تم إنشاء مسير الرواتب: ${runId}`);
-            return;
-          }
-          toast.success("تم إنشاء مسير الرواتب بنجاح");
-        },
-      },
-    );
-  };
-
-  const handleExportPayrollExcel = async () => {
-    // كود تصدير الإكسل بقي كما هو لعدم وجود تغييرات هيكلية فيه
-    if (finalPayrollRows.length === 0) {
-      toast.error("لا توجد بيانات لتصديرها");
-      return;
-    }
-    try {
-      const XLSX = await import("xlsx");
-      const rows: Array<Record<string, string | number>> = finalPayrollRows.map((row, index) => ({
-        "#": index + 1,
-        "كود الموظف": row.employeeId,
-        "اسم الموظف": row.employeeName,
-        "أيام الحضور": row.attendanceDays,
-        "أجر الدقيقة": Number(row.minuteRate.toFixed(4)),
-        "دقائق التأخير": row.lateMinutes,
-        "خصم التأخير": Number(row.lateDeduction.toFixed(2)),
-        "في خصم": row.hasLateDeduction ? "نعم" : "لا",
-        "الراتب النسبي": Number(row.proratedBase.toFixed(2)),
-        "المكافآت": Number(row.totalBonus.toFixed(2)),
-        "الخصومات": Number(row.totalDeductions.toFixed(2)),
-        "خصم السلف": Number(row.advancesInstallments.toFixed(2)),
-        "صافي المستحق": Number(row.net.toFixed(2)),
-      }));
-
-      rows.push({
-        "#": "", "كود الموظف": "", "اسم الموظف": "الإجمالي", "أيام الحضور": "", "أجر الدقيقة": "",
-        "دقائق التأخير": payrollTotals.totalLateMinutes,
-        "خصم التأخير": Number(payrollTotals.totalLateDeduction.toFixed(2)),
-        "في خصم": payrollTotals.employeesWithLateDeduction.toString(),
-        "الراتب النسبي": "", "المكافآت": "", "الخصومات": "", "خصم السلف": "",
-        "صافي المستحق": Number(finalPayrollRows.reduce((sum, row) => sum + row.net, 0).toFixed(2)),
-      });
-
-      const worksheet = XLSX.utils.json_to_sheet(rows);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll");
-      XLSX.writeFile(workbook, `payroll-${period}.xlsx`);
-
-      toast.success("تم تنزيل جدول الرواتب Excel بنجاح");
-    } catch {
-      toast.error("تعذر تنزيل ملف Excel حالياً");
-    }
-  };
 
   const openFloatingAction = () => {
     if (activeTab === "salary-config") { openFor(null); return; }
-    if (activeTab === "advances") { setSelectedAdvance(null); setIsAdvanceModalOpen(true); return; }
-    if (activeTab === "bonuses") { setSelectedBonus(null); setIsBonusModalOpen(true); }
+    if (activeTab === "advances") { setIsAdvanceModalOpen(true); return; }
+    if (activeTab === "bonuses") { setIsBonusModalOpen(true); }
   };
 
   const isFloatingActionVisible = activeTab !== "final-payroll";
